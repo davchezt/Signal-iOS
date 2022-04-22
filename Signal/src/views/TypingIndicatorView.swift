@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 @objc
@@ -26,12 +26,12 @@ class TypingIndicatorView: ManualStackView {
 
     @available(*, unavailable, message: "use other constructor instead.")
     required init(coder aDecoder: NSCoder) {
-        notImplemented()
+        fatalError("init(coder:) has not been implemented")
     }
 
     @available(*, unavailable, message: "use other constructor instead.")
     required init(name: String, arrangedSubviews: [UIView] = []) {
-        notImplemented()
+        fatalError("init(name:arrangedSubviews:) has not been implemented")
     }
 
     // MARK: - Notifications
@@ -49,7 +49,7 @@ class TypingIndicatorView: ManualStackView {
     // MARK: -
 
     @objc
-    func configureForHomeView() {
+    func configureForChatList() {
         if let measurement = self.cachedMeasurement {
             self.configureForReuse(config: Self.stackConfig,
                                    measurement: measurement)
@@ -157,12 +157,12 @@ class TypingIndicatorView: ManualStackView {
 
         @available(*, unavailable, message: "use other constructor instead.")
         required init?(coder aDecoder: NSCoder) {
-            notImplemented()
+            fatalError("init(coder:) has not been implemented")
         }
 
         @available(*, unavailable, message: "use other constructor instead.")
         override init(frame: CGRect) {
-            notImplemented()
+            fatalError("init(frame:) has not been implemented")
         }
 
         init(dotType: DotType) {

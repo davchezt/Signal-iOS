@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -133,14 +133,6 @@ open class OWSTableViewController2: OWSViewController {
 
             topHeader.setContentHuggingVerticalHigh()
             topHeader.setCompressionResistanceVerticalHigh()
-        } else if tableView.applyInsetsFix() {
-            // if applyScrollViewInsetsFix disables contentInsetAdjustmentBehavior,
-            // we need to pin to the top and bottom layout guides since UIKit
-            // won't adjust our content insets.
-            tableView.autoPin(toTopLayoutGuideOf: self, withInset: 0)
-
-            // We don't need a top or bottom insets, since we pin to the top and bottom layout guides.
-            automaticallyAdjustsScrollViewInsets = false
         } else {
             tableView.autoPinEdge(toSuperviewEdge: .top)
         }
@@ -199,11 +191,6 @@ open class OWSTableViewController2: OWSViewController {
             } else {
                 bottomFooterConstraint = bottomFooter.autoPinEdge(toSuperviewEdge: .bottom)
             }
-        } else if tableView.applyInsetsFix() {
-            // if applyScrollViewInsetsFix disables contentInsetAdjustmentBehavior,
-            // we need to pin to the top and bottom layout guides since UIKit
-            // won't adjust our content insets.
-            bottomFooterConstraint = tableView.autoPin(toBottomLayoutGuideOf: self, withInset: 0)
         } else if shouldAvoidKeyboard {
             bottomFooterConstraint = autoPinView(toBottomOfViewControllerOrKeyboard: tableView, avoidNotch: true)
         } else {
@@ -405,7 +392,7 @@ extension OWSTableViewController2: UITableViewDataSource, UITableViewDelegate {
             // We use cellHOuterMargin _outside_ the background and cellHInnerMargin
             // _inside_.
             //
-            // By applying it to the cell, ensure the correct behavior for accesories.
+            // By applying it to the cell, ensure the correct behavior for accessories.
             cell.layoutMargins = cellOuterInsetsWithMargin(hMargin: Self.cellHInnerMargin, vMargin: 0)
             var contentMargins = UIEdgeInsets(
                 hMargin: 0,

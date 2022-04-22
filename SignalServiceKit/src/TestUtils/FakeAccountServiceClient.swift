@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -19,15 +19,15 @@ public class FakeAccountServiceClient: AccountServiceClient {
         return Promise { $0.resolve() }
     }
 
-    public override func getPreKeysCount() -> Promise<Int> {
+    public override func getPreKeysCount(for identity: OWSIdentity) -> Promise<Int> {
         return Promise { $0.resolve(0) }
     }
 
-    public override func setPreKeys(identityKey: IdentityKey, signedPreKeyRecord: SignedPreKeyRecord, preKeyRecords: [PreKeyRecord]) -> Promise<Void> {
+    public override func setPreKeys(for identity: OWSIdentity, identityKey: IdentityKey, signedPreKeyRecord: SignedPreKeyRecord, preKeyRecords: [PreKeyRecord]) -> Promise<Void> {
         return Promise { $0.resolve() }
     }
 
-    public override func setSignedPreKey(_ signedPreKey: SignedPreKeyRecord) -> Promise<Void> {
+    public override func setSignedPreKey(_ signedPreKey: SignedPreKeyRecord, for identity: OWSIdentity) -> Promise<Void> {
         return Promise { $0.resolve() }
     }
 
@@ -36,6 +36,6 @@ public class FakeAccountServiceClient: AccountServiceClient {
     }
 
     public override func getAccountWhoAmI() -> Promise<WhoAmIResponse> {
-        return Promise { $0.resolve(WhoAmIResponse(uuid: UUID(), e164: nil)) }
+        return Promise { $0.resolve(WhoAmIResponse(aci: UUID(), pni: UUID(), e164: nil)) }
     }
 }

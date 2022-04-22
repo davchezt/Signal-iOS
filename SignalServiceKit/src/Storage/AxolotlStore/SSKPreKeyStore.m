@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 #import "SSKPreKeyStore.h"
@@ -16,7 +16,6 @@ static const int kPreKeyOfLastResortId = 0xFFFFFF;
 
 NS_ASSUME_NONNULL_BEGIN
 
-NSString *const TSStorageInternalSettingsCollection = @"TSStorageInternalSettingsCollection";
 NSString *const TSNextPrekeyIdKey = @"TSStorageInternalSettingsNextPreKeyId";
 
 #pragma mark - Private Extension
@@ -46,6 +45,7 @@ NSString *const TSNextPrekeyIdKey = @"TSStorageInternalSettingsNextPreKeyId";
 
 @interface SSKPreKeyStore ()
 
+@property (nonatomic, readonly) SDSKeyValueStore *keyStore;
 @property (nonatomic, readonly) SDSKeyValueStore *metadataStore;
 
 @end
@@ -54,15 +54,24 @@ NSString *const TSNextPrekeyIdKey = @"TSStorageInternalSettingsNextPreKeyId";
 
 @implementation SSKPreKeyStore
 
-- (instancetype)init
+- (instancetype)initForIdentity:(OWSIdentity)identity;
 {
     self = [super init];
     if (!self) {
         return self;
     }
 
-    _keyStore = [[SDSKeyValueStore alloc] initWithCollection:@"TSStorageManagerPreKeyStoreCollection"];
-    _metadataStore = [[SDSKeyValueStore alloc] initWithCollection:TSStorageInternalSettingsCollection];
+    switch (identity) {
+        case OWSIdentityACI:
+            _keyStore = [[SDSKeyValueStore alloc] initWithCollection:@"TSStorageManagerPreKeyStoreCollection"];
+            _metadataStore = [[SDSKeyValueStore alloc] initWithCollection:@"TSStorageInternalSettingsCollection"];
+            break;
+        case OWSIdentityPNI:
+            _keyStore = [[SDSKeyValueStore alloc] initWithCollection:@"TSStorageManagerPNIPreKeyStoreCollection"];
+            _metadataStore =
+                [[SDSKeyValueStore alloc] initWithCollection:@"TSStorageManagerPNIPreKeyMetadataCollection"];
+            break;
+    }
 
     return self;
 }
@@ -94,15 +103,11 @@ NSString *const TSNextPrekeyIdKey = @"TSStorageInternalSettingsNextPreKeyId";
     return preKeyRecords;
 }
 
-- (void)storePreKeyRecords:(NSArray<PreKeyRecord *> *)preKeyRecords
+- (void)storePreKeyRecords:(NSArray<PreKeyRecord *> *)preKeyRecords transaction:(SDSAnyWriteTransaction *)transaction
 {
-    DatabaseStorageWrite(self.databaseStorage, ^(SDSAnyWriteTransaction *transaction) {
-        for (PreKeyRecord *record in preKeyRecords) {
-            [self.keyStore setPreKeyRecord:record
-                                    forKey:[SDSKeyValueStore keyWithInt:record.Id]
-                               transaction:transaction];
-        }
-    });
+    for (PreKeyRecord *record in preKeyRecords) {
+        [self.keyStore setPreKeyRecord:record forKey:[SDSKeyValueStore keyWithInt:record.Id] transaction:transaction];
+    }
 }
 
 - (nullable PreKeyRecord *)loadPreKey:(int)preKeyId
@@ -143,6 +148,46 @@ NSString *const TSNextPrekeyIdKey = @"TSStorageInternalSettingsNextPreKeyId";
     OWSAssertDebug(lastPreKeyId > 0 && lastPreKeyId < kPreKeyOfLastResortId);
 
     return lastPreKeyId;
+}
+
+- (void)cullPreKeyRecordsWithTransaction:(SDSAnyWriteTransaction *)transaction
+{
+    NSTimeInterval expirationInterval = kDayInterval * 30;
+    NSMutableArray<NSString *> *keys = [[self.keyStore allKeysWithTransaction:transaction] mutableCopy];
+    NSMutableSet<NSString *> *keysToRemove = [NSMutableSet new];
+    [Batching
+        loopObjcWithBatchSize:Batching.kDefaultBatchSize
+                    loopBlock:^(BOOL *stop) {
+                        NSString *_Nullable key = [keys lastObject];
+                        if (key == nil) {
+                            *stop = YES;
+                            return;
+                        }
+                        [keys removeLastObject];
+                        PreKeyRecord *_Nullable record = [self.keyStore getObjectForKey:key transaction:transaction];
+                        if (![record isKindOfClass:[PreKeyRecord class]]) {
+                            OWSFailDebug(@"Unexpected value: %@", [record class]);
+                            return;
+                        }
+                        if (record.createdAt == nil) {
+                            OWSFailDebug(@"Missing createdAt.");
+                            [keysToRemove addObject:key];
+                            return;
+                        }
+                        BOOL shouldRemove = fabs(record.createdAt.timeIntervalSinceNow) > expirationInterval;
+                        if (shouldRemove) {
+                            OWSLogInfo(
+                                @"Removing prekey id: %lu., createdAt: %@", (unsigned long)record.Id, record.createdAt);
+                            [keysToRemove addObject:key];
+                        }
+                    }];
+    if (keysToRemove.count < 1) {
+        return;
+    }
+    OWSLogInfo(@"Culling prekeys: %lu", (unsigned long)keysToRemove.count);
+    for (NSString *key in keysToRemove) {
+        [self.keyStore removeValueForKey:key transaction:transaction];
+    }
 }
 
 #if TESTABLE_BUILD

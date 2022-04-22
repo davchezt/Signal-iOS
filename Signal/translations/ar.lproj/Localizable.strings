@@ -154,6 +154,9 @@
 /* Title for the 'app launch failed' alert. */
 "APP_LAUNCH_FAILURE_ALERT_TITLE" = "خطأ";
 
+/* No comment provided by engineer. */
+"APP_LAUNCH_FAILURE_CHECK_DATABASE" = "Run Database Integrity Check";
+
 /* Error indicating that the app could not launch because the database could not be loaded. */
 "APP_LAUNCH_FAILURE_COULD_NOT_LOAD_DATABASE" = "يتعذّر تحميل قاعدة البيانات";
 
@@ -377,13 +380,13 @@
 "BADGE_DETAILS_GIVE_A_BOOST" = "دعم Signal ";
 
 /* String explaing to the user that their boost badge has expired on the badge expiry sheetsheet. */
-"BADGE_EXIPRED_BOOST_BODY_FORMAT" = "Your Boost badge has expired, and is no longer visible on your profile.\n\nYou can continue using Signal but to support technology that is built for you, please consider becoming a monthly Sustainer.";
+"BADGE_EXIPRED_BOOST_BODY_FORMAT" = "Your Boost badge has expired and is no longer visible on your profile.\n\nYou can keep using Signal but to support technology that is built for you, consider becoming a sustainer by making a monthly donation.";
 
 /* String explaing to the user that their boost badge has expired while they are a current subscription sustainer on the badge expiry sheetsheet. */
-"BADGE_EXIPRED_BOOST_CURRENT_SUSTAINER_BODY_FORMAT" = "Your Boost badge has expired, and is no longer visible on your profile.\n\nYou can reactivate your Boost badge for another 30 days with a one-time contribution.";
+"BADGE_EXIPRED_BOOST_CURRENT_SUSTAINER_BODY_FORMAT" = "انتهت صلاحية شارة التعزيز، ولم تعد ظاهرة في ملفك الشخصي.\n\nيمكنك إعادة تنشيطها لمدة 30 يومًا بالمساهمة لمرة واحدة.";
 
 /* String explaing to the user that their subscription badge has expired on the badge expiry sheetsheet. Embed {badge name}. */
-"BADGE_EXIPRED_SUBSCRIPTION_BODY_FORMAT" = "Your Sustainer subscription was automatically cancelled because you were inactive for too long. Your %@ badge is no longer visible on your profile.\n\nYou can keep using Signal but to support the app and reactivate your badge, renew now.";
+"BADGE_EXIPRED_SUBSCRIPTION_BODY_FORMAT" = "Your recurring monthly donation was automatically cancelled because you were inactive for too long. Your %@ badge is no longer visible on your profile.\n\nYou can keep using Signal but to support the app and reactivate your badge, renew now.";
 
 /* Button title for boost on the badge expiration sheet, used if the user is not already a sustainer. */
 "BADGE_EXPIRED_BOOST_RENEWAL_BUTTON" = "كن من الداعمين";
@@ -392,13 +395,13 @@
 "BADGE_EXPIRED_BOOST_RENEWAL_BUTTON_SUSTAINER" = "أضف دعماً";
 
 /* Title for boost on the badge expiration sheet. */
-"BADGE_EXPIRED_BOOST_TITLE" = "Badge Expired";
+"BADGE_EXPIRED_BOOST_TITLE" = "انتهت صلاحية الشارة";
 
 /* Button title for subscription on the badge expiration sheet. */
-"BADGE_EXPIRED_SUBSCRIPTION_RENEWAL_BUTTON" = "Renew Subscription";
+"BADGE_EXPIRED_SUBSCRIPTION_RENEWAL_BUTTON" = "تجديد الاشتراك";
 
 /* Title for subscription on the badge expiration sheet. */
-"BADGE_EXPIRED_SUBSCRIPTION_TITLE" = "Subscription Cancelled";
+"BADGE_EXPIRED_SUBSCRIPTION_TITLE" = "لقد تم إلغاء التبرعات الشهرية";
 
 /* Title for boost on the thank you sheet. */
 "BADGE_THANKS_BOOST_TITLE" = "شكراً على الدعم!";
@@ -416,7 +419,7 @@
 "BADGE_THANKS_TOGGLE_FOOTER" = "عندما يكون لديك أكثر من شارة واحدة، يمكنك اختيار واحدة لتمييزها ليراها الآخرون في ملفك الشخصي.";
 
 /* String explaing to the user that they've earned a badge on the badge thank you sheet. Embed {badge name}. */
-"BADGE_THANKS_YOU_EARNED_FORMAT" = "لقد ربحت شارة %@! نرجو منك مساعدة Signal على نشر الوعي، وذلك عبر عرض هذه الشارة في ملفك الشخصي.";
+"BADGE_THANKS_YOU_EARNED_FORMAT" = "You’ve earned a %@ badge. Display this badge on your profile to build awareness for donating to Signal.";
 
 /* Accessibility label for banner close button */
 "BANNER_CLOSE_ACCESSIBILITY_LABEL" = "إغلاق اللافتة";
@@ -497,7 +500,7 @@
 "BOOST_VIEW_AMOUNT_LABEL" = "ضبط العملة";
 
 /* The body text for the donate to signal view */
-"BOOST_VIEW_BODY" = "قل \"شكراً!\" واحصل على شارة دعم لمدة 30 يوماً.";
+"BOOST_VIEW_BODY" = "Make a one-time donation and earn a Boost badge for 30 days.";
 
 /* The body text for the donate to signal view, embeds {{Expiration}} */
 "BOOST_VIEW_BODY_WITH_EXPIRATION_FORMAT" = "ستنتهي صلاحية شارة الدعم الخاصة بك يوم %@.";
@@ -586,8 +589,17 @@
 /* notification body */
 "CALL_AUDIO_INCOMING_NOTIFICATION_BODY" = "📞 مكالمة صوتية واردة...";
 
-/* notification body */
+/* notification body for a missed call in the last 24 hours. Embeds {{time}}, e.g. '3:30 PM'. */
+"CALL_AUDIO_MISSED_24_HOURS_NOTIFICATION_BODY_FORMAT" = "📞 Missed audio call at %@";
+
+/* notification body for a call that was just missed */
 "CALL_AUDIO_MISSED_NOTIFICATION_BODY" = "📞 مكالمة صوتية فائتة";
+
+/* notification body for a missed call from more than a week ago. Embeds {{short date}}, e.g. '6/28'. */
+"CALL_AUDIO_MISSED_PAST_NOTIFICATION_BODY_FORMAT" = "📞 Missed audio call on %@";
+
+/* notification body for a missed call from the last week. Embeds {{weekday}}, e.g. 'Monday'. */
+"CALL_AUDIO_MISSED_WEEK_NOTIFICATION_BODY_FORMAT" = "📞 Missed audio call on %@";
 
 /* Alert message when calling and permissions for microphone are missing */
 "CALL_AUDIO_PERMISSION_MESSAGE" = "يُمكِنُك تفعيل الوصول للميكروفون من خلال ‫تطبيق إعدادات iOS‬، للتمكن من إجراء مكالمات وإرسال رسائل صوتية في Signal. ";
@@ -619,8 +631,17 @@
 /* notification body */
 "CALL_VIDEO_INCOMING_NOTIFICATION_BODY" = "‫📹 مكالمة بالصورة واردة...";
 
-/* notification body */
+/* notification body for a missed call in the last 24 hours. Embeds {{time}}, e.g. '3:30 PM'. */
+"CALL_VIDEO_MISSED_24_HOURS_NOTIFICATION_BODY_FORMAT" = "📹 Missed video call at %@";
+
+/* notification body for a call that was just missed */
 "CALL_VIDEO_MISSED_NOTIFICATION_BODY" = "‫📹 مكالمة بالصورة فائتة";
+
+/* notification body for a missed call from more than a week ago. Embeds {{short date}}, e.g. '6/28'. */
+"CALL_VIDEO_MISSED_PAST_NOTIFICATION_BODY_FORMAT" = "📹 Missed video call on %@";
+
+/* notification body for a missed call from the last week. Embeds {{weekday}}, e.g. 'Monday'. */
+"CALL_VIDEO_MISSED_WEEK_NOTIFICATION_BODY_FORMAT" = "📹 Missed video call on %@";
 
 /* label for accepting incoming video calls as audio  only */
 "CALL_VIEW_ACCEPT_INCOMING_CALL_AUDIO_ONLY_LABEL" = "أجِب بلا فيديو";
@@ -680,19 +701,19 @@
 "CHANGE_AVATAR_BUTTON_LABEL" = "تحرير الصورة";
 
 /* Error indicating that the user's old and new phone numbers are identical. */
-"CHANGE_PHONE_NUMBER_IDENTICAL_PHONE_NUMBERS_ALERT_MESSAGE" = "Your new number should not be the same as your old one. Please enter a new phone number to change your number.";
+"CHANGE_PHONE_NUMBER_IDENTICAL_PHONE_NUMBERS_ALERT_MESSAGE" = "رقمك الجديد لا يمكن أن يكون كالقديم, لتغيير رقمك فضلًا أدخل رقم هاتف جديد.";
 
 /* Error indicating that the user's old phone number was not entered correctly. */
 "CHANGE_PHONE_NUMBER_INCORRECT_OLD_PHONE_NUMBER_ALERT_MESSAGE" = "إنَّ رَقم الهَاتِف الَّذِي أدخَلتَه لَا يَتَطَابَقُ مَعَ الرَّقم الخاصّ بِحِسَابك.";
 
 /* Error indicating that the user's new phone number is not valid. */
-"CHANGE_PHONE_NUMBER_INVALID_PHONE_NUMBER_ALERT_MESSAGE_NEW" = "Invalid new phone number. Please enter a valid phone number to change your number.";
+"CHANGE_PHONE_NUMBER_INVALID_PHONE_NUMBER_ALERT_MESSAGE_NEW" = "الرقم الجديد غير صالح، فضلًا أدخل رقم هاتف صالح.";
 
 /* Error indicating that the user's old phone number is not valid. */
-"CHANGE_PHONE_NUMBER_INVALID_PHONE_NUMBER_ALERT_MESSAGE_OLD" = "Invalid old phone number. Please enter a valid phone number to change your number.";
+"CHANGE_PHONE_NUMBER_INVALID_PHONE_NUMBER_ALERT_MESSAGE_OLD" = "الرقم القديم غير صالح، فضلًا أدخل رقم هاتف صالح.";
 
 /* Title of the 'change phone number PIN' view. */
-"CHANGE_PHONE_NUMBER_PIN_EXPLANATION" = "Enter the PIN for the new phone number. This is different from your SMS verification code.";
+"CHANGE_PHONE_NUMBER_PIN_EXPLANATION" = "أَدخل رقم التعريف الشخصي لرقم الهاتف الجديد. هذا مختلف عن رمز التحقق عبر الرسالة القصيرة.";
 
 /* The incoming bubble text when setting a chat color. */
 "CHAT_COLOR_INCOMING_MESSAGE" = "إليك معاينة لون المحادثة.";
@@ -736,6 +757,9 @@
 /* Tooltip highlighting the auto chat color option. */
 "CHAT_COLORS_AUTO_TOOLTIP" = "وافِق تلقائيا اللون مع الخلفية";
 
+/* Title for the chat list's default mode. */
+"CHAT_LIST_TITLE_INBOX" = "المُحادثات";
+
 /* Title for the color & wallpaper settings view. */
 "COLOR_AND_WALLPAPER_SETTINGS_TITLE" = "لون المحادثة والخلفية";
 
@@ -764,7 +788,7 @@
 "COMPOSE_SCREEN_MISSING_CONTACTS_PERMISSION" = "يُمكِنُك مَنح حقّ الوُصُول إلى جِهات الاِتصال مِن خِلال تَطبيق إعدادات iOS لِرُؤيَة جِهات الاِتِّصال التي تَستخدِم Signal.";
 
 /* Configure reactions title text */
-"CONFIGURE_REACTIONS" = "Configure Reactions";
+"CONFIGURE_REACTIONS" = "ضبط ردود الفعل";
 
 /* No comment provided by engineer. */
 "CONFIRM_DELETE_DATA_TEXT" = "سَوفَ يُؤدِّي هَذَا إلى إعادة تَعيِين التَّطبيق عَن طَريق حَذف رَسائِلك. سَوفَ يَتِمّ إغلاق التَّطبيق بَعدَ اِكتِمال هَذِهِ العَمَليَّة.";
@@ -998,16 +1022,16 @@
 "CONVERSATION_DELETE_CONFIRMATION_ALERT_MESSAGE" = "ستُحذَف هذه المحادثة من هذا الجهاز.";
 
 /* Message for the 'conversations delete confirmation' alert for multiple messages. */
-"CONVERSATION_DELETE_CONFIRMATION_ALERT_MESSAGES" = "These chats will be deleted from this device.";
+"CONVERSATION_DELETE_CONFIRMATION_ALERT_MESSAGES" = "ستُحذَف هذه المحادثات من هذا الجهاز.";
 
 /* Title for the 'conversation delete confirmation' alert. */
 "CONVERSATION_DELETE_CONFIRMATION_ALERT_TITLE" = "حذف المحادثة ؟";
 
 /* Title for the 'conversations delete confirmation' alert for multiple messages. Embeds: {{ %@ the number of currently selected items }}. */
-"CONVERSATION_DELETE_CONFIRMATIONS_ALERT_TITLE" = "Delete %@ Chats?";
+"CONVERSATION_DELETE_CONFIRMATIONS_ALERT_TITLE" = "حذف %@ محادثات؟";
 
 /* Title for the 'conversation mute confirmation' alert. */
-"CONVERSATION_MUTE_CONFIRMATION_ALERT_TITLE" = "Mute this chat for...";
+"CONVERSATION_MUTE_CONFIRMATION_ALERT_TITLE" = "كتم المحادثة لمدّة...";
 
 /* 1 day */
 "CONVERSATION_MUTE_CONFIRMATION_OPTION_1D" = "يوم واحد";
@@ -1306,6 +1330,21 @@
 /* Tooltip highlighting the custom chat color controls. */
 "CUSTOM_CHAT_COLOR_SETTINGS_TOOLTIP" = "اسحب لتغيير اتجاه التدرج";
 
+/* Button to run the database integrity check */
+"DATABASE_INTEGRITY_CHECK_ACTION_RUN" = "Run";
+
+/* Message for alert before running a database integrity check */
+"DATABASE_INTEGRITY_CHECK_MESSAGE" = "This may take a while (several minutes or more) depending on how much you have used Signal. It is safe to close Signal if it is taking too long.";
+
+/* Button to save database integrity check results to the debug log */
+"DATABASE_INTEGRITY_CHECK_RESULTS_ACTION_LOG" = "Add to Debug Log";
+
+/* Title for alert after running a database integrity check */
+"DATABASE_INTEGRITY_CHECK_RESULTS_TITLE" = "Integrity check results";
+
+/* Title for alert before running a database integrity check */
+"DATABASE_INTEGRITY_CHECK_TITLE" = "Run database integrity check?";
+
 /* Subtitle shown while the app is updating its database. */
 "DATABASE_VIEW_OVERLAY_SUBTITLE" = "قد يستغرق ذلك بضع دقائق.";
 
@@ -1330,9 +1369,6 @@
 /* The day before today. */
 "DATE_YESTERDAY" = "البارِحة";
 
-/* Error indicating that the debug logs could not be copied. */
-"DEBUG_LOG_ALERT_COULD_NOT_COPY_LOGS" = "تعذّر نسخ السجلات.";
-
 /* Error indicating that the debug logs could not be packaged. */
 "DEBUG_LOG_ALERT_COULD_NOT_PACKAGE_LOGS" = "تعذّر جمع السجلات.";
 
@@ -1353,6 +1389,9 @@
 
 /* Label for the 'email debug log' option of the debug log alert. */
 "DEBUG_LOG_ALERT_OPTION_EMAIL" = "بَريد الدَّعم";
+
+/* Label for the 'Export Logs' fallback option for the alert when debug log uploading fails. */
+"DEBUG_LOG_ALERT_OPTION_EXPORT_LOG_ARCHIVE" = "تصدير السّجلات";
 
 /* Label for the 'send to self' option of the debug log alert. */
 "DEBUG_LOG_ALERT_OPTION_SEND_TO_SELF" = "إرسال لِنَفسِك";
@@ -1427,10 +1466,10 @@
 "DEREGISTRATION_WARNING" = "لم يعُد الجِّهاز مُسَجلاً. قَد يَكُونُ رَقم هاتفَك مُسجلاً بِواسِطَة Signal في جِهاز آخر. اُنقُر لإعادَة التَّسجيل.";
 
 /* {{Short Date}} when device last communicated with Signal Server. */
-"DEVICE_LAST_ACTIVE_AT_LABEL" = "آخِرُ نَشاط %@";
+"DEVICE_LAST_ACTIVE_AT_LABEL" = "آخر نشاط %@";
 
 /* {{Short Date}} when device was linked. */
-"DEVICE_LINKED_AT_LABEL" = "مُرتَبِط %@";
+"DEVICE_LINKED_AT_LABEL" = "مرتبط %@";
 
 /* Alert title that can occur when viewing device manager. */
 "DEVICE_LIST_UPDATE_FAILED_TITLE" = "فشل تحديث قائمة الأجهزة";
@@ -1480,7 +1519,7 @@
 /* A warning for the device transfer 'choice' view indicating you can only have one device registered with your number */
 "DEVICE_TRANSFER_CHOICE_WARNING" = "الاستمرار سوف يُعطل Signal على الأجهزة الأُخرى المُسجلة بنفس رقم الهاتف.";
 
-/* An error indicating that we were unable to verify the indentity of the new device to complete the transfer */
+/* An error indicating that we were unable to verify the identity of the new device to complete the transfer */
 "DEVICE_TRANSFER_ERROR_CERTIFICATE_MISMATCH" = "تعذَّر التَّحقُّق مِن جِهازك الجَديد، مِن فَضلِك حاوِل مُجددًا";
 
 /* An error indicating that something went wrong with the transfer and it could not complete */
@@ -1585,38 +1624,41 @@
 /* Section title for the 'domain fronting country' view. */
 "DOMAIN_FRONTING_COUNTRY_VIEW_SECTION_HEADER" = "مكان التحايل على الرقابة";
 
-/* Donation amount label for the donate to signal view */
-"DONATION_VIEW_AMOUNT_LABEL" = "مَبلَغ التَّبَرُّع";
+/* Section title for donation amount on receipts */
+"DONATION_RECEIPT_AMOUNT" = "المبلغ";
 
-/* Default text for the custom amount field of the donation view. */
-"DONATION_VIEW_CUSTOM_AMOUNT_PLACEHOLDER" = "إدخال مَبلَغ مُخَصَّص";
+/* Section title for donation date on receipts */
+"DONATION_RECEIPT_DATE_PAID" = "تاريخ الدفع";
+
+/* Title on the view where you can see a single receipt */
+"DONATION_RECEIPT_DETAILS" = "التفاصيل";
+
+/* Text on the button that exports the receipt */
+"DONATION_RECEIPT_EXPORT_RECEIPT_BUTTON" = "Share Receipt";
+
+/* Footer text at the bottom of donation receipts */
+"DONATION_RECEIPT_FOOTER" = "Thank you for supporting Signal. Your contribution helps fuel the mission of developing open source privacy technology that protects free expression and enables secure global communication for millions around the world. If you’re a resident of the United States, please retain this receipt for your tax records. Signal Technology Foundation is a tax-exempt nonprofit organization in the United States under section 501c3 of the Internal Revenue Code. Our Federal Tax ID is 82-4506840.";
+
+/* Title for one-time donation receipts */
+"DONATION_RECEIPT_ONE_TIME" = "مرة واحدة";
+
+/* Title for recurring donation receipts */
+"DONATION_RECEIPT_RECURRING" = "التكرار";
+
+/* Title on donation receipts */
+"DONATION_RECEIPT_TITLE" = "وصولات التبرعات";
+
+/* Section title for donation type on receipts */
+"DONATION_RECEIPT_TYPE" = "Type";
+
+/* Title of view where you can see all of your donation receipts, or button to take you there */
+"DONATION_RECEIPTS" = "وصولات التبرعات";
+
+/* Text at the bottom of the donation receipts list, telling users that receipts might not be available */
+"DONATION_RECEIPTS_MIGHT_BE_MISSING_IF_YOU_REINSTALLED" = "إذا أعدت تثبيت Signal، فلن تصبح وصولات التبرعات السابقة متاحة.";
 
 /* Text describing to the user that they're going to pay a donation to Signal */
 "DONATION_VIEW_DONATION_TO_SIGNAL" = "التَّبّرُّع لِـ Signal";
-
-/* Text explaining there are other ways to donate on the donation view. */
-"DONATION_VIEW_OTHER_WAYS" = "طُرُق أُخرَى لِلتَبرُّع";
-
-/* Error text notifying the user they must select a large amount on the donate to signal view */
-"DONATION_VIEW_SELECT_A_LARGER_AMOUNT" = "يُرجى تحديد مبلغ أكبر للتبرع به";
-
-/* Error text notifying the user they must select a smaller amount on the donate to signal view */
-"DONATION_VIEW_SELECT_A_SMALLER_AMOUNT" = "يُرجى تحديد مبلغ أصغر للتبرع به";
-
-/* Error text notifying the user they must select an amount on the donate to signal view */
-"DONATION_VIEW_SELECT_AN_AMOUNT" = "يُرجى تحديد مبلغ للتبرع به";
-
-/* Thank you message on the donate to signal view */
-"DONATION_VIEW_THANKS_FOR_YOUR_SUPPORT" = "نَشكُرُكَ لِدَعمِك!";
-
-/* Title for the donate to signal view */
-"DONATION_VIEW_TITLE" = "يُشغَّل Signal بِواسِطَة أشخاص مِثلَك.";
-
-/* The body of the 'Why Donate' section of the donate to signal view */
-"DONATION_VIEW_WHY_DONATE_BODY" = "يلتزم فريق عمل Signal بمهمة تطوير تكنولوجيا مفتوحة المصدر، والتي تحمي حق الحرية في التعبير وتقوم بتفعيل المواصلات العالمية بأمان. إن مساهمتك تحفز الوصول إلى هذه الغاية. وإننا لصارمون في ذلك : فلا نستخدم الإعلانات، ولا أي متعقبات لخصوصيتك.\n\nإن تبرعاتك هي التي تساعدنا على دفع أجور المطورين، وتكاليف الخوادم التي يستعملها الملايين من الناس عبر العالم لتوفير اتصالاتهم بكل الخصوصية، وبشكل فوري.";
-
-/* The title of the 'Why Donate' section of the donate to signal view */
-"DONATION_VIEW_WHY_DONATE_TITLE" = "لِماذا أتبرع؟";
 
 /* Alert body for when the user has just tried to edit a contacts after declining to give Signal contacts permissions */
 "EDIT_CONTACT_WITHOUT_CONTACTS_PERMISSION_ALERT_BODY" = "يُمكِنُك تمكين الوصول من خِلال تطبيق إعدادات iOS.";
@@ -1697,7 +1739,7 @@
 "END_CALL_RESPONDER_IS_BUSY" = "مشغول";
 
 /* Call setup status label */
-"END_CALL_UNCATEGORIZED_FAILURE" = "فشل الاتصال.";
+"END_CALL_UNCATEGORIZED_FAILURE" = "فَشِل الاتصال.";
 
 /* Error indicating that the phone's contacts could not be retrieved. */
 "ERROR_COULD_NOT_FETCH_CONTACTS" = "يتعذّر الوصول إلى جهات الاتصال.";
@@ -1772,19 +1814,19 @@
 "ERROR_MESSAGE_DECRYPTION_FAILURE_UNKNOWN_SENDER" = "لقد تعذر توصيل الرسالة";
 
 /* No comment provided by engineer. */
-"ERROR_MESSAGE_DUPLICATE_MESSAGE" = "لقد تلقيت رسالة مُكرّرة.";
+"ERROR_MESSAGE_DUPLICATE_MESSAGE" = "تلقيت رسالة مكررة.";
 
 /* No comment provided by engineer. */
-"ERROR_MESSAGE_INVALID_KEY_EXCEPTION" = "المفتاح الخاص بالمُستلم غير صالح.";
+"ERROR_MESSAGE_INVALID_KEY_EXCEPTION" = "مفتاح المستلِم غير صالح.";
 
 /* No comment provided by engineer. */
-"ERROR_MESSAGE_INVALID_MESSAGE" = "الرسالة المُستلمة كانت غير متزامنة.";
+"ERROR_MESSAGE_INVALID_MESSAGE" = "الرسالة المستلمة لم تكن متزامنة.";
 
 /* No comment provided by engineer. */
-"ERROR_MESSAGE_INVALID_VERSION" = "تلقيت رسالة غير مُتوافقة مع هذا الإصدار.";
+"ERROR_MESSAGE_INVALID_VERSION" = "تلقيت رسالة غير متوافقة مع هذا الإصدار.";
 
 /* No comment provided by engineer. */
-"ERROR_MESSAGE_NO_SESSION" = "لا توجد جلسة مُتاحة للتواصل.";
+"ERROR_MESSAGE_NO_SESSION" = "لا توجد جلسة متاحة للتواصل.";
 
 /* Shown when signal users safety numbers changed */
 "ERROR_MESSAGE_NON_BLOCKING_IDENTITY_CHANGE" = "تمّ تغيير رقم اﻷمان.";
@@ -1796,10 +1838,10 @@
 "ERROR_MESSAGE_SESSION_REFRESH" = "تمَّ إنعاش جلسة المحادثة";
 
 /* No comment provided by engineer. */
-"ERROR_MESSAGE_UNKNOWN_ERROR" = "حدث خلل مجهول.";
+"ERROR_MESSAGE_UNKNOWN_ERROR" = "حدث خطأ مجهول.";
 
 /* No comment provided by engineer. */
-"ERROR_MESSAGE_WRONG_TRUSTED_IDENTITY_KEY" = "تمّ تغيير رقم اﻷمان.";
+"ERROR_MESSAGE_WRONG_TRUSTED_IDENTITY_KEY" = "تغيَّر رقم اﻷمان.";
 
 /* Error indicating network connectivity problems. */
 "ERROR_NETWORK_FAILURE" = "خلل في الشبكة";
@@ -1984,10 +2026,10 @@
 /* Title for alert explaining that a group call participant is blocked. Embeds {{ user's name }} */
 "GROUP_CALL_BLOCKED_ALERT_TITLE_FORMAT" = "تم حَظر %@";
 
-/* Message for eror alert indicating that only group administrators can start calls in announcement-only groups. */
+/* Message for error alert indicating that only group administrators can start calls in announcement-only groups. */
 "GROUP_CALL_BLOCKED_BY_ANNOUNCEMENT_ONLY_MESSAGE" = "يمكنك للمشرفين على المجموعة فقط بدء المكالمات.";
 
-/* Title for eror alert indicating that only group administrators can start calls in announcement-only groups. */
+/* Title for error alert indicating that only group administrators can start calls in announcement-only groups. */
 "GROUP_CALL_BLOCKED_BY_ANNOUNCEMENT_ONLY_TITLE" = "تعذر بدء المكالمة الجماعية";
 
 /* String displayed in group call grid cell when a user is blocked. Embeds {user's name} */
@@ -2260,6 +2302,9 @@
 /* Message indicating that 'announcement-only' mode was enabled by a remote user. Embeds {{ user who enabled 'announcement-only' mode }}. */
 "GROUP_IS_ANNOUNCEMENT_ONLY_ENABLED_BY_REMOTE_USER_FORMAT" = "لقد غيَّر العضو %@ إعدادات المجموعة للسماح للمشرفين فقط بإرسال الرسائل.";
 
+/* Subtitle indicating that the local user has been blocked from joining the group */
+"GROUP_LINK_ACTION_SHEET_VIEW_BLOCKED_FROM_JOINING_SUBTITLE" = "لا يمكنك الانضمام لهذه المجموعة من خلال الرابط لأن أحد المشرفين أزالك.";
+
 /* Subtitle indicating that the group invite link has expired in the 'group invite link' action sheet. */
 "GROUP_LINK_ACTION_SHEET_VIEW_EXPIRED_LINK_SUBTITLE" = "لم يعُد رابط المجموعة هذا صالحاً.";
 
@@ -2404,7 +2449,7 @@
 /* Message indicating that the local user was removed from the group by an unknown user. */
 "GROUP_LOCAL_USER_REMOVED_BY_UNKNOWN_USER" = "أُزلتَ من المجموعة.";
 
-/* Message indicating that the local user's request to join the group was approved by another user. Embeds {{ %@ the name of the user who approved the reuqest }}. */
+/* Message indicating that the local user's request to join the group was approved by another user. Embeds {{ %@ the name of the user who approved the request }}. */
 "GROUP_LOCAL_USER_REQUEST_APPROVED_BY_REMOTE_USER_FORMAT" = "لَقَد وافق %@ على طلب انضمامك إلى المجموعة.";
 
 /* Message indicating that the local user cancelled their request to join the group. */
@@ -2599,8 +2644,11 @@
 /* The title for the 'group requests and invites' view. */
 "GROUP_REQUESTS_AND_INVITES_VIEW_TITLE" = "الطلبات و الدعوات";
 
+/* Name for a group story on the stories list. Embeds {author's name}, {group name} */
+"GROUP_STORY_NAME_FORMAT" = "%1$@ إلى %2$@";
+
 /* Info message indicating that the group was updated by an unknown user. */
-"GROUP_UPDATED" = "تمَّ تحديث المجموعة.";
+"GROUP_UPDATED" = "تم تحديث المجموعة.";
 
 /* Message indicating that the group's avatar was removed. */
 "GROUP_UPDATED_AVATAR_REMOVED" = "تمَّ إزالة صورة المجموعة.";
@@ -2684,7 +2732,7 @@
 "GROUP_WAS_MIGRATED_USERS_INVITED_N_FORMAT" = "تعذّر إضافة عدد %@ عضو إلى المجموعة الجديدة وقد تم دعوتهم للانضمام.";
 
 /* Message indicating that the local user left the group. */
-"GROUP_YOU_LEFT" = "أنت قد غادرت المجموعة.";
+"GROUP_YOU_LEFT" = "غادرتَ المجموعة.";
 
 /* Label for group administrators in the 'announcement-only' group UI. */
 "GROUPS_ANNOUNCEMENT_ONLY_ADMINISTRATORS" = "المُشرِفون";
@@ -2941,14 +2989,11 @@
 /* Title for the conversation list's 'archive' mode. */
 "HOME_VIEW_TITLE_ARCHIVE" = "الأرشيف";
 
-/* Title for the conversation list's default mode. */
-"HOME_VIEW_TITLE_INBOX" = "Signal";
+/* Title for the 'Select Chats' option in the ChatList. */
+"HOME_VIEW_TITLE_SELECT_CHATS" = "تحديد المحادثات";
 
-/* Title for the 'Select Chats' option in the HomeView. */
-"HOME_VIEW_TITLE_SELECT_CHATS" = "Select Chats";
-
-/* Title 'Read All' button in the toolbar of the homeview if multi-section is active. */
-"HOME_VIEW_TOOLBAR_READ_ALL" = "Read All";
+/* Title 'Read All' button in the toolbar of the ChatList if multi-section is active. */
+"HOME_VIEW_TOOLBAR_READ_ALL" = "قراءة الكل";
 
 /* The image editor hint that you can draw blur */
 "IMAGE_EDITOR_BLUR_HINT" = "ارسم في أي مكان للتضبيب";
@@ -2975,7 +3020,7 @@
 "IMAGE_PICKER_FAILED_TO_PROCESS_ATTACHMENTS" = "فشل في تحديد المُرفق.";
 
 /* Call setup status label */
-"IN_CALL_CONNECTING" = "يَجري الاتصال…";
+"IN_CALL_CONNECTING" = "جارِ الربط…";
 
 /* Call screen label when call was canceled on this device because the call recipient answered on another device. */
 "IN_CALL_ENDED_BECAUSE_ANSWERED_ELSEWHERE" = "تمت الإجابة عليه من جهاز آخر.";
@@ -2999,7 +3044,7 @@
 "IN_CALL_RINGING_VIDEO" = "مُكالمة فيديو...";
 
 /* Call setup status label */
-"IN_CALL_SECURING" = "تمّت الإجابة. جار التأمين...";
+"IN_CALL_SECURING" = "تم الرّد. جارِ التأمين...";
 
 /* Call setup status label */
 "IN_CALL_TERMINATED" = "انتهت المكالمة.";
@@ -3017,7 +3062,7 @@
 "INFO_MESSAGE_SYNCED_THREAD" = "يُمكنك إرسال أو استقبال رسائل متزامنة من هاتفك أو من iPad.\nحفاظًا على أمانك ، لا يتم نقل محفوظات المُحادثة إلى الأجهزة المُرتبطة الجديدة.";
 
 /* Indicates that another user has changed their phone number. Embeds: {{ the user's name}} */
-"INFO_MESSAGE_USER_CHANGED_PHONE_NUMBER_FORMAT" = "%@ changed their phone number.";
+"INFO_MESSAGE_USER_CHANGED_PHONE_NUMBER_FORMAT" = "%@ غيَّرَ رقم هاتفِه.";
 
 /* Shown in inbox and conversation when a user joins Signal, embeds the new user's {{contact name}} */
 "INFO_MESSAGE_USER_JOINED_SIGNAL_BODY_FORMAT" = "إنَّ %@ مُتواجدٌ على Signal!";
@@ -3101,7 +3146,7 @@
 "LEARN_MORE" = "أعرف المزيد";
 
 /* Confirmation button within contextual alert */
-"LEAVE_BUTTON_TITLE" = "غادِر";
+"LEAVE_BUTTON_TITLE" = "مغادرة";
 
 /* table cell label in conversation settings */
 "LEAVE_GROUP_ACTION" = "مُغادرة المجموعة";
@@ -3116,7 +3161,7 @@
 "LINK_DEVICE_INVALID_CODE_TITLE" = "فشل ربط الجهاز";
 
 /* confirm the users intent to link a new device */
-"LINK_DEVICE_PERMISSION_ALERT_BODY" = "هذا الجهاز سوف يتمكن من رؤية مجموعاتك وجهات اتصالك، الوصول إلى محادثاتك وإرسال الرسائل باسمك.";
+"LINK_DEVICE_PERMISSION_ALERT_BODY" = "سيتمكن هذا الجهاز من رؤية مجموعاتك وجهات اتصالك، والوصول إلى محادثاتك، وإرسال الرسائل باسمك.";
 
 /* confirm the users intent to link a new device */
 "LINK_DEVICE_PERMISSION_ALERT_TITLE" = "ربط هذا الجهاز؟";
@@ -3125,10 +3170,10 @@
 "LINK_DEVICE_RESTART" = "إعادة المُحاولة";
 
 /* QR Scanning screen instructions, placed alongside a camera view for scanning QR Codes */
-"LINK_DEVICE_SCANNING_INSTRUCTIONS" = "اِمسَح رَمز الاِستِجابَة السّريعَة الظَّاهِر عَلَى الجِهاز الَّذي تُريدُ رَبطَه.";
+"LINK_DEVICE_SCANNING_INSTRUCTIONS" = "امسح رمز الاستجابة السريعة المعروض على الجهاز الذي تريد ربطه.";
 
 /* Subheading for 'Link New Device' navigation */
-"LINK_NEW_DEVICE_SUBTITLE" = "اِمسَح رَمزَ الاِستِجابَةِ السَّريعَة لِرَبطِ جِهَازٍ جَديد.";
+"LINK_NEW_DEVICE_SUBTITLE" = "امسح رمز الاستجابة السريعة لربط جهاز جديد.";
 
 /* Navigation title when scanning QR code to add new device. */
 "LINK_NEW_DEVICE_TITLE" = "ربط جهاز جديد";
@@ -3137,7 +3182,7 @@
 "LINK_PREVIEW_UNKNOWN_DOMAIN" = "مُعاينة الرابط";
 
 /* Menu item and navbar title for the device manager */
-"LINKED_DEVICES_TITLE" = "اﻷجهزة المُرتبطة";
+"LINKED_DEVICES_TITLE" = "اﻷجهزة المرتبطة";
 
 /* Alert Title */
 "LINKING_DEVICE_FAILED_TITLE" = "فشل ربط الجهاز";
@@ -3293,7 +3338,7 @@
 "MESSAGE_APPROVAL_DIALOG_TITLE" = "رسالة";
 
 /* Title for the compose view. */
-"MESSAGE_COMPOSEVIEW_TITLE" = "رِسالة جديدة";
+"MESSAGE_COMPOSEVIEW_TITLE" = "رسالة جديدة";
 
 /* Toast indicating that the user has copied the sent timestamp. */
 "MESSAGE_DETAIL_VIEW_DID_COPY_SENT_TIMESTAMP" = "تمَّ نسخ وقت الإرسال";
@@ -3524,7 +3569,7 @@
 "MESSAGES_VIEW_UNREAD_INDICATOR" = "رَسائل جديدة";
 
 /* info message text in conversation view */
-"MISSED_CALL" = "مُكالمة فائتة";
+"MISSED_CALL" = "مكالمة فائتة";
 
 /* Alert body */
 "MISSING_CAMERA_PERMISSION_MESSAGE" = "يُمكنك إتاحة الوصول إلى الكاميرا من خلال تطبيق إعدادات iOS للقيام بمكالمة فيديو في Signal.";
@@ -3548,10 +3593,10 @@
 "MISSING_VALUE" = "لا شيء ";
 
 /* alert title: cannot link - reached max linked devices */
-"MULTIDEVICE_PAIRING_MAX_DESC" = "لا يمكنك ربط أي أجهزة أُخرى إضافية.";
+"MULTIDEVICE_PAIRING_MAX_DESC" = "لا يمكنك ربط المزيد من الأجهزة.";
 
 /* alert body: cannot link - reached max linked devices */
-"MULTIDEVICE_PAIRING_MAX_RECOVERY" = "لقد وصلتَ للحد الأقصى المسموح به للأجهزة المُرتبطة بحسابك حالياً. يُرجى إزالة أحد الأجهزة ثم المُحاولة مرة أُخرى.";
+"MULTIDEVICE_PAIRING_MAX_RECOVERY" = "بلغت الحد الأقصى لِما يمكنك ربطه من أجهزة بحسابك. فضلًا أزل جهازًا وحاول مجددًا.";
 
 /* Badge indicating that the user is muted. */
 "MUTED_BADGE" = "مكتوم";
@@ -3563,7 +3608,7 @@
 "NAVIGATION_ITEM_SKIP_BUTTON" = "تخطي";
 
 /* No comment provided by engineer. */
-"NETWORK_ERROR_RECOVERY" = "يُرجى التأكد من اتصالك بالانترنت ثم حاول مرة أُخرى.";
+"NETWORK_ERROR_RECOVERY" = "فضلًا تأكد من اتصالك بالإنترنت وحاول مجددًا.";
 
 /* String representing only the cellular interface */
 "NETWORK_INTERFACE_SET_CELLULAR" = "الخلوية فقط";
@@ -3581,7 +3626,7 @@
 "NEW_CONVERSATION_FIND_BY_PHONE_NUMBER" = "إيجاد عن طريق رقم الهاتف";
 
 /* The title for the 'select members for new group' view if already one member is selected. */
-"NEW_GROUP_1_MEMBERS_VIEW_TITLE" = "1 Member";
+"NEW_GROUP_1_MEMBERS_VIEW_TITLE" = "عضو واحد";
 
 /* Label for the 'create new group' button. */
 "NEW_GROUP_BUTTON" = "مجموعة جديدة";
@@ -3692,10 +3737,10 @@
 "NOTIFICATION_PERMISSION_REMINDER_MEGAPHONE_TITLE" = "تفعيل الإشعارات؟";
 
 /* No comment provided by engineer. */
-"NOTIFICATIONS_FOOTER_WARNING" = "تتضمن الإجراءات \"تعليم كمقروء\"، \"الرَّدّ\"، و \"إعادة الاتِّصال.\"";
+"NOTIFICATIONS_FOOTER_WARNING" = "تتضمن الإجراءات \"مقروءة\"، \"رد\"، و \"إعادة الاتصال.\"";
 
 /* No comment provided by engineer. */
-"NOTIFICATIONS_NONE" = "لا اسم ولا مُحتوى";
+"NOTIFICATIONS_NONE" = "لا اسم ولا محتوى";
 
 /* Table cell switch label. When disabled, Signal will not play notification sounds while the app is in the foreground. */
 "NOTIFICATIONS_SECTION_INAPP" = "التشغيل أثناء فتح التطبيق";
@@ -3704,10 +3749,10 @@
 "NOTIFICATIONS_SECTION_SOUNDS_ADD_CUSTOM_SOUND" = "إضافة صوت مُخصصة…";
 
 /* No comment provided by engineer. */
-"NOTIFICATIONS_SENDER_AND_MESSAGE" = "الاِسم، المُحتَوَى والإجراءات";
+"NOTIFICATIONS_SENDER_AND_MESSAGE" = "الاسم، المحتوى، والإجراءات";
 
 /* No comment provided by engineer. */
-"NOTIFICATIONS_SENDER_ONLY" = "الاِسمُ فَقَط";
+"NOTIFICATIONS_SENDER_ONLY" = "الاسم فقط";
 
 /* No comment provided by engineer. */
 "NOTIFICATIONS_SHOW" = "إظهار";
@@ -4280,10 +4325,10 @@
 "PIN_ACTION" = "تثبيت";
 
 /* Error body indicating that the attempt to change a PIN failed. */
-"PIN_CHANGE_ERROR_MESSAGE" = "Couldn't create your new PIN. Your existing PIN has been disabled. Check your connection and try again.";
+"PIN_CHANGE_ERROR_MESSAGE" = "تعذر إنشاء رقم تعريفك الشخصي الجديد. عُطِّل رقم تعريفك الشخصي الحالي. تحقق من اتصالك وحاول مجددًا.";
 
 /* Error title indicating that the attempt to change a PIN failed. */
-"PIN_CHANGE_ERROR_TITLE" = "PIN Change Failed";
+"PIN_CHANGE_ERROR_TITLE" = "فشل تغيير رقم التعريف الشخصي";
 
 /* Label indicating the user must use at least 4 characters */
 "PIN_CREATION_ALPHANUMERIC_HINT" = "الـPIN يجب أن يحوي اربعة رموز على الأقل";
@@ -4328,10 +4373,10 @@
 "PIN_CREATION_MISMATCH_ERROR" = "الـPIN غير مُطابق. حاول مرة أُخرى.";
 
 /* Error body indicating that the attempt to create a PIN failed due to network issues. */
-"PIN_CREATION_NO_NETWORK_ERROR_MESSAGE" = "Check your connection and try again.";
+"PIN_CREATION_NO_NETWORK_ERROR_MESSAGE" = "تحقق من اتصالك بالشبكة ثم حاول مجددًا.";
 
 /* Error title indicating that the attempt to create a PIN failed due to network issues. */
-"PIN_CREATION_NO_NETWORK_ERROR_TITLE" = "No Network Connection";
+"PIN_CREATION_NO_NETWORK_ERROR_TITLE" = "لا يوجد اتصال بالشبكة";
 
 /* Label indicating the user must use at least 4 digits */
 "PIN_CREATION_NUMERIC_HINT" = "الـPIN يجب أن يحوي اربعة ارقام على الأقل";
@@ -4345,9 +4390,6 @@
 /* The re-creation explanation in the 'pin creation' view. */
 "PIN_CREATION_RECREATION_EXPLANATION" = "يُمكنك تغيير الـPIN الخاص بك طالما أن هذا الجهاز مُسجّل.";
 
-/* Title of the 'pin creation' recreation view. */
-"PIN_CREATION_RECREATION_TITLE" = "تغيير الـPIN الخاص بك";
-
 /* Action of the 'pin disable' reglock action sheet. */
 "PIN_CREATION_REGLOCK_CONFIRMATION_ACTION" = "تعطيل";
 
@@ -4358,10 +4400,10 @@
 "PIN_CREATION_REGLOCK_CONFIRMATION_TITLE" = "هل تُريد تعطيل قفل التسجيل؟";
 
 /* Error body indicating that the attempt to create a PIN succeeded but enabling reglock failed. */
-"PIN_CREATION_REGLOCK_ERROR_MESSAGE" = "PIN creation succeeded, but registration lock could not be enabled. Check your connection and try again.";
+"PIN_CREATION_REGLOCK_ERROR_MESSAGE" = "أُنشئَ رقم التعريف الشخصي بنجاح، لكن قفل التسجيل تعذر تفعيله. تحقق من اتصالك وحاول مجددًا.";
 
 /* Error title indicating that the attempt to create a PIN succeeded but enabling reglock failed. */
-"PIN_CREATION_REGLOCK_ERROR_TITLE" = "Enable Registration Lock Failed";
+"PIN_CREATION_REGLOCK_ERROR_TITLE" = "فشل تفعيل قفل التسجيل";
 
 /* Skip action on the pin creation view */
 "PIN_CREATION_SKIP" = "تعطيل الـPIN";
@@ -4382,7 +4424,7 @@
 "PIN_RECREATION_ERROR_TITLE" = "فشل إنشاء الـPIN";
 
 /* Error body indicating that the attempt to recreate a PIN failed. */
-"PIN_RECRETION_ERROR_MESSAGE" = "Couldn’t create your PIN. Check your connection and try again.";
+"PIN_RECRETION_ERROR_MESSAGE" = "تعذر إنشاء رقم التعريف الشخصي. تحقق من اتصالك وحاول مجددًا. ";
 
 /* The explanation for the 'pin reminder' dialog. */
 "PIN_REMINDER_EXPLANATION" = "لمُساعدتك في حفظ الـPIN الخاص بك، سوف نسألك لإدخاله من حين لآخر. سنسألك عنه بشكل أقل مع مرور الزمن.";
@@ -4430,7 +4472,7 @@
 "PINS_MEGAPHONE_ACTION" = "إنشاء PIN";
 
 /* Body for PIN megaphone when user doesn't have a PIN */
-"PINS_MEGAPHONE_BODY" = "Finish creating your Signal PIN.";
+"PINS_MEGAPHONE_BODY" = "أتمِم إنشاء رقم التعريف لـ Signal.";
 
 /* Toast indication that the user will be reminded later to setup their PIN. Embeds {{time until mandatory}} */
 "PINS_MEGAPHONE_SNOOZE_TOAST_FORMAT" = "سنُذكرك لاحقًا. سيُصبح إنشاء PIN إلزاميًا في غُضون عدد %ld يوم.";
@@ -4574,7 +4616,7 @@
 "PUSH_MANAGER_REACT_WITH_THUMBS_UP" = "👍";
 
 /* Notification action button title */
-"PUSH_MANAGER_REPLY" = "الرَّدّ";
+"PUSH_MANAGER_REPLY" = "رد";
 
 /* Title of alert shown when push tokens sync job succeeds. */
 "PUSH_REGISTER_SUCCESS" = "تمَّت إعادة الاشتراك بنجاح في الإشعارات اللحظية.";
@@ -4596,6 +4638,15 @@
 
 /* Toast alert text shown when tapping on a quoted message which we cannot scroll to because the local copy of the message didn't exist when the quote was received. */
 "QUOTED_REPLY_ORIGINAL_MESSAGE_REMOTELY_SOURCED" = "لم يُعثَر على الرسالة الأصلية.";
+
+/* Header label that appears above quoted messages when the quoted content was includes a reaction to your own story. */
+"QUOTED_REPLY_REACTION_TO_OWN_STORY" = "التفاعلات مع قصتك";
+
+/* Header label that appears above quoted messages when the quoted content was includes a reaction to a story. Embeds {{ story author name }} */
+"QUOTED_REPLY_REACTION_TO_STORY_FORMAT" = "Reacted to %@’s story";
+
+/* Message header when you are quoting a story. Embeds {{ story author name }} */
+"QUOTED_REPLY_STORY_AUTHOR_INDICATOR_FORMAT" = "%@ · Story";
 
 /* Indicates this message is a quoted reply to an attachment of unknown type. */
 "QUOTED_REPLY_TYPE_ATTACHMENT" = "مُرفق";
@@ -4703,10 +4754,10 @@
 "REGISTER_2FA_SUBMIT_BUTTON" = "تسليم";
 
 /* No comment provided by engineer. */
-"REGISTER_CONTACTS_WELCOME" = "مَرحبًا!";
+"REGISTER_CONTACTS_WELCOME" = "مرحبًا!";
 
 /* action sheet body */
-"REGISTER_RATE_LIMITING_BODY" = "أنتَ قد حاولتَ كثيرًا. يُرجى الانتظار لمُدة دقيقة واحدة قبل المُحاولة مرة أُخرى.";
+"REGISTER_RATE_LIMITING_BODY" = "حاولت كثيرًا. فضلًا انتظر دقيقة واحدة قبل إعادة المحاولة.";
 
 /* No comment provided by engineer. */
 "REGISTER_RATE_LIMITING_ERROR" = "أنتَ قد حاولتَ كثيرًا. يُرجى الانتظار لمُدة دقيقة واحدة قبل المُحاولة مرة أُخرى.";
@@ -4733,13 +4784,13 @@
 "REGISTRATION_ERROR_NETWORK_FAILURE_ALERT_TITLE" = "تأكَّد مِنَ الاِتِّصال";
 
 /* No comment provided by engineer. */
-"REGISTRATION_NON_VALID_NUMBER" = "تنسيق رقم هذا الهاتف غير مدعوم، يُرجى التواصُل مع الدَّعم.";
+"REGISTRATION_NON_VALID_NUMBER" = "صيغة رقم الهاتف هذه غير مدعومة، فضلًا تواصل مع الدعم.";
 
 /* Label for the phone number textfield */
 "REGISTRATION_PHONENUMBER_BUTTON" = "رقم الهاتف";
 
 /* No comment provided by engineer. */
-"REGISTRATION_RESTRICTED_MESSAGE" = "تحتاج إلى التسجيل قبل أن تتمكن من إرسال رسالة.";
+"REGISTRATION_RESTRICTED_MESSAGE" = "يجب عليك التسجيل قبل أن تتمكن من إرسال رسالة.";
 
 /* Error message indicating that device transfer from another device might be possible. */
 "REGISTRATION_TRANSFER_AVAILABLE_DESCRIPTION" = "هناك مسبقا حساب مسجل برقم الهاتف هذا، والذي هو متاح للنقل.";
@@ -4781,7 +4832,7 @@
 "REJECT_CALL_BUTTON_TITLE" = "رفض";
 
 /* No comment provided by engineer. */
-"RELAY_REGISTERED_ERROR_RECOVERY" = "إنَّ رقم الهاتف الذي تُحاول تسجيله قد تمَّ تسجيله بالفعل على خادم آخر, يُرجى إلغاء التسجيل من هُناك ثم حاول مرة أُخرى.";
+"RELAY_REGISTERED_ERROR_RECOVERY" = "رقم الهاتف الذي تحاول تسجيله سُجِّل مسبقًا على خادم آخر, فضلًا ألغ التسجيل من هناك وحاول مجددًا.";
 
 /* Accessibility label for a button that removes the preview from a drafted message. */
 "REMOVE_PREVIEW" = "إزالة المعاينة";
@@ -5003,7 +5054,7 @@
 "SEARCH_BY_NAME_OR_USERNAME_OR_NUMBER_PLACEHOLDER_TEXT" = "اسم، اسم مُستخدم، أو رقم";
 
 /* Placeholder text indicating the user can search for contacts by name or phone number. */
-"SEARCH_BYNAMEORNUMBER_PLACEHOLDER_TEXT" = "البحث باستخدام الاسم أو الرقم";
+"SEARCH_BYNAMEORNUMBER_PLACEHOLDER_TEXT" = "البحث بالاسم أو الرقم";
 
 /* placeholder text in an empty search field */
 "SEARCH_FIELD_PLACE_HOLDER_TEXT" = "البحث";
@@ -5084,7 +5135,7 @@
 "SECONDARY_TRANSFER_GET_STARTED_BY_OPENING_IPAD" = "شَغِّل Signal على جهاز الـiPad القديم الخاص بك لكي تنقل الحساب الخاص بك";
 
 /* No comment provided by engineer. */
-"SECURE_SESSION_RESET" = "لقد تمَّ إعادة تعيين الجلسة الآمنة.";
+"SECURE_SESSION_RESET" = "أُعيدَ ضبط الجلسة الآمنة.";
 
 /* Label for the 'see all' button. */
 "SEE_ALL_BUTTON" = "إظهارُ الجَميع";
@@ -5109,9 +5160,6 @@
 
 /* alert action when the user decides not to cancel the media flow after all. */
 "SEND_MEDIA_RETURN_TO_CAMERA" = "العودة إلى الكاميرا";
-
-/* alert action when the user decides not to cancel the media flow after all. */
-"SEND_MEDIA_RETURN_TO_MEDIA_LIBRARY" = "العودة إلى مكتبة الوسائط";
 
 /* No comment provided by engineer. */
 "SEND_SMS_CONFIRM_TITLE" = "دعوة صديق عبر رسالة SMS غير الآمنة؟";
@@ -5222,19 +5270,19 @@
 "SETTINGS_CALLING_HIDES_IP_ADDRESS_PREFERENCE_TITLE_DETAIL" = "إعادة توجيه جميع المُكالمات عبر خوادم Signal لتفادي الكشف عن عنوان الـIP  الخاص بك لجهة اتصالك. تفعيل هذه الميزة سوف يُقلل من جودة المُكالمة.";
 
 /* Label for the 'edit phone number' button in the 'change phone number' views. */
-"SETTINGS_CHANGE_PHONE_NUMBER_BACK_TO_EDIT_BUTTON" = "Edit Number";
+"SETTINGS_CHANGE_PHONE_NUMBER_BACK_TO_EDIT_BUTTON" = "تعديل الرقم";
 
 /* Label for button in settings views to change phone number */
-"SETTINGS_CHANGE_PHONE_NUMBER_BUTTON" = "Change Phone Number";
+"SETTINGS_CHANGE_PHONE_NUMBER_BUTTON" = "تغيير رقم الهاتف";
 
 /* Message indicating that 'change phone number' was successful. Embeds: {{ the user's new phone number }} */
-"SETTINGS_CHANGE_PHONE_NUMBER_CHANGE_SUCCESSFUL_FORMAT" = "Your phone number has been changed to %@";
+"SETTINGS_CHANGE_PHONE_NUMBER_CHANGE_SUCCESSFUL_FORMAT" = "رقم هاتفك أصبح %@";
 
 /* Label for the 'confirm change phone number' button in the 'change phone number' views. */
 "SETTINGS_CHANGE_PHONE_NUMBER_CONFIRM_BUTTON" = "تغيير الرقم";
 
 /* Format for the description text in the 'change phone number splash' view. Embeds: {{ %1$@ the old phone number, %2$@ the new phone number }}. */
-"SETTINGS_CHANGE_PHONE_NUMBER_CONFIRM_DESCRIPTION_FORMAT" = "You are about to change your phone number from %1$@ to %2$@.\n\nBefore proceeding, please verify that the below number is correct.";
+"SETTINGS_CHANGE_PHONE_NUMBER_CONFIRM_DESCRIPTION_FORMAT" = "تُوشِك على تغيير رقم هاتفك من %1$@ إلى %2$@.\n\nقبل الإستمرار, يُرجى التحقق من صحّة الرقم أدناه.";
 
 /* Label for the 'country code' row in the 'change phone number' settings. */
 "SETTINGS_CHANGE_PHONE_NUMBER_COUNTRY_CODE_FIELD" = "رمز البلد";
@@ -5246,22 +5294,22 @@
 "SETTINGS_CHANGE_PHONE_NUMBER_EXAMPLE_PHONE_NUMBER_FORMAT" = "مِثال: %@";
 
 /* Title for the 'new phone number' section in the 'change phone number' settings. */
-"SETTINGS_CHANGE_PHONE_NUMBER_NEW_PHONE_NUMBER_SECTION_TITLE" = "Your New Number";
+"SETTINGS_CHANGE_PHONE_NUMBER_NEW_PHONE_NUMBER_SECTION_TITLE" = "رقمك الجديد";
 
 /* Title for the 'old phone number' section in the 'change phone number' settings. */
-"SETTINGS_CHANGE_PHONE_NUMBER_OLD_PHONE_NUMBER_SECTION_TITLE" = "Your Old Number";
+"SETTINGS_CHANGE_PHONE_NUMBER_OLD_PHONE_NUMBER_SECTION_TITLE" = "رقمك القديم";
 
 /* Label for the 'country code' row in the 'change phone number' settings. */
 "SETTINGS_CHANGE_PHONE_NUMBER_PHONE_NUMBER_FIELD" = "رقم الهاتف";
 
 /* Format for the 'change phone number' progress view. Embeds: {{ the user's new phone number }}. */
-"SETTINGS_CHANGE_PHONE_NUMBER_PROGRESS_FORMAT" = "Verifying %@";
+"SETTINGS_CHANGE_PHONE_NUMBER_PROGRESS_FORMAT" = "جاري التحقق من %@";
 
 /* Description text in the 'change phone number splash' view. */
-"SETTINGS_CHANGE_PHONE_NUMBER_SPLASH_DESCRIPTION" = "Use this to change your current phone number to a new phone number. You can’t undo this change.\n\nBefore continuing, make sure your new number can receive SMS or calls.";
+"SETTINGS_CHANGE_PHONE_NUMBER_SPLASH_DESCRIPTION" = "يمكنك تغيير رقم هاتفك الحالي برقم جديد. لا يمكن التراجع عن هذا الإجراء.\n\nقبل الاستمرار, تأكد أن رقمك الجديد يمكنه تلقي الرسائل القصيرة أو المكالمات.";
 
 /* Title text in the 'change phone number splash' view. */
-"SETTINGS_CHANGE_PHONE_NUMBER_SPLASH_TITLE" = "Change Phone Number";
+"SETTINGS_CHANGE_PHONE_NUMBER_SPLASH_TITLE" = "تغيير رقم الهاتف";
 
 /* Title for the 'change phone number' views in settings. */
 "SETTINGS_CHANGE_PHONE_NUMBER_VIEW_TITLE" = "تغيير الرقم";
@@ -5270,10 +5318,10 @@
 "SETTINGS_CHATS" = "المُحادثات";
 
 /* No comment provided by engineer. */
-"SETTINGS_CLEAR_HISTORY" = "مَحوُ تاريخ المُحادثة";
+"SETTINGS_CLEAR_HISTORY" = "مسح تاريخ المحادثات";
 
 /* Footer for the 'about' help section */
-"SETTINGS_COPYRIGHT" = "الحُقوق Signal Messenger\nمُرخَّص بِمُوجَب الـ GPLv3";
+"SETTINGS_COPYRIGHT" = "حقوق النشر Signal Messenger\nمُرخَّص بِمُوجَب الـ GPLv3";
 
 /* Title for the 'Subscription' link in settings. */
 "SETTINGS_CURRENT_SUBSCRIPTION" = "الاشتراك";
@@ -5333,7 +5381,7 @@
 "SETTINGS_DELETE_DATA_BUTTON" = "حذف كافة البيانات";
 
 /* Alert message before user confirms clearing history */
-"SETTINGS_DELETE_HISTORYLOG_CONFIRMATION" = "هل أنت مُتأكد من أنّكَ تُريد حذف كُل التأريخ (الرسائل، المُرفقات، المُكالمات، إلخ.)؟ إنَّ هذا إجراء لا يُمكن التراجُع عنه.";
+"SETTINGS_DELETE_HISTORYLOG_CONFIRMATION" = "هل أنت متأكد من أنك تريد حذف كل التاريخ (الرسائل، المرفقات، المكالمات، إلخ.)؟ لا يمكن التراجع عن هذا الإجراء.";
 
 /* Confirmation text for button which deletes all message, calling, attachments, etc. */
 "SETTINGS_DELETE_HISTORYLOG_CONFIRMATION_BUTTON" = "حذف كل شيء";
@@ -5352,9 +5400,6 @@
 
 /* Settings table view cell label */
 "SETTINGS_INVITE_TITLE" = "اُدعُ الأصدِقاء";
-
-/* content of tweet when inviting via twitter - please do not translate URL */
-"SETTINGS_INVITE_TWITTER_TEXT" = "يُمكِنك التواصل معي عبر استخدام Signal. احصل عليه الآن: https://signal.org/download/";
 
 /* Label for settings view that allows user to change the chat color and wallpaper. */
 "SETTINGS_ITEM_COLOR_AND_WALLPAPER" = "لون المحادثة والخلفية";
@@ -5421,6 +5466,9 @@
 
 /* The title for the notification settings. */
 "SETTINGS_NOTIFICATIONS" = "الإشعارات";
+
+/* Title for the 'one-time donation' link in settings. */
+"SETTINGS_ONE_TIME_DONATION" = "التبرع مرة واحدة";
 
 /* Label for the 'agree to payments terms' button in the 'activate payments confirmation' UI in the payment settings. */
 "SETTINGS_PAYMENTS_ACTIVATE_PAYMENTS_CONFIRM_AGREE" = "تفعيل";
@@ -5696,7 +5744,7 @@
 "SETTINGS_PAYMENTS_RESTORE_WALLET_PASTE_TITLE" = "لصق جملة الاستعادة";
 
 /* Explanation of the 'restore payments wallet' process payments settings. */
-"SETTINGS_PAYMENTS_RESTORE_WALLET_SPLASH_EXPLANATION" = "Your recovery phrase is a 24-word phrase unique to you. Use it to restore your payments account.";
+"SETTINGS_PAYMENTS_RESTORE_WALLET_SPLASH_EXPLANATION" = "جملة الاستعادة هي جملة مكونة من 24 كلمة فريدة خاصة بك فقط. استخدمها لاستعادة حساب مدفوعاتك.";
 
 /* Title for the first step of the 'restore payments wallet' views. */
 "SETTINGS_PAYMENTS_RESTORE_WALLET_SPLASH_TITLE" = "إدخال جملة الاستعادة";
@@ -5894,7 +5942,7 @@
 "SETTINGS_SCREEN_LOCK_SWITCH_LABEL" = "قفل الشاشة";
 
 /* No comment provided by engineer. */
-"SETTINGS_SCREEN_SECURITY" = "إخفَاءُ الشَّاشَةِ فِي مُبَدِّلِ التَّطبِيقَات";
+"SETTINGS_SCREEN_SECURITY" = "إخفاء الشاشة في مبدل التطبيقات";
 
 /* Footer for table section */
 "SETTINGS_SECTION_FOOTER_CALLING" = "إظهار المُكالمات في \"الحديثة\" في قائمة تطبيق هاتِف iOS.";
@@ -5918,7 +5966,7 @@
 "SETTINGS_SECURITY_DETAIL_TOUCHID" = "اِستِخدامُ Touch ID لِفَكّ فقل Signal.";
 
 /* Section header */
-"SETTINGS_SECURITY_TITLE" = "أمنُ التَّطبِيق";
+"SETTINGS_SECURITY_TITLE" = "حماية التطبيق";
 
 /* The footer for the photos and videos section in the sent media quality settings. */
 "SETTINGS_SENT_MEDIA_QUALITY_SECTION_FOOTER" = "إن إرسال وسائط بجودة عالية سوف يستخدم كما أكبر من البيانات.";
@@ -5935,11 +5983,8 @@
 /* Footer for setting for enabling & disabling contact and notification sharing with iOS. */
 "SETTINGS_SHARING_SUGGESTIONS_NOTIFICATIONS_FOOTER" = "السماح لنظام iOS‬ بالوصول إلى جهات الاتصال Signal وإلى المحادثات لاستخدام ميزات مثل مشاركة الاقتراحات والإشعارات.";
 
-/* Title for the 'signal boost' link in settings. */
-"SETTINGS_SIGNAL_BOOST" = "تعزيز سيجنال";
-
-/* Title for the 'become a sustainer' link in settings. */
-"SETTINGS_SUBSCRIPTION" = "كن من داعمي Signal";
+/* Title for the 'monthly donation' link in settings. */
+"SETTINGS_SUBSCRIPTION" = "التبرع شهريا";
 
 /* Label for the 'enable registration lock' switch of the privacy settings. */
 "SETTINGS_TWO_FACTOR_AUTH_SWITCH_LABEL" = "قفل التسجيل";
@@ -5973,9 +6018,6 @@
 
 /* action sheet item to open native messages app */
 "SHARE_ACTION_MESSAGE" = "رسالة";
-
-/* action sheet item */
-"SHARE_ACTION_TWEET" = "Twitter";
 
 /* alert body when sharing file failed because of untrusted/changed identity keys */
 "SHARE_EXTENSION_FAILED_SENDING_BECAUSE_UNTRUSTED_IDENTITY_FORMAT" = "رقم أمانك أنت مع %@ قد تغير. رُبما قد ترغب في التحقق منه في التطبيق الرئيس قبل إعادة الإرسال.";
@@ -6091,6 +6133,60 @@
 /* Label for the 'uninstall sticker pack' button. */
 "STICKERS_UNINSTALL_BUTTON" = "إلغاء التثبيت";
 
+/* Text indication a story caption can be tapped to read more. */
+"STORIES_CAPTION_READ_MORE" = "قراءة المزيد";
+
+/* Context menu action to copy the selected story reply */
+"STORIES_COPY_REPLY_ACTION" = "نسخ";
+
+/* Context menu action to delete the selected story reply */
+"STORIES_DELETE_REPLY_ACTION" = "حذف";
+
+/* Context menu action to forward the selected story */
+"STORIES_FORWARD_STORY_ACTION" = "إعادة التوجيه";
+
+/* Context menu action to open the chat associated with the selected story */
+"STORIES_GO_TO_CHAT_ACTION" = "Go to Chat";
+
+/* Context menu action to hide the selected story */
+"STORIES_HIDE_STORY_ACTION" = "Hide Story";
+
+/* Indicates that there are no recent stories to render */
+"STORIES_NO_RECENT_MESSAGES" = "No recent updates to show right now.";
+
+/* Indicates that this story has no replies yet */
+"STORIES_NO_REPLIES_YET" = "لا جواب حاليا";
+
+/* Context menu action to share the selected story */
+"STORIES_SHARE_STORY_ACTION" = "المُشاركة";
+
+/* Title for the stories view. */
+"STORIES_TITLE" = "القِصَص";
+
+/* Tooltip prompting the user to visit a story link. */
+"STORY_LINK_PREVIEW_VISIT_LINK_TOOLTIP" = "زيارة الرابط";
+
+/* Text indicating a story that was replied to is no longer available. */
+"STORY_NO_LONGER_AVAILABLE" = "لم تعد متاحة";
+
+/* Button for replying to a story with a single existing reply. */
+"STORY_REPLY_BUTTON_WITH_1_REPLY" = "<bold>1</bold> reply";
+
+/* Button for replying to a story with N existing replies. {embeds the number of replies} */
+"STORY_REPLY_BUTTON_WITH_N_REPLIES_FORMAT" = "<bold>%@</bold> replies";
+
+/* Button for replying to a story with no existing replies. */
+"STORY_REPLY_BUTTON_WITH_NO_REPLIES" = "رد";
+
+/* Text indicating a story has been reacted to */
+"STORY_REPLY_REACTION" = "المتفاعلون مع القصة";
+
+/* placeholder text for replying to a story */
+"STORY_REPLY_TEXT_FIELD_PLACEHOLDER" = "رد";
+
+/* Author text when the local user author's a story reply */
+"STORY_REPLY_YOU_AUTHOR" = "أنت";
+
 /* Title for the 'Badges' button in sustainer view. */
 "SUBSCRIBER_BADGES" = "شارات";
 
@@ -6101,13 +6197,13 @@
 "SUBSCRIBER_SUBSCRIPTION_FAQ" = "الأسئلة الشائعة حول الاشتراك";
 
 /* Action text for subscription megaphone */
-"SUBSCRIPTION_MEGAPHONE_ACTION" = "المساهمة";
+"SUBSCRIPTION_MEGAPHONE_ACTION" = "تبرع";
 
 /* Body for subscription megaphone */
-"SUBSCRIPTION_MEGAPHONE_BODY" = "Signal يدعمه أشخاص مثلك. ساهم واحصل على شارة.";
+"SUBSCRIPTION_MEGAPHONE_BODY" = "إن Signal مدعوم بفضل أفراد مثلك. يُرجى التبرع للحصول على الشارة.";
 
 /* Cancel text for subscription megaphone */
-"SUBSCRIPTION_MEGAPHONE_CANCEL" = "لا شكرا";
+"SUBSCRIPTION_MEGAPHONE_CANCEL" = "ليس الآن";
 
 /* Title for subscription megaphone */
 "SUBSCRIPTION_MEGAPHONE_TITLE" = "كن من الداعمين";
@@ -6170,16 +6266,16 @@
 "SUPPORT_LOG_UPLOAD_IN_PROGRESS" = "يَجري التَّحميل";
 
 /* First block of description text in read more sheet */
-"SUSTAINER_READ_MORE_DESCRIPTION_BLOCK_ONE" = "إن Signal غير ربحي بلا إعلانات أو مستثمرين، يدعمه فقط الأشخاص الذين يستخدمونه ويقدرونه. ساهم بشكل شهري واحصل على شارة ملف شخصي لمشاركة دعمك.";
+"SUSTAINER_READ_MORE_DESCRIPTION_BLOCK_ONE" = "Signal is a nonprofit with no advertisers or investors, sustained only by the people who use and value it. Make a recurring monthly donation and receive a profile badge to share your support.";
 
 /* Second block of description text in read more sheet */
-"SUSTAINER_READ_MORE_DESCRIPTION_BLOCK_TWO" = "Signal ملتزمة بتطوير تكنولوجيا خصوصية مفتوحة المصدر تحمي حرية التعبير وتجعل التواصل العالمي الآمن ممكناً.\n\nتدعم مساهمتك هذه القضية وتساعد في دفع تكلفة التطوير والعمليات اللازمة لتطبيق يستخدمه الملايين للتواصل الخاص. بلا إعلانات. بلا أدوات تتبع. بلا مزاح.";
+"SUSTAINER_READ_MORE_DESCRIPTION_BLOCK_TWO" = "Signal is committed to developing open source privacy technology that protects free expression and enables secure global communication.\n\nYour donation fuels this cause and pays for the development and operations of an app used by millions for private communication. No ads. No trackers. No kidding.";
 
 /* Title for the signal sustainer read more view */
-"SUSTAINER_READ_MORE_TITLE" = "تكنولوجيا دعم تمّ إنشاؤها لك - وليس لبياناتك - بالانضمام إلى المجتمع الذي يدعمها.";
+"SUSTAINER_READ_MORE_TITLE" = "Support technology that is built for you—not for your data—by joining the community that sustains it.";
 
 /* Why Contribute title for the signal sustainer read more view */
-"SUSTAINER_READ_MORE_WHY_CONTRIBUTE" = "لماذا المساهمة؟";
+"SUSTAINER_READ_MORE_WHY_CONTRIBUTE" = "لِماذا أتبرع؟";
 
 /* Action sheet title for Still Processing Badge sheet */
 "SUSTAINER_STILL_PROCESSING_BADGE_TITLE" = "ما زال قيد المعالجة.";
@@ -6223,7 +6319,7 @@
 /* Existing subscriber support header */
 "SUSTAINER_VIEW_MY_SUPPORT" = "دعمي";
 
-/* Payment error occured text, embeds {{link to contact support}} */
+/* Payment error occurred text, embeds {{link to contact support}} */
 "SUSTAINER_VIEW_PAYMENT_ERROR" = "حدث خطأ أثناء معالجة عملية الدفع الخاصة بك. %@";
 
 /* Pricing text for sustainer view badges, embeds {{price}} */
@@ -6242,7 +6338,7 @@
 "SUSTAINER_VIEW_PROCESSING_TRANSACTION" = "جاري معالجة المعاملة...";
 
 /* Read More tappable text in sustainer view body */
-"SUSTAINER_VIEW_READ_MORE" = "اقرأ المزيد.";
+"SUSTAINER_VIEW_READ_MORE" = "Read more.";
 
 /* Renewal date text for sustainer view level, embeds {{renewal date}} */
 "SUSTAINER_VIEW_RENEWAL" = "يتجدد %@";
@@ -6269,7 +6365,7 @@
 "SUSTAINER_VIEW_UPDATE_SUBSCRIPTION_CONFIRMATION_UPDATE" = "تحديث التطبيق";
 
 /* The body text for the signal sustainer view */
-"SUSTAINER_VIEW_WHY_DONATE_BODY" = "تكنولوجيا دعم تمّ إنشاؤها لك - وليس لبياناتك - بالانضمام إلى مجتمع الأشخاص الذين يدعموها.";
+"SUSTAINER_VIEW_WHY_DONATE_BODY" = "يُرجى التبرع شهريا لـ Signal بشكل متواصل، وذلك لدعم التكنولوجيا التي بُنيَت لأجلك، وليس لأجل الحصول على بياناتك.";
 
 /* Label for 'off' state of a switch control. */
 "SWITCH_OFF" = "مُعطَّل";
@@ -6374,7 +6470,7 @@
 "TXT_DELETE_TITLE" = "حذف";
 
 /* Label for the unarchive button for conversations list view */
-"UNARCHIVE_ACTION" = "الإخراج من اﻷرشيف";
+"UNARCHIVE_ACTION" = "إخراج من اﻷرشيف";
 
 /* Message shown in conversation view that offers to block an unknown user. */
 "UNKNOWN_CONTACT_BLOCK_OFFER" = "إن المُستخدم ليس ضمن جهات اتصالك. هل أقوم بحظر هذا المُستخدم؟";
@@ -6419,22 +6515,22 @@
 "UNKNOWN_VALUE" = "مجهولة";
 
 /* button title for unlinking a device */
-"UNLINK_ACTION" = "إلغاء الارتباط";
+"UNLINK_ACTION" = "فصل الارتباط";
 
 /* Alert message to confirm unlinking a device */
-"UNLINK_CONFIRMATION_ALERT_BODY" = "لن يتمكن هذا الجهاز بعد الآن من إرسال الرسائل أو استقبالها إذا تمَّ إلغاء ربطه.";
+"UNLINK_CONFIRMATION_ALERT_BODY" = "لن يتمكن هذا الجهاز من إرسال أو استلام الرسائل إذا فُصل ارتباطه.";
 
 /* Alert title for confirming device deletion */
-"UNLINK_CONFIRMATION_ALERT_TITLE" = "إلغاء ربط \"%@\"؟";
+"UNLINK_CONFIRMATION_ALERT_TITLE" = "فصل ارتباط \"%@\"?";
 
 /* Label warning the user that they have been unlinked from their primary device. */
 "UNLINKED_WARNING" = "لم يعُد الجهاز مُرتبطًا. أعد ربط Signal مع الهاتف الخاص بك لمُتابعة التراسُل.";
 
 /* Alert title when unlinking device fails */
-"UNLINKING_FAILED_ALERT_TITLE" = "لم يتمكن Signal من إلغاء ربط جهازك.";
+"UNLINKING_FAILED_ALERT_TITLE" = "لم يتمكن Signal من فصل ارتباط جهازك.";
 
 /* Label text in device manager for a device with no name */
-"UNNAMED_DEVICE" = "جهاز بدون اسم";
+"UNNAMED_DEVICE" = "جهاز غير مسمى";
 
 /* Pressing this button upins a thread */
 "UNPIN_ACTION" = "فَكّ التَّثبيت";
@@ -6446,7 +6542,7 @@
 "UNREAD_ACTION" = "غير مقروءة";
 
 /* No comment provided by engineer. */
-"UNSUPPORTED_ATTACHMENT" = "تمَّ استلام مُرفق مِن نوع غير مدعوم.";
+"UNSUPPORTED_ATTACHMENT" = "تلقيت مرفق من نوع غير مدعوم.";
 
 /* No comment provided by engineer. */
 "UNSUPPORTED_FEATURE_ERROR" = "جهازك لا يدعم هذه الميزة.";
@@ -6465,12 +6561,6 @@
 
 /* Error indicating that a group could not be updated due to network connectivity problems. */
 "UPDATE_GROUP_FAILED_DUE_TO_NETWORK" = "لا يُمكن تحديث المجموعة. تحقق من اتصالك بالإنترنت ثمَّ حاول مرة أُخرى.";
-
-/* Message for the alert indicating that user should upgrade iOS. */
-"UPGRADE_IOS_ALERT_MESSAGE" = "قريبًا سيطلب تطبيق Signal نظام iOS 11 أو أحدث. يُرجى الترقية من تطبيق الإعدادات >> عام >> تحديث البرامج.";
-
-/* Title for the alert indicating that user should upgrade iOS. */
-"UPGRADE_IOS_ALERT_TITLE" = "ترقية iOS";
 
 /* An explanation of how usernames work on the username view. */
 "USERNAME_DESCRIPTION" = "اسماء المُستخدمين على Signal اختيارية. إذا اخترت إنشاء اسم مُستخدم، سيتمكن مُستخدمو Signal الآخرون من العُثور عليك بواسطة اسم المُستخدم هذا والاتصال بك دون معرفة رقم الهاتف الخاص بك.";
@@ -6557,7 +6647,7 @@
 "VOICE_MESSAGE_TOO_SHORT_TOOLTIP" = "إضغَط مَعَ الاِستِمرار فِي الضَّغط لِلتَسجِيل.";
 
 /* Activity indicator title, shown upon returning to the device manager, until you complete the provisioning process on desktop */
-"WAITING_TO_COMPLETE_DEVICE_LINK_TEXT" = "أكمل الإعداد على تطبيق Signal سَطح المَكتب.";
+"WAITING_TO_COMPLETE_DEVICE_LINK_TEXT" = "أكمل الإعداد على Signal للحاسوب المكتبي.";
 
 /* Placeholder text for header of the wallpaper mini preview */
 "WALLPAPER_MINI_PREVIEW_CONTACT_NAME" = "اسم جهة الاتصال";

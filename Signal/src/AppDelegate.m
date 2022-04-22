@@ -3,7 +3,7 @@
 //
 
 #import "AppDelegate.h"
-#import "HomeViewController.h"
+#import "ChatListViewController.h"
 #import "MainAppContext.h"
 #import "OWSDeviceProvisioningURLParser.h"
 #import "OWSScreenLockUI.h"
@@ -44,6 +44,7 @@
 #import <WebRTC/WebRTC.h>
 
 NSString *const AppDelegateStoryboardMain = @"Main";
+NSString *const kShouldFailNextLaunchForTestingPurposesKey = @"ShouldFailNextLaunchForTestingPurposes";
 
 static NSString *const kInitialViewControllerIdentifier = @"UserInitialViewController";
 NSString *const kURLSchemeSGNLKey = @"sgnl";
@@ -59,11 +60,11 @@ typedef NS_ENUM(NSUInteger, LaunchFailure) {
     LaunchFailure_CouldNotLoadDatabase,
     LaunchFailure_UnknownDatabaseVersion,
     LaunchFailure_CouldNotRestoreTransferredData,
-    LaunchFailure_DatabaseUnrecoverablyCorrupted
+    LaunchFailure_DatabaseUnrecoverablyCorrupted,
+    LaunchFailure_PretendFailureForTestingPurposes,
 };
 
-NSString *NSStringForLaunchFailure(LaunchFailure launchFailure);
-NSString *NSStringForLaunchFailure(LaunchFailure launchFailure)
+static NSString *NSStringForLaunchFailure(LaunchFailure launchFailure)
 {
     switch (launchFailure) {
         case LaunchFailure_None:
@@ -76,6 +77,8 @@ NSString *NSStringForLaunchFailure(LaunchFailure launchFailure)
             return @"LaunchFailure_CouldNotRestoreTransferredData";
         case LaunchFailure_DatabaseUnrecoverablyCorrupted:
             return @"LaunchFailure_DatabaseUnrecoverablyCorrupted";
+        case LaunchFailure_PretendFailureForTestingPurposes:
+            return @"LaunchFailure_PretendFailureForTestingPurposes";
     }
 }
 
@@ -161,8 +164,14 @@ static void uncaughtExceptionHandler(NSException *exception)
     SetCurrentAppContext([MainAppContext new]);
 
     launchStartedAt = CACurrentMediaTime();
+    [BenchManager startEventWithTitle:@"Presenting HomeView" eventId:@"AppStart" logInProduction:TRUE];
 
     BOOL isLoggingEnabled;
+    [InstrumentsMonitor enable];
+    unsigned long long monitorId = [InstrumentsMonitor startSpanWithCategory:@"appstart"
+                                                                      parent:@"application"
+                                                                        name:@"didFinishLaunchingWithOptions"];
+
 #ifdef DEBUG
     // Specified at Product -> Scheme -> Edit Scheme -> Test -> Arguments -> Environment to avoid things like
     // the phone directory being looked up during tests.
@@ -201,6 +210,8 @@ static void uncaughtExceptionHandler(NSException *exception)
     // XXX - careful when moving this. It must happen before we load GRDB.
     [self verifyDBKeysAvailableBeforeBackgroundLaunch];
 
+    [InstrumentsMonitor trackEventWithName:@"AppStart"];
+
     // We need to do this _after_ we set up logging, when the keychain is unlocked,
     // but before we access the database, files on disk, or NSUserDefaults.
     NSError *_Nullable launchError = nil;
@@ -216,8 +227,12 @@ static void uncaughtExceptionHandler(NSException *exception)
         launchFailure = LaunchFailure_UnknownDatabaseVersion;
     } else if ([SSKPreferences hasGrdbDatabaseCorruption]) {
         launchFailure = LaunchFailure_DatabaseUnrecoverablyCorrupted;
+    } else if ([[CurrentAppContext() appUserDefaults] boolForKey:kShouldFailNextLaunchForTestingPurposesKey]) {
+        [[CurrentAppContext() appUserDefaults] removeObjectForKey:kShouldFailNextLaunchForTestingPurposesKey];
+        launchFailure = LaunchFailure_PretendFailureForTestingPurposes;
     }
     if (launchFailure != LaunchFailure_None) {
+        [InstrumentsMonitor stopSpanWithCategory:@"appstart" hash:monitorId];
         OWSLogInfo(@"application: didFinishLaunchingWithOptions failed.");
         [self showUIForLaunchFailure:launchFailure];
 
@@ -229,6 +244,7 @@ static void uncaughtExceptionHandler(NSException *exception)
     [self setupNSEInteroperation];
 
     if (CurrentAppContext().isRunningTests) {
+        [InstrumentsMonitor stopSpanWithCategory:@"appstart" hash:monitorId];
         return YES;
     }
 
@@ -304,6 +320,7 @@ static void uncaughtExceptionHandler(NSException *exception)
 
     [OWSAnalytics appLaunchDidBegin];
 
+    [InstrumentsMonitor stopSpanWithCategory:@"appstart" hash:monitorId];
     return YES;
 }
 
@@ -399,14 +416,45 @@ static void uncaughtExceptionHandler(NSException *exception)
 
     ActionSheetController *actionSheet = [[ActionSheetController alloc] initWithTitle:alertTitle message:alertMessage];
 
+    if (SSKDebugFlags.internalSettings) {
+        [actionSheet addAction:[[ActionSheetAction alloc]
+                                   initWithTitle:@"Export Database (internal)"
+                                           style:ActionSheetActionStyleDefault
+                                         handler:^(ActionSheetAction *_Nonnull action) {
+                                             [SignalApp
+                                                 showExportDatabaseUIFromViewController:viewController
+                                                                             completion:^{
+                                                                                 [viewController
+                                                                                     presentActionSheet:actionSheet];
+                                                                             }];
+                                         }]];
+    }
+
+    // Note: It's sometimes useful for us to enable this for certain external users.
+    // In that case, we can make a PR that changes this to `if (true)` and do a build from that.
+    if (SSKDebugFlags.databaseIntegrityCheck) {
+        [actionSheet
+            addAction:[[ActionSheetAction alloc]
+                          initWithTitle:NSLocalizedString(@"APP_LAUNCH_FAILURE_CHECK_DATABASE", nil)
+                                  style:ActionSheetActionStyleDefault
+                                handler:^(ActionSheetAction *_Nonnull action) {
+                                    [SignalApp
+                                        showDatabaseIntegrityCheckUIFromViewController:viewController
+                                                                            completion:^{
+                                                                                [viewController
+                                                                                    presentActionSheet:actionSheet];
+                                                                            }];
+                                }]];
+    }
+
     [actionSheet
-        addAction:[[ActionSheetAction alloc] initWithTitle:NSLocalizedString(@"SETTINGS_ADVANCED_SUBMIT_DEBUGLOG", nil)
-                                                     style:ActionSheetActionStyleDefault
-                                                   handler:^(ActionSheetAction *_Nonnull action) {
-                                                       [Pastelog submitLogsWithCompletion:^{
-                                                           OWSFail(@"exiting after sharing debug logs.");
-                                                       }];
-                                                   }]];
+        addAction:[[ActionSheetAction alloc]
+                      initWithTitle:NSLocalizedString(@"SETTINGS_ADVANCED_SUBMIT_DEBUGLOG", nil)
+                              style:ActionSheetActionStyleDefault
+                            handler:^(ActionSheetAction *_Nonnull action) {
+                                [Pastelog submitLogsWithSupportTag:NSStringForLaunchFailure(launchFailure)
+                                                        completion:^{ OWSFail(@"exiting after sharing debug logs."); }];
+                            }]];
     [viewController presentActionSheet:actionSheet];
 }
 
@@ -763,7 +811,7 @@ static void uncaughtExceptionHandler(NSException *exception)
 
     AppReadinessRunNowOrWhenAppDidBecomeReadySync(^{
         [AppEnvironment.shared.notificationPresenter clearAllNotifications];
-        [OWSMessageUtils updateApplicationBadgeCount];
+        [self.messageManager updateApplicationBadgeCount];
     });
 }
 
@@ -902,10 +950,11 @@ static void uncaughtExceptionHandler(NSException *exception)
                 }
             }
 
+            TSContactThread *thread = [TSContactThread getOrCreateThreadWithContactAddress:address];
             OutboundIndividualCallInitiator *outboundIndividualCallInitiator
                 = AppEnvironment.shared.outboundIndividualCallInitiator;
             OWSAssertDebug(outboundIndividualCallInitiator);
-            [outboundIndividualCallInitiator initiateCallWithAddress:address];
+            [outboundIndividualCallInitiator initiateCallWithThread:thread isVideo:YES];
         });
         return YES;
     } else if ([userActivity.activityType isEqualToString:@"INStartAudioCallIntent"]) {
@@ -942,10 +991,11 @@ static void uncaughtExceptionHandler(NSException *exception)
                 return;
             }
 
+            TSContactThread *thread = [TSContactThread getOrCreateThreadWithContactAddress:address];
             OutboundIndividualCallInitiator *outboundIndividualCallInitiator
                 = AppEnvironment.shared.outboundIndividualCallInitiator;
             OWSAssertDebug(outboundIndividualCallInitiator);
-            [outboundIndividualCallInitiator initiateCallWithAddress:address];
+            [outboundIndividualCallInitiator initiateCallWithThread:thread isVideo:NO];
         });
         return YES;
 
@@ -990,10 +1040,11 @@ static void uncaughtExceptionHandler(NSException *exception)
                 return;
             }
 
+            TSContactThread *thread = [TSContactThread getOrCreateThreadWithContactAddress:address];
             OutboundIndividualCallInitiator *outboundIndividualCallInitiator
                 = AppEnvironment.shared.outboundIndividualCallInitiator;
             OWSAssertDebug(outboundIndividualCallInitiator);
-            [outboundIndividualCallInitiator initiateCallWithAddress:address];
+            [outboundIndividualCallInitiator initiateCallWithThread:thread isVideo:NO];
         });
         return YES;
     } else if ([userActivity.activityType isEqualToString:NSUserActivityTypeBrowsingWeb]) {
@@ -1204,10 +1255,11 @@ static void uncaughtExceptionHandler(NSException *exception)
 
     // Note that this does much more than set a flag;
     // it will also run all deferred blocks.
-    [AppReadiness setAppIsReady];
+    [AppReadiness setAppIsReadyUIStillPending];
 
     if (CurrentAppContext().isRunningTests) {
         OWSLogVerbose(@"Skipping post-launch logic in tests.");
+        [AppReadiness setUIIsReady];
         return;
     }
 
@@ -1219,12 +1271,15 @@ static void uncaughtExceptionHandler(NSException *exception)
     }
 
     if ([self.tsAccountManager isRegistered]) {
-        OWSLogInfo(@"localAddress: %@", TSAccountManager.localAddress);
+        OWSLogInfo(@"localAddress: %@, deviceId: %u",
+            self.tsAccountManager.localAddress,
+            [self.tsAccountManager storedDeviceId]);
 
         // This should happen at any launch, background or foreground.
         [OWSSyncPushTokensJob run];
     }
 
+    [DebugLogger.shared postLaunchLogCleanup];
     [AppVersion.shared mainAppLaunchDidComplete];
 
     if (!Environment.shared.preferences.hasGeneratedThumbnails) {
@@ -1242,9 +1297,6 @@ static void uncaughtExceptionHandler(NSException *exception)
     }
 
     [SignalApp.shared ensureRootViewController:launchStartedAt];
-
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0),
-        ^{ [DebugLogger.shared removeObsoleteDebugLogs]; });
 }
 
 - (void)registrationStateDidChange

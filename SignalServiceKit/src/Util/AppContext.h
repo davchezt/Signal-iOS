@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 NS_ASSUME_NONNULL_BEGIN
@@ -102,14 +102,13 @@ NSString *NSStringForUIApplicationState(UIApplicationState value);
 
 - (void)setMainAppBadgeNumber:(NSInteger)value;
 
-- (void)setStatusBarHidden:(BOOL)isHidden animated:(BOOL)isAnimated;
-
 @property (nonatomic, readonly) CGFloat statusBarHeight;
 
 // Returns the VC that should be used to present alerts, modals, etc.
 - (nullable UIViewController *)frontmostViewController;
 
 - (void)openSystemSettings;
+- (void)openURL:(NSURL *)url completion:(void (^__nullable)(BOOL success))completion;
 
 // Should be a NOOP if isMainApp is NO.
 - (void)setNetworkActivityIndicatorVisible:(BOOL)value;

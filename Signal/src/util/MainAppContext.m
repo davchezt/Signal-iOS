@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 #import "MainAppContext.h"
@@ -214,11 +214,6 @@ NSString *const ReportedApplicationStateDidChangeNotification = @"ReportedApplic
     return isRTL;
 }
 
-- (void)setStatusBarHidden:(BOOL)isHidden animated:(BOOL)isAnimated
-{
-    [[UIApplication sharedApplication] setStatusBarHidden:isHidden animated:isAnimated];
-}
-
 - (CGFloat)statusBarHeight
 {
     return [UIApplication sharedApplication].statusBarFrame.size.height;
@@ -270,6 +265,11 @@ NSString *const ReportedApplicationStateDidChangeNotification = @"ReportedApplic
 - (void)openSystemSettings
 {
     [UIApplication.sharedApplication openSystemSettings];
+}
+
+- (void)openURL:(NSURL *)url completion:(void (^__nullable)(BOOL success))completion
+{
+    [UIApplication.sharedApplication openURL:url options:@{} completionHandler:completion];
 }
 
 - (BOOL)isRunningTests

@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -18,7 +18,6 @@ public enum SDSRecordType: UInt, CaseIterable {
     case unknownContactBlockOfferMessage = 5
     case attachment = 6
     case addToProfileWhitelistOfferMessage = 7
-    case messageDecryptJob = 8
     case errorMessage = 9
     case infoMessage = 10
     case message = 11

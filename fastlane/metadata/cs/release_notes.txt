@@ -1,6 +1,2 @@
-• Nová funkce více výběrů umožňuje vybrat ze seznamu chatů více chatů najednou a označit je jako přečtené, archivovat nebo odstranit. Vyzkoušejte ji klepnutím na profilovou fotografii v levém horním rohu.
-• K archivovaným chatům je nyní rychlejší přístup. Stačí klepnout na profilovou fotografii v levém horním rohu a snadno se k nim dostanete.
-• Tolik reakcí na výběr a tak málo času. Nyní můžete snadno vyhledat svou oblíbenou reakci.
-• Přizpůsobte si výchozí reakce, abyste měli své oblíbené emoce vždy po ruce.
-• Únava z oznámení? Chcete-li rychle ztlumit nebo zrušit zvuk, stačí na chatu v seznamu chatů přejet prstem doleva.
-• Opravena chyba, která způsobovala, že části dlouhých textových zpráv byly ve vstupním poli neviditelné.
+• Trochu jsme poladili velikost aplikace Signál a zmenšili ji o 25 %.
+• Další vylepšení, díky kterým bude otevírání skupinových chatů velmi rychlé.

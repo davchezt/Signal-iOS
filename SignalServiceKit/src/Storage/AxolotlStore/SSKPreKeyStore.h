@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
@@ -11,12 +11,15 @@ NS_ASSUME_NONNULL_BEGIN
 @class SDSAnyWriteTransaction;
 @class SDSKeyValueStore;
 
+typedef NS_ENUM(uint8_t, OWSIdentity);
+
 @interface SSKPreKeyStore : NSObject
 
-@property (nonatomic, readonly) SDSKeyValueStore *keyStore;
+- (instancetype)initForIdentity:(OWSIdentity)identity;
 
 - (NSArray<PreKeyRecord *> *)generatePreKeyRecords;
-- (void)storePreKeyRecords:(NSArray<PreKeyRecord *> *)preKeyRecords NS_SWIFT_NAME(storePreKeyRecords(_:));
+- (void)storePreKeyRecords:(NSArray<PreKeyRecord *> *)preKeyRecords
+               transaction:(SDSAnyWriteTransaction *)transaction NS_SWIFT_NAME(storePreKeyRecords(_:transaction:));
 
 #if TESTABLE_BUILD
 - (void)removeAll:(SDSAnyWriteTransaction *)transaction;
@@ -30,6 +33,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)removePreKey:(int)preKeyId
          transaction:(SDSAnyWriteTransaction *)transaction;
+
+- (void)cullPreKeyRecordsWithTransaction:(SDSAnyWriteTransaction *)transaction
+    NS_SWIFT_NAME(cullPreKeyRecords(transaction:));
 
 @end
 

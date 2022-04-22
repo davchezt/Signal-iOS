@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -52,7 +52,7 @@ public class StickerKeyboard: CustomKeyboard {
     }
 
     required public init(coder: NSCoder) {
-        notImplemented()
+        fatalError("init(coder:) has not been implemented")
     }
 
     private func createSubviews() {
@@ -151,14 +151,6 @@ public class StickerKeyboard: CustomKeyboard {
         headerView.layoutMargins = UIEdgeInsets(top: 6, leading: 6, bottom: 6, trailing: 6)
         headerView.isLayoutMarginsRelativeArrangement = true
 
-        if FeatureFlags.stickerSearch {
-            let searchButton = buildHeaderButton("search-24") { [weak self] in
-                self?.searchButtonWasTapped()
-            }
-            headerView.addArrangedSubview(searchButton)
-            searchButton.accessibilityIdentifier = UIView.accessibilityIdentifier(in: self, name: "searchButton")
-        }
-
         packsCollectionView.backgroundColor = Theme.keyboardBackgroundColor
         headerView.addArrangedSubview(packsCollectionView)
 
@@ -197,14 +189,6 @@ public class StickerKeyboard: CustomKeyboard {
         Logger.verbose("")
 
         updatePageConstraints(ignoreScrollingState: true)
-    }
-
-    private func searchButtonWasTapped() {
-        AssertIsOnMainThread()
-
-        Logger.verbose("")
-
-        // TODO:
     }
 
     private func recentsButtonWasTapped() {
@@ -282,7 +266,7 @@ public class StickerKeyboard: CustomKeyboard {
     private var numberOfPages: CGFloat { return CGFloat(stickerPackCollectionViews.count) }
 
     // These thresholds indicate the offset at which we update the next / previous page.
-    // They're not exactly half way through the transition, to avoid us continously
+    // They're not exactly half way through the transition, to avoid us continuously
     // bouncing back and forth between pages.
     private var previousPageThreshold: CGFloat { return pageWidth * 0.45 }
     private var nextPageThreshold: CGFloat { return pageWidth + previousPageThreshold }
@@ -456,7 +440,7 @@ public class StickerKeyboard: CustomKeyboard {
 
             // We're about to cross the threshold into a new page, execute any pending updates.
             // We wait to execute these until we're sure we're going to cross over as it
-            // can cause some UI jitter that interupts scrolling.
+            // can cause some UI jitter that interrupts scrolling.
         } else if offsetX >= pageWidth * 0.95 && offsetX <= pageWidth * 1.05 {
             applyPendingPageChangeUpdates()
         }

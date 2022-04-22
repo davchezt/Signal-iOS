@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -17,11 +17,12 @@ public class ContextMenuActionsAccessory: ContextMenuTargetedPreviewAccessory, C
 
     public init(
         menu: ContextMenu,
-        accessoryAlignment: AccessoryAlignment
+        accessoryAlignment: AccessoryAlignment,
+        forceDarkTheme: Bool = false
     ) {
         self.menu = menu
 
-        menuView = ContextMenuActionsView(menu: menu)
+        menuView = ContextMenuActionsView(menu: menu, forceDarkTheme: forceDarkTheme)
         menuView.isHidden = true
         super.init(accessoryView: menuView, accessoryAlignment: accessoryAlignment)
         menuView.delegate = self
@@ -134,9 +135,10 @@ public class ContextMenuActionsView: UIView, UIGestureRecognizerDelegate, UIScro
     private class ContextMenuActionRow: UIView {
         let attributes: ContextMenuAction.Attributes
         let hostEffect: UIBlurEffect
+        let forceDarkTheme: Bool
         let titleLabel: UILabel
         let iconView: UIImageView
-        let seperatorView: UIVisualEffectView
+        let separatorView: UIVisualEffectView
         var highlightedView: UIView?
         var isHighlighted: Bool {
             didSet {
@@ -147,8 +149,8 @@ public class ContextMenuActionsView: UIView, UIGestureRecognizerDelegate, UIScro
                             vibrancyView.frame = bounds
                             let view = UIView(frame: bounds)
                             view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-                            view.backgroundColor = Theme.cellSelectedColor
-                            if Theme.isDarkThemeEnabled {
+                            view.backgroundColor = forceDarkTheme || Theme.isDarkThemeEnabled ? .ows_gray80 : .ows_gray12
+                            if forceDarkTheme || Theme.isDarkThemeEnabled {
                                 vibrancyView.backgroundColor = UIColor.ows_whiteAlpha20
                             }
                             view.alpha = 0.3
@@ -168,50 +170,53 @@ public class ContextMenuActionsView: UIView, UIGestureRecognizerDelegate, UIScro
 
         var maxWidth: CGFloat = 250
         let margin: CGFloat = 16
-        let verticalPadding: CGFloat = 20
-        let iconSize: CGFloat = 22
+        let verticalPadding: CGFloat = 23
+        let iconSize: CGFloat = 20
 
         public init(
             title: String,
             icon: UIImage?,
             attributes: ContextMenuAction.Attributes,
-            hostBlurEffect: UIBlurEffect
+            hostBlurEffect: UIBlurEffect,
+            forceDarkTheme: Bool
         ) {
             titleLabel = UILabel(frame: CGRect.zero)
             titleLabel.text = title
             titleLabel.font = .ows_dynamicTypeBodyClamped
+            titleLabel.numberOfLines = 2
 
             self.attributes = attributes
             hostEffect = hostBlurEffect
+            self.forceDarkTheme = forceDarkTheme
 
             if attributes.contains(.destructive) {
                 titleLabel.textColor = Theme.ActionSheet.default.destructiveButtonTextColor
             } else if attributes.contains(.disabled) {
-                titleLabel.textColor = Theme.secondaryTextAndIconColor
+                titleLabel.textColor = forceDarkTheme ? Theme.darkThemeSecondaryTextAndIconColor : Theme.secondaryTextAndIconColor
             } else {
-                titleLabel.textColor = Theme.primaryTextColor
+                titleLabel.textColor = forceDarkTheme ? Theme.darkThemePrimaryColor : Theme.primaryTextColor
             }
 
             iconView = UIImageView(image: icon)
             iconView.contentMode = .scaleAspectFit
             iconView.tintColor = titleLabel.textColor
 
-            seperatorView = UIVisualEffectView(effect: UIVibrancyEffect(blurEffect: hostBlurEffect))
-            if Theme.isDarkThemeEnabled {
-                seperatorView.backgroundColor = UIColor.ows_whiteAlpha20
+            separatorView = UIVisualEffectView(effect: UIVibrancyEffect(blurEffect: hostBlurEffect))
+            if forceDarkTheme || Theme.isDarkThemeEnabled {
+                separatorView.backgroundColor = UIColor.ows_whiteAlpha20
             }
 
-            let seperator = UIView(frame: seperatorView.bounds)
-            seperator.backgroundColor = Theme.cellSeparatorColor
-            seperator.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-            seperatorView.contentView.addSubview(seperator)
+            let separator = UIView(frame: separatorView.bounds)
+            separator.backgroundColor = forceDarkTheme || Theme.isDarkThemeEnabled ? .ows_gray75 : .ows_gray22
+            separator.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+            separatorView.contentView.addSubview(separator)
             isHighlighted = false
 
             super.init(frame: CGRect.zero)
 
             addSubview(titleLabel)
             addSubview(iconView)
-            addSubview(seperatorView)
+            addSubview(separatorView)
 
             isAccessibilityElement = true
             accessibilityLabel = titleLabel.text
@@ -231,7 +236,7 @@ public class ContextMenuActionsView: UIView, UIGestureRecognizerDelegate, UIScro
             var iconViewFrame = CGRect(x: 0, y: 0, width: iconSize, height: iconSize)
 
             titleFrame.y = ceil((bounds.height - titleFrame.height) / 2)
-            iconViewFrame.height = bounds.height
+            iconViewFrame.y = max(0, (bounds.height - iconView.height) / 2)
 
             if !isRTL {
                 titleFrame.x = margin
@@ -246,22 +251,23 @@ public class ContextMenuActionsView: UIView, UIGestureRecognizerDelegate, UIScro
             titleLabel.frame = titleFrame
             iconView.frame = iconViewFrame
 
-            var seperatorFrame = bounds
-            seperatorFrame.height = 1.0 / UIScreen.main.scale
-            seperatorFrame.y = bounds.maxY - seperatorFrame.height
-            seperatorView.frame = seperatorFrame
+            var separatorFrame = bounds
+            separatorFrame.height = 1.0 / UIScreen.main.scale
+            separatorFrame.y = bounds.maxY - separatorFrame.height
+            separatorView.frame = separatorFrame
         }
 
         public override func sizeThatFits(
             _ size: CGSize
         ) -> CGSize {
-            let height = ceil(titleLabel.sizeThatFits(CGSize(width: 0, height: 0)).height) + verticalPadding
+            let height = ceil(titleLabel.sizeThatFits(CGSize(width: maxWidth - 3 * margin - iconSize, height: 0)).height) + verticalPadding
             return CGSize(width: maxWidth, height: height)
         }
     }
 
     weak var delegate: ContextMenuActionsViewDelegate?
     public let menu: ContextMenu
+    public let forceDarkTheme: Bool
 
     private let actionViews: [ContextMenuActionRow]
     private let scrollView: UIScrollView
@@ -283,9 +289,11 @@ public class ContextMenuActionsView: UIView, UIGestureRecognizerDelegate, UIScro
     let cornerRadius: CGFloat = 12
 
     public init(
-        menu: ContextMenu
+        menu: ContextMenu,
+        forceDarkTheme: Bool = false
     ) {
         self.menu = menu
+        self.forceDarkTheme = forceDarkTheme
 
         scrollView = UIScrollView(frame: CGRect.zero)
         let effect = UIBlurEffect(style: UIBlurEffect.Style.prominent)
@@ -293,7 +301,7 @@ public class ContextMenuActionsView: UIView, UIGestureRecognizerDelegate, UIScro
 
         var actionViews: [ContextMenuActionRow] = []
         for action in menu.children {
-            let actionView = ContextMenuActionRow(title: action.title, icon: action.image, attributes: action.attributes, hostBlurEffect: effect)
+            let actionView = ContextMenuActionRow(title: action.title, icon: action.image, attributes: action.attributes, hostBlurEffect: effect, forceDarkTheme: forceDarkTheme)
             actionViews.append(actionView)
         }
 
@@ -327,7 +335,7 @@ public class ContextMenuActionsView: UIView, UIGestureRecognizerDelegate, UIScro
 
         scrollView.delegate = self
 
-        actionViews.last?.seperatorView.isHidden = true
+        actionViews.last?.separatorView.isHidden = true
     }
 
     required init?(coder: NSCoder) {
@@ -342,28 +350,31 @@ public class ContextMenuActionsView: UIView, UIGestureRecognizerDelegate, UIScro
         backdropView.frame = bounds
         scrollView.frame = bounds
         var yOffset: CGFloat = 0
-        let actionViewSize = actionViewSizeThatFits(bounds.size)
         var maxY: CGFloat = 0
+        var width: CGFloat = 0.0
         for actionView in actionViews {
-            actionView.frame = CGRect(x: 0, y: yOffset, width: actionViewSize.width, height: actionViewSize.height)
-            yOffset += actionViewSize.height
+            let size = actionView.sizeThatFits(.zero)
+            width = max(width, size.width)
+            actionView.frame = CGRect(x: 0, y: yOffset, width: width, height: size.height)
+            yOffset += size.height
             maxY = max(maxY, actionView.frame.maxY)
         }
 
-        scrollView.contentSize = CGSize(width: bounds.width, height: maxY)
+        scrollView.contentSize = CGSize(width: width, height: maxY)
     }
 
     public override func sizeThatFits(
         _ size: CGSize
     ) -> CGSize {
-        let actionViewSize = actionViewSizeThatFits(size)
-        return CGSize(width: actionViewSize.width, height: actionViewSize.height * CGFloat(actionViews.count))
-    }
-
-    private func actionViewSizeThatFits(
-        _ size: CGSize)
-    -> CGSize {
-        return actionViews.first?.sizeThatFits(size) ?? CGSize.zero
+        // every entry may have a different height
+        var height = 0.0
+        var width = 0.0
+        for actionView in actionViews {
+            let size = actionView.sizeThatFits(size)
+            height += size.height
+            width = max(width, size.width)
+        }
+        return CGSize(width: width, height: height)
     }
 
     // MARK: Gestures
@@ -409,6 +420,7 @@ public class ContextMenuActionsView: UIView, UIGestureRecognizerDelegate, UIScro
         }
     }
 
+    @discardableResult
     func handleGestureEnded(locationInView: CGPoint) -> Bool {
         guard !isScrolling else {
             return false

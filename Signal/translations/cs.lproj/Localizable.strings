@@ -154,6 +154,9 @@
 /* Title for the 'app launch failed' alert. */
 "APP_LAUNCH_FAILURE_ALERT_TITLE" = "Chyba";
 
+/* No comment provided by engineer. */
+"APP_LAUNCH_FAILURE_CHECK_DATABASE" = "Run Database Integrity Check";
+
 /* Error indicating that the app could not launch because the database could not be loaded. */
 "APP_LAUNCH_FAILURE_COULD_NOT_LOAD_DATABASE" = "Nepodařilo se načíst databázi";
 
@@ -203,7 +206,7 @@
 "ATTACHMENT_APPROVAL_CAPTION_LENGTH_LIMIT_REACHED" = "Dosažen limit znaků.";
 
 /* placeholder text for an empty captioning field */
-"ATTACHMENT_APPROVAL_CAPTION_PLACEHOLDER" = "Přidat titulek...";
+"ATTACHMENT_APPROVAL_CAPTION_PLACEHOLDER" = "Přidat titulek…";
 
 /* Title for 'caption' mode of the attachment approval view. */
 "ATTACHMENT_APPROVAL_CAPTION_TITLE" = "Titulek";
@@ -377,13 +380,13 @@
 "BADGE_DETAILS_GIVE_A_BOOST" = "Dejte Signalu Boost";
 
 /* String explaing to the user that their boost badge has expired on the badge expiry sheetsheet. */
-"BADGE_EXIPRED_BOOST_BODY_FORMAT" = "Platnost vašeho odznaku Boost vypršela a již není na vašem profilu viditelný.\n\nSignál můžete používat i nadále, ale abyste podpořili technologii, která je vytvořena pro vás, zvažte, zda se nestát měsíčním podporovatelem.";
+"BADGE_EXIPRED_BOOST_BODY_FORMAT" = "Your Boost badge has expired and is no longer visible on your profile.\n\nYou can keep using Signal but to support technology that is built for you, consider becoming a sustainer by making a monthly donation.";
 
 /* String explaing to the user that their boost badge has expired while they are a current subscription sustainer on the badge expiry sheetsheet. */
 "BADGE_EXIPRED_BOOST_CURRENT_SUSTAINER_BODY_FORMAT" = "Platnost vašeho odznaku Boost vypršela a již není na vašem profilu viditelný.\n\nJednorázovým příspěvkem si můžete odznak Boost znovu aktivovat na dalších 30 dní.";
 
 /* String explaing to the user that their subscription badge has expired on the badge expiry sheetsheet. Embed {badge name}. */
-"BADGE_EXIPRED_SUBSCRIPTION_BODY_FORMAT" = "Vaše předplatné Sustainer bylo automaticky zrušeno, protože jste byli příliš dlouho neaktivní. Váš %@ odznak již není na vašem profilu viditelný.\n\nSignál můžete používat i nadále, ale abyste aplikaci podpořili a svůj odznak znovu aktivovali, obnovte jej nyní.";
+"BADGE_EXIPRED_SUBSCRIPTION_BODY_FORMAT" = "Your recurring monthly donation was automatically cancelled because you were inactive for too long. Your %@ badge is no longer visible on your profile.\n\nYou can keep using Signal but to support the app and reactivate your badge, renew now.";
 
 /* Button title for boost on the badge expiration sheet, used if the user is not already a sustainer. */
 "BADGE_EXPIRED_BOOST_RENEWAL_BUTTON" = "Staňte se podporovatelem";
@@ -398,7 +401,7 @@
 "BADGE_EXPIRED_SUBSCRIPTION_RENEWAL_BUTTON" = "Obnovit předplatné";
 
 /* Title for subscription on the badge expiration sheet. */
-"BADGE_EXPIRED_SUBSCRIPTION_TITLE" = "Předplatné zrušeno";
+"BADGE_EXPIRED_SUBSCRIPTION_TITLE" = "Monthly Donation Cancelled";
 
 /* Title for boost on the thank you sheet. */
 "BADGE_THANKS_BOOST_TITLE" = "Díky za Boost!";
@@ -416,7 +419,7 @@
 "BADGE_THANKS_TOGGLE_FOOTER" = "Pokud máte více odznaků, můžete si jeden z nich vybrat, aby ho ostatní viděli na vašem profilu.";
 
 /* String explaing to the user that they've earned a badge on the badge thank you sheet. Embed {badge name}. */
-"BADGE_THANKS_YOU_EARNED_FORMAT" = "Získali jste %@ odznak! Pomozte společnosti Signal budovat povědomí tím, že si tento odznak zobrazíte na svém profilu.";
+"BADGE_THANKS_YOU_EARNED_FORMAT" = "You’ve earned a %@ badge. Display this badge on your profile to build awareness for donating to Signal.";
 
 /* Accessibility label for banner close button */
 "BANNER_CLOSE_ACCESSIBILITY_LABEL" = "Zavřít banner";
@@ -497,7 +500,7 @@
 "BOOST_VIEW_AMOUNT_LABEL" = "Nastavit měnu";
 
 /* The body text for the donate to signal view */
-"BOOST_VIEW_BODY" = "Řekněte \"Díky!\" a získejte Boost odznak na 30 dnů.";
+"BOOST_VIEW_BODY" = "Make a one-time donation and earn a Boost badge for 30 days.";
 
 /* The body text for the donate to signal view, embeds {{Expiration}} */
 "BOOST_VIEW_BODY_WITH_EXPIRATION_FORMAT" = "Váš Boost odznak vyprší %@.";
@@ -586,8 +589,17 @@
 /* notification body */
 "CALL_AUDIO_INCOMING_NOTIFICATION_BODY" = "📞 Příchozí audio hovor…";
 
-/* notification body */
+/* notification body for a missed call in the last 24 hours. Embeds {{time}}, e.g. '3:30 PM'. */
+"CALL_AUDIO_MISSED_24_HOURS_NOTIFICATION_BODY_FORMAT" = "📞 Zmeškaný hovor v %@";
+
+/* notification body for a call that was just missed */
 "CALL_AUDIO_MISSED_NOTIFICATION_BODY" = "📞 Zmeškaný audio hovor";
+
+/* notification body for a missed call from more than a week ago. Embeds {{short date}}, e.g. '6/28'. */
+"CALL_AUDIO_MISSED_PAST_NOTIFICATION_BODY_FORMAT" = "📞 Zmeškaný hovor z %@";
+
+/* notification body for a missed call from the last week. Embeds {{weekday}}, e.g. 'Monday'. */
+"CALL_AUDIO_MISSED_WEEK_NOTIFICATION_BODY_FORMAT" = "📞 Zmeškaný hovor z %@";
 
 /* Alert message when calling and permissions for microphone are missing */
 "CALL_AUDIO_PERMISSION_MESSAGE" = "Pro volání a nahrávání hlasových zpráv v Signalu povolte přístup k mikrofonu v nastavení iOS.";
@@ -619,8 +631,17 @@
 /* notification body */
 "CALL_VIDEO_INCOMING_NOTIFICATION_BODY" = "📹 Příchozí video hovor…";
 
-/* notification body */
+/* notification body for a missed call in the last 24 hours. Embeds {{time}}, e.g. '3:30 PM'. */
+"CALL_VIDEO_MISSED_24_HOURS_NOTIFICATION_BODY_FORMAT" = "📹 Zmeškaný videohovor v %@";
+
+/* notification body for a call that was just missed */
 "CALL_VIDEO_MISSED_NOTIFICATION_BODY" = "📹 Zmeškaný video hovor";
+
+/* notification body for a missed call from more than a week ago. Embeds {{short date}}, e.g. '6/28'. */
+"CALL_VIDEO_MISSED_PAST_NOTIFICATION_BODY_FORMAT" = "📹 Zmeškaný videohovor z %@";
+
+/* notification body for a missed call from the last week. Embeds {{weekday}}, e.g. 'Monday'. */
+"CALL_VIDEO_MISSED_WEEK_NOTIFICATION_BODY_FORMAT" = "📹 Zmeškaný videohovor z %@";
 
 /* label for accepting incoming video calls as audio  only */
 "CALL_VIEW_ACCEPT_INCOMING_CALL_AUDIO_ONLY_LABEL" = "Přijmout bez videa";
@@ -735,6 +756,9 @@
 
 /* Tooltip highlighting the auto chat color option. */
 "CHAT_COLORS_AUTO_TOOLTIP" = "Automatické přizpůsobení barvy tapetě";
+
+/* Title for the chat list's default mode. */
+"CHAT_LIST_TITLE_INBOX" = "Konverzace";
 
 /* Title for the color & wallpaper settings view. */
 "COLOR_AND_WALLPAPER_SETTINGS_TITLE" = "Barva chatu a tapety";
@@ -1007,7 +1031,7 @@
 "CONVERSATION_DELETE_CONFIRMATIONS_ALERT_TITLE" = "Odstranit %@ konverzací?";
 
 /* Title for the 'conversation mute confirmation' alert. */
-"CONVERSATION_MUTE_CONFIRMATION_ALERT_TITLE" = "Ztišit tuto konverzaci na...";
+"CONVERSATION_MUTE_CONFIRMATION_ALERT_TITLE" = "Ztišit tuto konverzaci na…";
 
 /* 1 day */
 "CONVERSATION_MUTE_CONFIRMATION_OPTION_1D" = "1 den";
@@ -1151,7 +1175,7 @@
 "CONVERSATION_SETTINGS_MESSAGE_BUTTON" = "zpráva";
 
 /* Title for the mute action sheet */
-"CONVERSATION_SETTINGS_MUTE_ACTION_SHEET_TITLE" = "Ztišit konverzaci na...";
+"CONVERSATION_SETTINGS_MUTE_ACTION_SHEET_TITLE" = "Ztišit konverzaci na…";
 
 /* Label for button to mute a thread forever. */
 "CONVERSATION_SETTINGS_MUTE_ALWAYS_ACTION" = "Vždy";
@@ -1306,6 +1330,21 @@
 /* Tooltip highlighting the custom chat color controls. */
 "CUSTOM_CHAT_COLOR_SETTINGS_TOOLTIP" = "Přetažením změníte směr gradientu";
 
+/* Button to run the database integrity check */
+"DATABASE_INTEGRITY_CHECK_ACTION_RUN" = "Run";
+
+/* Message for alert before running a database integrity check */
+"DATABASE_INTEGRITY_CHECK_MESSAGE" = "This may take a while (several minutes or more) depending on how much you have used Signal. It is safe to close Signal if it is taking too long.";
+
+/* Button to save database integrity check results to the debug log */
+"DATABASE_INTEGRITY_CHECK_RESULTS_ACTION_LOG" = "Add to Debug Log";
+
+/* Title for alert after running a database integrity check */
+"DATABASE_INTEGRITY_CHECK_RESULTS_TITLE" = "Integrity check results";
+
+/* Title for alert before running a database integrity check */
+"DATABASE_INTEGRITY_CHECK_TITLE" = "Run database integrity check?";
+
 /* Subtitle shown while the app is updating its database. */
 "DATABASE_VIEW_OVERLAY_SUBTITLE" = "Toto může pár minut trvat.";
 
@@ -1330,9 +1369,6 @@
 /* The day before today. */
 "DATE_YESTERDAY" = "Včera";
 
-/* Error indicating that the debug logs could not be copied. */
-"DEBUG_LOG_ALERT_COULD_NOT_COPY_LOGS" = "Nelze zkopírovat logy.";
-
 /* Error indicating that the debug logs could not be packaged. */
 "DEBUG_LOG_ALERT_COULD_NOT_PACKAGE_LOGS" = "Nelze zabalit logy.";
 
@@ -1353,6 +1389,9 @@
 
 /* Label for the 'email debug log' option of the debug log alert. */
 "DEBUG_LOG_ALERT_OPTION_EMAIL" = "E-mailová podpora";
+
+/* Label for the 'Export Logs' fallback option for the alert when debug log uploading fails. */
+"DEBUG_LOG_ALERT_OPTION_EXPORT_LOG_ARCHIVE" = "Exportovat logy";
 
 /* Label for the 'send to self' option of the debug log alert. */
 "DEBUG_LOG_ALERT_OPTION_SEND_TO_SELF" = "Odeslat sobě";
@@ -1480,7 +1519,7 @@
 /* A warning for the device transfer 'choice' view indicating you can only have one device registered with your number */
 "DEVICE_TRANSFER_CHOICE_WARNING" = "Pokud budete pokračovat, Signal bude deaktivován na dalších zařízeních aktuálně registrovaných na stejné telefonní číslo.";
 
-/* An error indicating that we were unable to verify the indentity of the new device to complete the transfer */
+/* An error indicating that we were unable to verify the identity of the new device to complete the transfer */
 "DEVICE_TRANSFER_ERROR_CERTIFICATE_MISMATCH" = "Nepodařilo se ověřit vaše nové zařízení, zkuste to prosím znovu";
 
 /* An error indicating that something went wrong with the transfer and it could not complete */
@@ -1585,38 +1624,41 @@
 /* Section title for the 'domain fronting country' view. */
 "DOMAIN_FRONTING_COUNTRY_VIEW_SECTION_HEADER" = "Umístění pro obcházení cenzury";
 
-/* Donation amount label for the donate to signal view */
-"DONATION_VIEW_AMOUNT_LABEL" = "Výše příspěvku";
+/* Section title for donation amount on receipts */
+"DONATION_RECEIPT_AMOUNT" = "Částka";
 
-/* Default text for the custom amount field of the donation view. */
-"DONATION_VIEW_CUSTOM_AMOUNT_PLACEHOLDER" = "Zadat vlastní výši";
+/* Section title for donation date on receipts */
+"DONATION_RECEIPT_DATE_PAID" = "Datum platby";
+
+/* Title on the view where you can see a single receipt */
+"DONATION_RECEIPT_DETAILS" = "Podrobnosti";
+
+/* Text on the button that exports the receipt */
+"DONATION_RECEIPT_EXPORT_RECEIPT_BUTTON" = "Share Receipt";
+
+/* Footer text at the bottom of donation receipts */
+"DONATION_RECEIPT_FOOTER" = "Thank you for supporting Signal. Your contribution helps fuel the mission of developing open source privacy technology that protects free expression and enables secure global communication for millions around the world. If you’re a resident of the United States, please retain this receipt for your tax records. Signal Technology Foundation is a tax-exempt nonprofit organization in the United States under section 501c3 of the Internal Revenue Code. Our Federal Tax ID is 82-4506840.";
+
+/* Title for one-time donation receipts */
+"DONATION_RECEIPT_ONE_TIME" = "One-time";
+
+/* Title for recurring donation receipts */
+"DONATION_RECEIPT_RECURRING" = "Opakující se";
+
+/* Title on donation receipts */
+"DONATION_RECEIPT_TITLE" = "Doklad o příspěvku";
+
+/* Section title for donation type on receipts */
+"DONATION_RECEIPT_TYPE" = "Type";
+
+/* Title of view where you can see all of your donation receipts, or button to take you there */
+"DONATION_RECEIPTS" = "Doklady o příspěvku";
+
+/* Text at the bottom of the donation receipts list, telling users that receipts might not be available */
+"DONATION_RECEIPTS_MIGHT_BE_MISSING_IF_YOU_REINSTALLED" = "Pokud jste znovu nainstalovali aplikaci Signal, účtenky za předchozí dary nebudou k dispozici.";
 
 /* Text describing to the user that they're going to pay a donation to Signal */
 "DONATION_VIEW_DONATION_TO_SIGNAL" = "Přispět Signalu";
-
-/* Text explaining there are other ways to donate on the donation view. */
-"DONATION_VIEW_OTHER_WAYS" = "Další možnosti příspěvku";
-
-/* Error text notifying the user they must select a large amount on the donate to signal view */
-"DONATION_VIEW_SELECT_A_LARGER_AMOUNT" = "Vyberte vyšší částku příspěvku";
-
-/* Error text notifying the user they must select a smaller amount on the donate to signal view */
-"DONATION_VIEW_SELECT_A_SMALLER_AMOUNT" = "Vyberte nižší částku příspěvku";
-
-/* Error text notifying the user they must select an amount on the donate to signal view */
-"DONATION_VIEW_SELECT_AN_AMOUNT" = "Zadejte výši příspěvku";
-
-/* Thank you message on the donate to signal view */
-"DONATION_VIEW_THANKS_FOR_YOUR_SUPPORT" = "Děkujeme za vaši podporu!";
-
-/* Title for the donate to signal view */
-"DONATION_VIEW_TITLE" = "Signal pohání lidé, jako jste vy.";
-
-/* The body of the 'Why Donate' section of the donate to signal view */
-"DONATION_VIEW_WHY_DONATE_BODY" = "Tým společnosti Signal se zavázal k vývoji open source technologie ochrany soukromí, která chrání svobodu projevu a umožňuje bezpečnou globální komunikaci. Váš příspěvek je pro tento cíl přínosem. Žádné reklamy. Žádné trackery. Bez legrace.\n\nVáš dar pomáhá platit vývoj, servery a datové přenosy aplikace, kterou používají miliony lidí na celém světě k soukromé a okamžité komunikaci.";
-
-/* The title of the 'Why Donate' section of the donate to signal view */
-"DONATION_VIEW_WHY_DONATE_TITLE" = "Proč přispět?";
 
 /* Alert body for when the user has just tried to edit a contacts after declining to give Signal contacts permissions */
 "EDIT_CONTACT_WITHOUT_CONTACTS_PERMISSION_ALERT_BODY" = "Můžete povolit přístup v nastavení iOS.";
@@ -1889,10 +1931,10 @@
 "GALLERY_TILES_EMPTY_GALLERY" = "Nemáte žádná média v tomto chatu.";
 
 /* Label indicating loading is in progress */
-"GALLERY_TILES_LOADING_MORE_RECENT_LABEL" = "Načítání novějších médií...";
+"GALLERY_TILES_LOADING_MORE_RECENT_LABEL" = "Načítání novějších médií…";
 
 /* Label indicating loading is in progress */
-"GALLERY_TILES_LOADING_OLDER_LABEL" = "Načítání starších médií...";
+"GALLERY_TILES_LOADING_OLDER_LABEL" = "Načítání starších médií…";
 
 /* A label for generic attachments. */
 "GENERIC_ATTACHMENT_LABEL" = "Příloha";
@@ -1984,10 +2026,10 @@
 /* Title for alert explaining that a group call participant is blocked. Embeds {{ user's name }} */
 "GROUP_CALL_BLOCKED_ALERT_TITLE_FORMAT" = "%@ je zablokován";
 
-/* Message for eror alert indicating that only group administrators can start calls in announcement-only groups. */
+/* Message for error alert indicating that only group administrators can start calls in announcement-only groups. */
 "GROUP_CALL_BLOCKED_BY_ANNOUNCEMENT_ONLY_MESSAGE" = "Pouze správci této skupiny mohou zahájit hovor.";
 
-/* Title for eror alert indicating that only group administrators can start calls in announcement-only groups. */
+/* Title for error alert indicating that only group administrators can start calls in announcement-only groups. */
 "GROUP_CALL_BLOCKED_BY_ANNOUNCEMENT_ONLY_TITLE" = "Nelze zahájit skupinový hovor";
 
 /* String displayed in group call grid cell when a user is blocked. Embeds {user's name} */
@@ -2260,6 +2302,9 @@
 /* Message indicating that 'announcement-only' mode was enabled by a remote user. Embeds {{ user who enabled 'announcement-only' mode }}. */
 "GROUP_IS_ANNOUNCEMENT_ONLY_ENABLED_BY_REMOTE_USER_FORMAT" = "%@ změnil nastavení skupiny tak, aby zprávy mohli odesílat pouze správci.";
 
+/* Subtitle indicating that the local user has been blocked from joining the group */
+"GROUP_LINK_ACTION_SHEET_VIEW_BLOCKED_FROM_JOINING_SUBTITLE" = "K této skupině se nemůžete připojit prostřednictvím odkazu na skupinu, protože vás odstranil správce.";
+
 /* Subtitle indicating that the group invite link has expired in the 'group invite link' action sheet. */
 "GROUP_LINK_ACTION_SHEET_VIEW_EXPIRED_LINK_SUBTITLE" = "Tento odkaz skupiny již není platný.";
 
@@ -2273,7 +2318,7 @@
 "GROUP_LINK_ACTION_SHEET_VIEW_JOIN_BUTTON" = "Připojit";
 
 /* Label indicating that the group info is being loaded in the 'group invite link' action sheet. */
-"GROUP_LINK_ACTION_SHEET_VIEW_LOADING_TITLE" = "Načítání...";
+"GROUP_LINK_ACTION_SHEET_VIEW_LOADING_TITLE" = "Načítání…";
 
 /* Message text for the 'group invite link' action sheet. */
 "GROUP_LINK_ACTION_SHEET_VIEW_MESSAGE" = "Připojit se k této skupině a sdílet vaše jméno a fotografii s jejími členy?";
@@ -2404,7 +2449,7 @@
 /* Message indicating that the local user was removed from the group by an unknown user. */
 "GROUP_LOCAL_USER_REMOVED_BY_UNKNOWN_USER" = "Byli jste odebráni ze skupiny.";
 
-/* Message indicating that the local user's request to join the group was approved by another user. Embeds {{ %@ the name of the user who approved the reuqest }}. */
+/* Message indicating that the local user's request to join the group was approved by another user. Embeds {{ %@ the name of the user who approved the request }}. */
 "GROUP_LOCAL_USER_REQUEST_APPROVED_BY_REMOTE_USER_FORMAT" = "%@ schválil váš požadavek na připojení ke skupině.";
 
 /* Message indicating that the local user cancelled their request to join the group. */
@@ -2598,6 +2643,9 @@
 
 /* The title for the 'group requests and invites' view. */
 "GROUP_REQUESTS_AND_INVITES_VIEW_TITLE" = "Požadavky a pozvánky";
+
+/* Name for a group story on the stories list. Embeds {author's name}, {group name} */
+"GROUP_STORY_NAME_FORMAT" = "%1$@ do %2$@";
 
 /* Info message indicating that the group was updated by an unknown user. */
 "GROUP_UPDATED" = "Skupina aktualizována.";
@@ -2941,13 +2989,10 @@
 /* Title for the conversation list's 'archive' mode. */
 "HOME_VIEW_TITLE_ARCHIVE" = "Archiv";
 
-/* Title for the conversation list's default mode. */
-"HOME_VIEW_TITLE_INBOX" = "Signal";
-
-/* Title for the 'Select Chats' option in the HomeView. */
+/* Title for the 'Select Chats' option in the ChatList. */
 "HOME_VIEW_TITLE_SELECT_CHATS" = "Vyberte konverzace";
 
-/* Title 'Read All' button in the toolbar of the homeview if multi-section is active. */
+/* Title 'Read All' button in the toolbar of the ChatList if multi-section is active. */
 "HOME_VIEW_TOOLBAR_READ_ALL" = "Vše přečteno";
 
 /* The image editor hint that you can draw blur */
@@ -2987,16 +3032,16 @@
 "IN_CALL_ENDED_BECAUSE_DECLINED_ELSEWHERE" = "Odmítnuto na jiném zařízení.";
 
 /* Call setup status label */
-"IN_CALL_RECONNECTING" = "Opětovné připojování...";
+"IN_CALL_RECONNECTING" = "Opětovné připojování…";
 
 /* Call setup status label */
 "IN_CALL_RINGING" = "Vyzvánění…";
 
 /* Call setup status label */
-"IN_CALL_RINGING_AUDIO" = "Hlasový hovor...";
+"IN_CALL_RINGING_AUDIO" = "Hlasový hovor…";
 
 /* Call setup status label */
-"IN_CALL_RINGING_VIDEO" = "Videohovor...";
+"IN_CALL_RINGING_VIDEO" = "Videohovor…";
 
 /* Call setup status label */
 "IN_CALL_SECURING" = "Odpovězeno. Zabezpečování…";
@@ -3491,7 +3536,7 @@
 "MESSAGE_STATUS_SEND_FAILED" = "Odesílání selhalo";
 
 /* message status while message is sending. */
-"MESSAGE_STATUS_SENDING" = "Odesílaní...";
+"MESSAGE_STATUS_SENDING" = "Odesílání…";
 
 /* status message for sent messages */
 "MESSAGE_STATUS_SENT" = "Odesláno";
@@ -3701,7 +3746,7 @@
 "NOTIFICATIONS_SECTION_INAPP" = "Zvuky při spuštěné aplikaci";
 
 /* Label for settings UI that allows user to add a new notification sound. */
-"NOTIFICATIONS_SECTION_SOUNDS_ADD_CUSTOM_SOUND" = "Přidat vlastní zvuk...";
+"NOTIFICATIONS_SECTION_SOUNDS_ADD_CUSTOM_SOUND" = "Přidat vlastní zvuk…";
 
 /* No comment provided by engineer. */
 "NOTIFICATIONS_SENDER_AND_MESSAGE" = "Jméno, obsah a akce";
@@ -4025,7 +4070,7 @@
 "PAYMENTS_PAYMENT_STATUS_LONG_OUTGOING_COMPLETE" = "Platba dokončena";
 
 /* Status indicator for outgoing payments which are being sent. */
-"PAYMENTS_PAYMENT_STATUS_LONG_OUTGOING_SENDING" = "Odesílaní...";
+"PAYMENTS_PAYMENT_STATUS_LONG_OUTGOING_SENDING" = "Odesílání…";
 
 /* Status indicator for outgoing payments which have been sent. */
 "PAYMENTS_PAYMENT_STATUS_LONG_OUTGOING_SENT" = "Odesláno";
@@ -4055,7 +4100,7 @@
 "PAYMENTS_PAYMENT_STATUS_SHORT_OUTGOING_COMPLETE" = "Dokončeno";
 
 /* Status indicator for outgoing payments which are being sent. */
-"PAYMENTS_PAYMENT_STATUS_SHORT_OUTGOING_SENDING" = "Odesílaní...";
+"PAYMENTS_PAYMENT_STATUS_SHORT_OUTGOING_SENDING" = "Odesílání…";
 
 /* Status indicator for outgoing payments which have been sent. */
 "PAYMENTS_PAYMENT_STATUS_SHORT_OUTGOING_SENT" = "Odesláno";
@@ -4280,10 +4325,10 @@
 "PIN_ACTION" = "Připnout";
 
 /* Error body indicating that the attempt to change a PIN failed. */
-"PIN_CHANGE_ERROR_MESSAGE" = "Couldn't create your new PIN. Your existing PIN has been disabled. Check your connection and try again.";
+"PIN_CHANGE_ERROR_MESSAGE" = "Nepodařilo se vytvořit nový kód PIN. Váš stávající PIN byl zablokován. Zkontrolujte připojení a zkuste to znovu.";
 
 /* Error title indicating that the attempt to change a PIN failed. */
-"PIN_CHANGE_ERROR_TITLE" = "PIN Change Failed";
+"PIN_CHANGE_ERROR_TITLE" = "Změna PIN selhala";
 
 /* Label indicating the user must use at least 4 characters */
 "PIN_CREATION_ALPHANUMERIC_HINT" = "PIN musí mít alespoň 4 znaky";
@@ -4328,10 +4373,10 @@
 "PIN_CREATION_MISMATCH_ERROR" = "PINy se neshodují. Zkuste to znovu.";
 
 /* Error body indicating that the attempt to create a PIN failed due to network issues. */
-"PIN_CREATION_NO_NETWORK_ERROR_MESSAGE" = "Check your connection and try again.";
+"PIN_CREATION_NO_NETWORK_ERROR_MESSAGE" = "Zkontrolujte připojení k internetu a zkuste to znovu.";
 
 /* Error title indicating that the attempt to create a PIN failed due to network issues. */
-"PIN_CREATION_NO_NETWORK_ERROR_TITLE" = "No Network Connection";
+"PIN_CREATION_NO_NETWORK_ERROR_TITLE" = "Bez přístupu k internetu";
 
 /* Label indicating the user must use at least 4 digits */
 "PIN_CREATION_NUMERIC_HINT" = "PIN musí mít alespoň 4 číslice";
@@ -4340,13 +4385,10 @@
 "PIN_CREATION_PIN_CONFIRMATION_HINT" = "Zadejte PIN znovu";
 
 /* Indicates the work we are doing while creating the user's pin */
-"PIN_CREATION_PIN_PROGRESS" = "Vytvářím PIN...";
+"PIN_CREATION_PIN_PROGRESS" = "Vytváření PIN…";
 
 /* The re-creation explanation in the 'pin creation' view. */
 "PIN_CREATION_RECREATION_EXPLANATION" = "Můžete změnit váš PIN, dokud je toto zařízení registrováno.";
-
-/* Title of the 'pin creation' recreation view. */
-"PIN_CREATION_RECREATION_TITLE" = "Změnit váš PIN";
 
 /* Action of the 'pin disable' reglock action sheet. */
 "PIN_CREATION_REGLOCK_CONFIRMATION_ACTION" = "Vypnout";
@@ -4358,10 +4400,10 @@
 "PIN_CREATION_REGLOCK_CONFIRMATION_TITLE" = "Vypnout zámek registrace?";
 
 /* Error body indicating that the attempt to create a PIN succeeded but enabling reglock failed. */
-"PIN_CREATION_REGLOCK_ERROR_MESSAGE" = "PIN creation succeeded, but registration lock could not be enabled. Check your connection and try again.";
+"PIN_CREATION_REGLOCK_ERROR_MESSAGE" = "Vytvoření kódu PIN se podařilo, ale registrační zámek se nepodařilo povolit. Zkontrolujte připojení a zkuste to znovu.";
 
 /* Error title indicating that the attempt to create a PIN succeeded but enabling reglock failed. */
-"PIN_CREATION_REGLOCK_ERROR_TITLE" = "Enable Registration Lock Failed";
+"PIN_CREATION_REGLOCK_ERROR_TITLE" = "Povolení registračního zámku se nezdařilo";
 
 /* Skip action on the pin creation view */
 "PIN_CREATION_SKIP" = "Deaktivovat PIN";
@@ -4382,7 +4424,7 @@
 "PIN_RECREATION_ERROR_TITLE" = "Vytvoření PIN selhalo";
 
 /* Error body indicating that the attempt to recreate a PIN failed. */
-"PIN_RECRETION_ERROR_MESSAGE" = "Couldn’t create your PIN. Check your connection and try again.";
+"PIN_RECRETION_ERROR_MESSAGE" = "Nepodařilo se vytvořit kód PIN. Zkontrolujte připojení a zkuste to znovu.";
 
 /* The explanation for the 'pin reminder' dialog. */
 "PIN_REMINDER_EXPLANATION" = "Abychom vám pomohli zapamatovat si PIN, budeme vás opakovaně žádat o jeho zadání. Postupem času vás budeme žádat méně.";
@@ -4430,7 +4472,7 @@
 "PINS_MEGAPHONE_ACTION" = "Vytvořit PIN";
 
 /* Body for PIN megaphone when user doesn't have a PIN */
-"PINS_MEGAPHONE_BODY" = "Finish creating your Signal PIN.";
+"PINS_MEGAPHONE_BODY" = "Dokončete vytváření Signal PIN.";
 
 /* Toast indication that the user will be reminded later to setup their PIN. Embeds {{time until mandatory}} */
 "PINS_MEGAPHONE_SNOOZE_TOAST_FORMAT" = "Připomeneme se vám později. Vytvoření PIN bude povinné za %ld dnů.";
@@ -4481,7 +4523,7 @@
 "PRIVACY_VERIFICATION_FAILURE_INVALID_QRCODE" = "Naskenovaný kód nevypadá jako bezpečnostní číslo. Používate oba aktuální verzi Signalu?";
 
 /* Paragraph(s) shown alongside the safety number when verifying privacy with {{contact name}} */
-"PRIVACY_VERIFICATION_INSTRUCTIONS" = "Pokud chcete ověřit bezpečnost koncového šifrování s %@, porovnete čísla výše s čísli na druhém zařízení.\n\nTaké můžete naskenovat kód z jejich telefonu, nebo je požádat o naskenování vašeho kódu.";
+"PRIVACY_VERIFICATION_INSTRUCTIONS" = "Pokud chcete ověřit bezpečnost koncového šifrování s %@, porovnejte čísla výše s čísly na zařízení vašeho kontaktu.\n\nTaké můžete naskenovat kód z jejich telefonu, nebo je požádat o naskenování vašeho kódu.";
 
 /* Navbar title */
 "PRIVACY_VERIFICATION_TITLE" = "Ověření bezpečnostního čísla";
@@ -4493,7 +4535,7 @@
 "PROCEED_BUTTON" = "Pokračovat";
 
 /* Placeholder text for the bio field of the profile bio view. */
-"PROFILE_BIO_VIEW_BIO_PLACEHOLDER" = "Napište o sobě několik slov...";
+"PROFILE_BIO_VIEW_BIO_PLACEHOLDER" = "Napište o sobě pár slov…";
 
 /* The 'Be kind' default bio in the profile bio view. */
 "PROFILE_BIO_VIEW_DEFAULT_BIO_BE_KIND" = "Buďte milí";
@@ -4597,6 +4639,15 @@
 /* Toast alert text shown when tapping on a quoted message which we cannot scroll to because the local copy of the message didn't exist when the quote was received. */
 "QUOTED_REPLY_ORIGINAL_MESSAGE_REMOTELY_SOURCED" = "Původní zpráva nebyla nalezena.";
 
+/* Header label that appears above quoted messages when the quoted content was includes a reaction to your own story. */
+"QUOTED_REPLY_REACTION_TO_OWN_STORY" = "Reagoval(a) na váš příběh";
+
+/* Header label that appears above quoted messages when the quoted content was includes a reaction to a story. Embeds {{ story author name }} */
+"QUOTED_REPLY_REACTION_TO_STORY_FORMAT" = "Reacted to %@’s story";
+
+/* Message header when you are quoting a story. Embeds {{ story author name }} */
+"QUOTED_REPLY_STORY_AUTHOR_INDICATOR_FORMAT" = "%@ · Story";
+
 /* Indicates this message is a quoted reply to an attachment of unknown type. */
 "QUOTED_REPLY_TYPE_ATTACHMENT" = "Příloha";
 
@@ -4697,7 +4748,7 @@
 "REGISTER_2FA_INVALID_PIN_ALERT_TITLE" = "Nesprávný PIN";
 
 /* Indicates the work we are doing while verifying the user's pin */
-"REGISTER_2FA_PIN_PROGRESS" = "Ověřujeme PIN...";
+"REGISTER_2FA_PIN_PROGRESS" = "Ověřování PIN…";
 
 /* Label for 'submit' button in the 2FA registration view. */
 "REGISTER_2FA_SUBMIT_BUTTON" = "Potvrdit";
@@ -5063,7 +5114,7 @@
 "SECONDARY_ONBOARDING_GET_STARTED_BY_OPENING_PRIMARY" = "Pro připojení tohoto iPad k vašemu účtu spusťte Signal na vašem telefonu.";
 
 /* Link explaining what to do when trying to link a device before having a primary device. */
-"SECONDARY_ONBOARDING_GET_STARTED_DO_NOT_HAVE_PRIMARY" = "Na mém telefonu nemám Signal...";
+"SECONDARY_ONBOARDING_GET_STARTED_DO_NOT_HAVE_PRIMARY" = "Na mém telefonu nemám Signal…";
 
 /* alert body */
 "SECONDARY_ONBOARDING_INSTALL_PRIMARY_FIRST_BODY" = "Jděte do App Store na vašem telefonu, nainstalujte Signal, dokončete registraci a poté můžete připojit Váš iPad ke stejnému účtu.";
@@ -5109,9 +5160,6 @@
 
 /* alert action when the user decides not to cancel the media flow after all. */
 "SEND_MEDIA_RETURN_TO_CAMERA" = "Zpět k fotoaparátu";
-
-/* alert action when the user decides not to cancel the media flow after all. */
-"SEND_MEDIA_RETURN_TO_MEDIA_LIBRARY" = "Zpět k mediální knihovně";
 
 /* No comment provided by engineer. */
 "SEND_SMS_CONFIRM_TITLE" = "Pozvat kamaráda přes zabezpečenou SMS?";
@@ -5353,9 +5401,6 @@
 /* Settings table view cell label */
 "SETTINGS_INVITE_TITLE" = "Pozvěte vaše přátele";
 
-/* content of tweet when inviting via twitter - please do not translate URL */
-"SETTINGS_INVITE_TWITTER_TEXT" = "Můžete mě kontaktovat pomocí aplikace @signalapp. Stáhnout nyní: https://signal.org/download/";
-
 /* Label for settings view that allows user to change the chat color and wallpaper. */
 "SETTINGS_ITEM_COLOR_AND_WALLPAPER" = "Barva chatu a tapety";
 
@@ -5417,10 +5462,13 @@
 "SETTINGS_NOTIFICATION_EVENTS_CONTACT_JOINED_SIGNAL" = "Kontakt se připojil k Signalu";
 
 /* table section header */
-"SETTINGS_NOTIFICATION_NOTIFY_WHEN_TITLE" = "Upozornit, když...";
+"SETTINGS_NOTIFICATION_NOTIFY_WHEN_TITLE" = "Upozornit, když…";
 
 /* The title for the notification settings. */
 "SETTINGS_NOTIFICATIONS" = "Oznámení";
+
+/* Title for the 'one-time donation' link in settings. */
+"SETTINGS_ONE_TIME_DONATION" = "One-time Donation";
 
 /* Label for the 'agree to payments terms' button in the 'activate payments confirmation' UI in the payment settings. */
 "SETTINGS_PAYMENTS_ACTIVATE_PAYMENTS_CONFIRM_AGREE" = "Aktivovat";
@@ -5935,11 +5983,8 @@
 /* Footer for setting for enabling & disabling contact and notification sharing with iOS. */
 "SETTINGS_SHARING_SUGGESTIONS_NOTIFICATIONS_FOOTER" = "Povolit iOS přístup ke kontaktům a konverzacím Signal pro zpřístupnění funkcí jako doporučení ke sdílení a upozornění.";
 
-/* Title for the 'signal boost' link in settings. */
-"SETTINGS_SIGNAL_BOOST" = "Signal Boost";
-
-/* Title for the 'become a sustainer' link in settings. */
-"SETTINGS_SUBSCRIPTION" = "Staňte se podporovatelem";
+/* Title for the 'monthly donation' link in settings. */
+"SETTINGS_SUBSCRIPTION" = "Monthly Donation";
 
 /* Label for the 'enable registration lock' switch of the privacy settings. */
 "SETTINGS_TWO_FACTOR_AUTH_SWITCH_LABEL" = "Zámek registrace";
@@ -5966,7 +6011,7 @@
 "SETTINGS_VERSION" = "Verze";
 
 /* Label for the 'who can' privacy settings. */
-"SETTINGS_WHO_CAN" = "Kdo může...";
+"SETTINGS_WHO_CAN" = "Kdo může…";
 
 /* action sheet item to open native mail app */
 "SHARE_ACTION_MAIL" = "E-mail";
@@ -5974,14 +6019,11 @@
 /* action sheet item to open native messages app */
 "SHARE_ACTION_MESSAGE" = "Zpráva";
 
-/* action sheet item */
-"SHARE_ACTION_TWEET" = "Twitter";
-
 /* alert body when sharing file failed because of untrusted/changed identity keys */
 "SHARE_EXTENSION_FAILED_SENDING_BECAUSE_UNTRUSTED_IDENTITY_FORMAT" = "Vaše bezpečnostní číslo s %@ se nedávno změnilo. Před novým odesláním zvažte jeho ověření.";
 
 /* Indicates that the share extension is still loading. */
-"SHARE_EXTENSION_LOADING" = "Načítání...";
+"SHARE_EXTENSION_LOADING" = "Načítání…";
 
 /* Message indicating that the share extension cannot be used until the user has registered in the main app. */
 "SHARE_EXTENSION_NOT_REGISTERED_MESSAGE" = "Otevřete Signal pro registraci.";
@@ -6002,7 +6044,7 @@
 "SHARE_EXTENSION_SENDING_IN_PROGRESS_FORMAT" = "Nahrávání %1$@ z %2$@…";
 
 /* Alert title */
-"SHARE_EXTENSION_SENDING_IN_PROGRESS_TITLE" = "Nahrávání...";
+"SHARE_EXTENSION_SENDING_IN_PROGRESS_TITLE" = "Nahrávání…";
 
 /* Shown when trying to share content to a Signal user for the share extension. Followed by failure details. */
 "SHARE_EXTENSION_UNABLE_TO_BUILD_ATTACHMENT_ALERT_TITLE" = "Přílohu nelze připravit";
@@ -6068,7 +6110,7 @@
 "STICKERS_MANAGE_VIEW_INSTALLED_PACKS_SECTION_TITLE" = "Instalované nálepky";
 
 /* Label indicating that one or more known sticker packs is loading. */
-"STICKERS_MANAGE_VIEW_LOADING_KNOWN_PACKS" = "Načítání...";
+"STICKERS_MANAGE_VIEW_LOADING_KNOWN_PACKS" = "Načítání…";
 
 /* Label indicating that the user has no installed sticker packs. */
 "STICKERS_MANAGE_VIEW_NO_INSTALLED_PACKS" = "Nejsou instalovány žádné nálepky";
@@ -6091,6 +6133,60 @@
 /* Label for the 'uninstall sticker pack' button. */
 "STICKERS_UNINSTALL_BUTTON" = "Odinstalovat";
 
+/* Text indication a story caption can be tapped to read more. */
+"STORIES_CAPTION_READ_MORE" = "Číst dále";
+
+/* Context menu action to copy the selected story reply */
+"STORIES_COPY_REPLY_ACTION" = "Kopírovat";
+
+/* Context menu action to delete the selected story reply */
+"STORIES_DELETE_REPLY_ACTION" = "Smazat";
+
+/* Context menu action to forward the selected story */
+"STORIES_FORWARD_STORY_ACTION" = "Přeposlat";
+
+/* Context menu action to open the chat associated with the selected story */
+"STORIES_GO_TO_CHAT_ACTION" = "Jít do konverzace";
+
+/* Context menu action to hide the selected story */
+"STORIES_HIDE_STORY_ACTION" = "Schovat příběh";
+
+/* Indicates that there are no recent stories to render */
+"STORIES_NO_RECENT_MESSAGES" = "Žádné nové aktualizace k zobrazení.";
+
+/* Indicates that this story has no replies yet */
+"STORIES_NO_REPLIES_YET" = "Zatím žádné odpovědi";
+
+/* Context menu action to share the selected story */
+"STORIES_SHARE_STORY_ACTION" = "Sdílet";
+
+/* Title for the stories view. */
+"STORIES_TITLE" = "Příběhy";
+
+/* Tooltip prompting the user to visit a story link. */
+"STORY_LINK_PREVIEW_VISIT_LINK_TOOLTIP" = "Navštívit odkaz";
+
+/* Text indicating a story that was replied to is no longer available. */
+"STORY_NO_LONGER_AVAILABLE" = "Není již dostupný";
+
+/* Button for replying to a story with a single existing reply. */
+"STORY_REPLY_BUTTON_WITH_1_REPLY" = "<bold>1</bold> odpověď";
+
+/* Button for replying to a story with N existing replies. {embeds the number of replies} */
+"STORY_REPLY_BUTTON_WITH_N_REPLIES_FORMAT" = "<bold>%@</bold> odpovědi/í";
+
+/* Button for replying to a story with no existing replies. */
+"STORY_REPLY_BUTTON_WITH_NO_REPLIES" = "Odpověď";
+
+/* Text indicating a story has been reacted to */
+"STORY_REPLY_REACTION" = "Reagoval(a) na příběh";
+
+/* placeholder text for replying to a story */
+"STORY_REPLY_TEXT_FIELD_PLACEHOLDER" = "Odpověď";
+
+/* Author text when the local user author's a story reply */
+"STORY_REPLY_YOU_AUTHOR" = "Vy";
+
 /* Title for the 'Badges' button in sustainer view. */
 "SUBSCRIBER_BADGES" = "Odznaky";
 
@@ -6101,13 +6197,13 @@
 "SUBSCRIBER_SUBSCRIPTION_FAQ" = "Často kladené dotazy k předplatnému";
 
 /* Action text for subscription megaphone */
-"SUBSCRIPTION_MEGAPHONE_ACTION" = "Podpořit";
+"SUBSCRIPTION_MEGAPHONE_ACTION" = "Sponzorujte";
 
 /* Body for subscription megaphone */
-"SUBSCRIPTION_MEGAPHONE_BODY" = "Signal je aplikace, za kterou stojí lidé jako vy. Prokažte jim dnes svoji podporu!";
+"SUBSCRIPTION_MEGAPHONE_BODY" = "Signal is powered by people like you. Donate and receive a badge.";
 
 /* Cancel text for subscription megaphone */
-"SUBSCRIPTION_MEGAPHONE_CANCEL" = "Ne, děkuji";
+"SUBSCRIPTION_MEGAPHONE_CANCEL" = "Nyní ne";
 
 /* Title for subscription megaphone */
 "SUBSCRIPTION_MEGAPHONE_TITLE" = "Staňte se podporovatelem";
@@ -6170,16 +6266,16 @@
 "SUPPORT_LOG_UPLOAD_IN_PROGRESS" = "Načítání";
 
 /* First block of description text in read more sheet */
-"SUSTAINER_READ_MORE_DESCRIPTION_BLOCK_ONE" = "Signal je nezisková organizace bez inzerentů a investorů, kterou živí pouze lidé, kteří ji používají a oceňují. Přispívejte pravidelně každý měsíc a získejte profilový odznak, abyste se podělili o svou podporu.";
+"SUSTAINER_READ_MORE_DESCRIPTION_BLOCK_ONE" = "Signal is a nonprofit with no advertisers or investors, sustained only by the people who use and value it. Make a recurring monthly donation and receive a profile badge to share your support.";
 
 /* Second block of description text in read more sheet */
-"SUSTAINER_READ_MORE_DESCRIPTION_BLOCK_TWO" = "Společnost Signal se zavázala vyvíjet open source technologii ochrany soukromí, která chrání svobodu projevu a umožňuje bezpečnou globální komunikaci.\n\nSvým příspěvkem podpoříte tento účel a zaplatíte vývoj a provoz aplikace, kterou používají miliony lidí pro soukromou komunikaci. Žádné reklamy. Žádné trackery. Bez legrace.";
+"SUSTAINER_READ_MORE_DESCRIPTION_BLOCK_TWO" = "Signal is committed to developing open source privacy technology that protects free expression and enables secure global communication.\n\nYour donation fuels this cause and pays for the development and operations of an app used by millions for private communication. No ads. No trackers. No kidding.";
 
 /* Title for the signal sustainer read more view */
-"SUSTAINER_READ_MORE_TITLE" = "Podpořte technologii, která je vytvořena pro vás, ne kvůli vašim datům, a připojte se ke komunitě lidí, kteří ji podporují.";
+"SUSTAINER_READ_MORE_TITLE" = "Support technology that is built for you—not for your data—by joining the community that sustains it.";
 
 /* Why Contribute title for the signal sustainer read more view */
-"SUSTAINER_READ_MORE_WHY_CONTRIBUTE" = "Proč podpořit?";
+"SUSTAINER_READ_MORE_WHY_CONTRIBUTE" = "Proč přispět?";
 
 /* Action sheet title for Still Processing Badge sheet */
 "SUSTAINER_STILL_PROCESSING_BADGE_TITLE" = "Stále zpracovávám";
@@ -6223,7 +6319,7 @@
 /* Existing subscriber support header */
 "SUSTAINER_VIEW_MY_SUPPORT" = "Má podpora";
 
-/* Payment error occured text, embeds {{link to contact support}} */
+/* Payment error occurred text, embeds {{link to contact support}} */
 "SUSTAINER_VIEW_PAYMENT_ERROR" = "Chyba při zpracovávání platby. %@";
 
 /* Pricing text for sustainer view badges, embeds {{price}} */
@@ -6242,7 +6338,7 @@
 "SUSTAINER_VIEW_PROCESSING_TRANSACTION" = "Zpracovávání transakce…";
 
 /* Read More tappable text in sustainer view body */
-"SUSTAINER_VIEW_READ_MORE" = "Číst dál.";
+"SUSTAINER_VIEW_READ_MORE" = "Read more.";
 
 /* Renewal date text for sustainer view level, embeds {{renewal date}} */
 "SUSTAINER_VIEW_RENEWAL" = "Obnoví se %@";
@@ -6269,7 +6365,7 @@
 "SUSTAINER_VIEW_UPDATE_SUBSCRIPTION_CONFIRMATION_UPDATE" = "Aktualizovat";
 
 /* The body text for the signal sustainer view */
-"SUSTAINER_VIEW_WHY_DONATE_BODY" = "Podpořte technologii, která je vytvořena pro vás, ne kvůli vašim datům, a připojte se ke komunitě lidí, kteří ji podporují.";
+"SUSTAINER_VIEW_WHY_DONATE_BODY" = "Make a recurring monthly donation to Signal to support technology built for you, not your data.";
 
 /* Label for 'off' state of a switch control. */
 "SWITCH_OFF" = "Vyp.";
@@ -6465,12 +6561,6 @@
 
 /* Error indicating that a group could not be updated due to network connectivity problems. */
 "UPDATE_GROUP_FAILED_DUE_TO_NETWORK" = "Skupinu nebylo možné aktualizovat. Zkontrolujte své připojení a zkuste to znovu.";
-
-/* Message for the alert indicating that user should upgrade iOS. */
-"UPGRADE_IOS_ALERT_MESSAGE" = "Signal bude brzy vyžadovat iOS 11 nebo novější. Proveďte prosím aktualizaci v aplikaci Nastavení >> Obecné >> Aktualizace softwaru.";
-
-/* Title for the alert indicating that user should upgrade iOS. */
-"UPGRADE_IOS_ALERT_TITLE" = "Upgradujte iOS";
 
 /* An explanation of how usernames work on the username view. */
 "USERNAME_DESCRIPTION" = "Uživatelská jména na Signal jsou nepovinná. Pokud se rozhodnete vytvořit uživatelské jméno, ostatní uživatelé Signal vás budou moci najít podle tohoto uživatelského jména a kontaktovat vás, aniž by znali vaše telefonní číslo.";

@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -107,16 +107,20 @@ public extension ConversationViewController {
 
     // MARK: - Verification
 
-    // Returns a collection of the group members who are "no longer verified".
-    var noLongerVerifiedAddresses: [SignalServiceAddress] {
+    // Returns a random sub-collection of the group members who are "no longer verified".
+    func arbitraryNoLongerVerifiedAddresses(limit: Int) -> [SignalServiceAddress] {
         databaseStorage.read { transaction in
-            self.noLongerVerifiedAddresses(transaction: transaction)
+            self.noLongerVerifiedAddresses(limit: limit, transaction: transaction)
         }
     }
 
-    // Returns a collection of the group members who are "no longer verified".
-    func noLongerVerifiedAddresses(transaction: SDSAnyReadTransaction) -> [SignalServiceAddress] {
-        thread.recipientAddresses.filter { address in
+    func noLongerVerifiedAddresses(limit: Int, transaction: SDSAnyReadTransaction) -> [SignalServiceAddress] {
+        if let groupThread = thread as? TSGroupThread {
+            return Self.identityManager.noLongerVerifiedAddresses(inGroup: groupThread.uniqueId,
+                                                                  limit: limit,
+                                                                  transaction: transaction)
+        }
+        return thread.recipientAddresses.filter { address in
             Self.identityManager.verificationState(for: address,
                                                    transaction: transaction) == .noLongerVerified
         }
@@ -126,7 +130,8 @@ public extension ConversationViewController {
         AssertIsOnMainThread()
 
         databaseStorage.write { transaction in
-            let noLongerVerifiedAddresses = self.noLongerVerifiedAddresses(transaction: transaction)
+            let noLongerVerifiedAddresses = self.noLongerVerifiedAddresses(limit: Int.max,
+                                                                           transaction: transaction)
             for address in noLongerVerifiedAddresses {
                 owsAssertDebug(address.isValid)
 
@@ -151,13 +156,17 @@ public extension ConversationViewController {
     func showNoLongerVerifiedUI() {
         AssertIsOnMainThread()
 
-        let noLongerVerifiedAddresses = self.noLongerVerifiedAddresses
-        if noLongerVerifiedAddresses.count > 1 {
-            showConversationSettingsAndShowVerification()
-        } else if noLongerVerifiedAddresses.count == 1,
-                  let address = noLongerVerifiedAddresses.last {
+        let addresses = arbitraryNoLongerVerifiedAddresses(limit: 2)
+        switch addresses.count {
+        case 0:
+             break
+
+        case 1:
             // Pick one in an arbitrary but deterministic manner.
-            showFingerprint(address: address)
+            showFingerprint(address: addresses[0])
+
+        default:
+            showConversationSettingsAndShowVerification()
         }
     }
 
@@ -509,8 +518,7 @@ extension ConversationViewController {
         AssertIsOnMainThread()
 
         if isUserScrolling || !isViewCompletelyAppeared || !isViewVisible
-            || !CurrentAppContext().isAppForegroundAndActive() || !viewHasEverAppeared
-            || isPresentingMessageActions {
+            || !CurrentAppContext().isAppForegroundAndActive() || !viewHasEverAppeared {
             return
         }
 

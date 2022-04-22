@@ -3,8 +3,7 @@
 //
 
 import Foundation
-import SignalMetadataKit
-import SignalClient
+import LibSignalClient
 
 @objc
 public extension MessageSender {
@@ -78,8 +77,9 @@ extension MessageSender {
                 deviceIds = deviceIds.filter { $0 != localDeviceId }
             }
 
+            let sessionStore = signalProtocolStore(for: .aci).sessionStore
             return deviceIds.filter { deviceId in
-                !self.sessionStore.containsActiveSession(
+                !sessionStore.containsActiveSession(
                     forAccountId: recipient.accountId,
                     deviceId: Int32(deviceId),
                     transaction: transaction
@@ -240,7 +240,7 @@ public extension MessageSender {
                 if httpStatusCode == 404 {
                     self.hadMissingDeviceError(recipientAddress: recipientAddress, deviceId: deviceId)
                     return failure(MessageSenderError.missingDevice)
-                } else if httpStatusCode == 413 {
+                } else if httpStatusCode == 413 || httpStatusCode == 429 {
                     return failure(MessageSenderError.prekeyRateLimit)
                 } else if httpStatusCode == 428 {
                     // SPAM TODO: Only retry messages with -hasRenderableContent
@@ -282,24 +282,24 @@ public extension MessageSender {
 
         Logger.info("Creating session for recipientAddress: \(recipientAddress), deviceId: \(deviceId)")
 
-        guard !sessionStore.containsActiveSession(forAccountId: accountId,
-                                                  deviceId: deviceId.int32Value,
-                                                  transaction: transaction) else {
+        guard !signalProtocolStore(for: .aci).sessionStore.containsActiveSession(forAccountId: accountId,
+                                                                                 deviceId: deviceId.int32Value,
+                                                                                 transaction: transaction) else {
             Logger.warn("Session already exists.")
             return
         }
 
-        let bundle: SignalClient.PreKeyBundle
+        let bundle: LibSignalClient.PreKeyBundle
         if preKeyBundle.preKeyPublic.isEmpty {
-            bundle = try SignalClient.PreKeyBundle(
+            bundle = try LibSignalClient.PreKeyBundle(
                 registrationId: UInt32(bitPattern: preKeyBundle.registrationId),
                 deviceId: UInt32(bitPattern: preKeyBundle.deviceId),
                 signedPrekeyId: UInt32(bitPattern: preKeyBundle.signedPreKeyId),
                 signedPrekey: try PublicKey(preKeyBundle.signedPreKeyPublic),
                 signedPrekeySignature: preKeyBundle.signedPreKeySignature,
-                identity: try SignalClient.IdentityKey(bytes: preKeyBundle.identityKey))
+                identity: try LibSignalClient.IdentityKey(bytes: preKeyBundle.identityKey))
         } else {
-            bundle = try SignalClient.PreKeyBundle(
+            bundle = try LibSignalClient.PreKeyBundle(
                 registrationId: UInt32(bitPattern: preKeyBundle.registrationId),
                 deviceId: UInt32(bitPattern: preKeyBundle.deviceId),
                 prekeyId: UInt32(bitPattern: preKeyBundle.preKeyId),
@@ -307,15 +307,15 @@ public extension MessageSender {
                 signedPrekeyId: UInt32(bitPattern: preKeyBundle.signedPreKeyId),
                 signedPrekey: try PublicKey(preKeyBundle.signedPreKeyPublic),
                 signedPrekeySignature: preKeyBundle.signedPreKeySignature,
-                identity: try SignalClient.IdentityKey(bytes: preKeyBundle.identityKey))
+                identity: try LibSignalClient.IdentityKey(bytes: preKeyBundle.identityKey))
         }
 
         do {
             let protocolAddress = try ProtocolAddress(from: recipientAddress, deviceId: deviceId.uint32Value)
             try processPreKeyBundle(bundle,
                                     for: protocolAddress,
-                                    sessionStore: sessionStore,
-                                    identityStore: identityManager,
+                                    sessionStore: signalProtocolStore(for: .aci).sessionStore,
+                                    identityStore: identityManager.store(for: .aci, transaction: transaction),
                                     context: transaction)
         } catch SignalError.untrustedIdentity(_) {
             handleUntrustedIdentityKeyError(accountId: accountId,
@@ -324,9 +324,9 @@ public extension MessageSender {
                                             transaction: transaction)
             throw UntrustedIdentityError(address: recipientAddress)
         }
-        if !sessionStore.containsActiveSession(forAccountId: accountId,
-                                               deviceId: deviceId.int32Value,
-                                               transaction: transaction) {
+        if !signalProtocolStore(for: .aci).sessionStore.containsActiveSession(forAccountId: accountId,
+                                                                              deviceId: deviceId.int32Value,
+                                                                              transaction: transaction) {
             owsFailDebug("Session does not exist.")
         }
     }
@@ -587,6 +587,15 @@ extension MessageSender {
             // which recipients are unregistered.
             return firstly(on: .global()) { () -> Promise<[SignalServiceAddress]> in
                 Self.ensureRecipientAddresses(sendInfo.recipients, message: message)
+            }.map(on: .global()) { (registeredRecipients: [SignalServiceAddress]) in
+                // For group story replies, we must check if the recipients are stories capable
+                guard message.isGroupStoryReply else { return registeredRecipients }
+
+                let profiles = databaseStorage.read {
+                    Self.profileManager.getUserProfiles(forAddresses: registeredRecipients, transaction: $0)
+                }
+
+                return registeredRecipients.filter { profiles[$0]?.isStoriesCapable == true }
             }.map(on: .global()) { (validRecipients: [SignalServiceAddress]) in
                 // Replace recipients with validRecipients.
                 MessageSendInfo(thread: sendInfo.thread,
@@ -599,6 +608,7 @@ extension MessageSender {
             // * Recipient is no longer in the group.
             // * Recipient is blocked.
             // * Recipient is unregistered.
+            // * Recipient does not have the required capability.
             //
             // Elsewhere, we skip recipient if their Signal account has been deactivated.
             let skippedRecipients = Set(message.sendingRecipientAddresses()).subtracting(sendInfo.recipients)
@@ -656,28 +666,26 @@ extension MessageSender {
             currentValidRecipients.remove(localAddress)
             recipientAddresses.formIntersection(currentValidRecipients)
 
-            recipientAddresses.subtract(self.blockingManager.blockedAddresses)
+            let blockedAddresses = databaseStorage.read { blockingManager.blockedAddresses(transaction: $0) }
+            recipientAddresses.subtract(blockedAddresses)
 
             if recipientAddresses.contains(localAddress) {
                 owsFailDebug("Message send recipients should not include self.")
             }
             return Array(recipientAddresses)
-        } else if let contactThread = thread as? TSContactThread {
-            let contactAddress = contactThread.contactAddress
-            if contactAddress.isLocalAddress {
-                return [contactAddress]
-            }
-
+        } else if let contactAddress = (thread as? TSContactThread)?.contactAddress {
             // Treat 1:1 sends to blocked contacts as failures.
             // If we block a user, don't send 1:1 messages to them. The UI
             // should prevent this from occurring, but in some edge cases
             // you might, for example, have a pending outgoing message when
             // you block them.
-            guard !self.blockingManager.isAddressBlocked(contactAddress) else {
+            let isBlocked = databaseStorage.read { blockingManager.isAddressBlocked(contactAddress, transaction: $0) }
+            if isBlocked {
                 Logger.info("Skipping 1:1 send to blocked contact: \(contactAddress).")
                 throw MessageSenderError.blockedContactRecipient
+            } else {
+                return [contactAddress]
             }
-            return [contactAddress]
         } else {
             owsFailDebug("Invalid thread.")
             throw SSKUnretryableError.invalidThread
@@ -874,7 +882,7 @@ public extension MessageSender {
             transaction.addSyncCompletion {
                 BenchManager.completeEvent(eventId: "sendMessageNetwork-\(message.timestamp)")
                 BenchManager.completeEvent(eventId: "sendMessageMarkedAsSent-\(message.timestamp)")
-                BenchManager.startEvent(title: "Send Message Milestone: Post-Network (\(message.timestamp)))",
+                BenchManager.startEvent(title: "Send Message Milestone: Post-Network (\(message.timestamp))",
                                         eventId: "sendMessagePostNetwork-\(message.timestamp)")
             }
 
@@ -1075,7 +1083,7 @@ extension MessageSender {
 
     // Called when the server indicates that the devices no longer exist - e.g. when the remote recipient has reinstalled.
     func handleStaleDevices(staleDevices devicesIn: [Int]?,
-                                    address: SignalServiceAddress) {
+                            address: SignalServiceAddress) {
         owsAssertDebug(!Thread.isMainThread)
         let staleDevices = devicesIn ?? []
 
@@ -1089,8 +1097,9 @@ extension MessageSender {
 
         Self.databaseStorage.write { transaction in
             Logger.info("Archiving sessions for stale devices: \(staleDevices)")
+            let sessionStore = signalProtocolStore(for: .aci).sessionStore
             for staleDeviceId in staleDevices {
-                Self.sessionStore.archiveSession(for: address, deviceId: Int32(staleDeviceId), transaction: transaction)
+                sessionStore.archiveSession(for: address, deviceId: Int32(staleDeviceId), transaction: transaction)
             }
         }
     }
@@ -1120,6 +1129,7 @@ extension MessageSender {
 
         if !devicesToRemove.isEmpty {
             Logger.info("Archiving sessions for extra devices: \(devicesToRemove), \(devicesToRemove)")
+            let sessionStore = signalProtocolStore(for: .aci).sessionStore
             for deviceId in devicesToRemove {
                 sessionStore.archiveSession(for: address, deviceId: deviceId.int32Value, transaction: transaction)
             }
@@ -1140,9 +1150,10 @@ extension MessageSender {
         let recipientAddress = messageSend.address
         owsAssertDebug(recipientAddress.isValid)
 
-        guard Self.sessionStore.containsActiveSession(for: recipientAddress,
-                                                      deviceId: deviceId,
-                                                      transaction: transaction) else {
+        let signalProtocolStore = signalProtocolStore(for: .aci)
+        guard signalProtocolStore.sessionStore.containsActiveSession(for: recipientAddress,
+                                                                        deviceId: deviceId,
+                                                                        transaction: transaction) else {
             throw MessageSendEncryptionError(recipientAddress: recipientAddress, deviceId: deviceId)
         }
         guard let plainText = messageSend.plaintextContent else {
@@ -1157,14 +1168,15 @@ extension MessageSender {
         let protocolAddress = try ProtocolAddress(from: recipientAddress, deviceId: UInt32(bitPattern: deviceId))
 
         if let udSendingAccess = messageSend.udSendingAccess {
-            let secretCipher = try SMKSecretSessionCipher(sessionStore: Self.sessionStore,
-                                                          preKeyStore: Self.preKeyStore,
-                                                          signedPreKeyStore: Self.signedPreKeyStore,
-                                                          identityStore: Self.identityManager,
-                                                          senderKeyStore: Self.senderKeyStore)
+            let secretCipher = try SMKSecretSessionCipher(
+                sessionStore: signalProtocolStore.sessionStore,
+                preKeyStore: signalProtocolStore.preKeyStore,
+                signedPreKeyStore: signalProtocolStore.signedPreKeyStore,
+                identityStore: identityManager.store(for: .aci, transaction: transaction),
+                senderKeyStore: Self.senderKeyStore)
 
             serializedMessage = try secretCipher.encryptMessage(
-                recipient: SMKAddress(uuid: recipientAddress.uuid, e164: recipientAddress.phoneNumber),
+                recipient: recipientAddress,
                 deviceId: deviceId,
                 paddedPlaintext: paddedPlaintext,
                 contentHint: messageSend.message.contentHint.signalClientHint,
@@ -1177,8 +1189,8 @@ extension MessageSender {
         } else {
             let result = try signalEncrypt(message: paddedPlaintext,
                                            for: protocolAddress,
-                                           sessionStore: Self.sessionStore,
-                                           identityStore: Self.identityManager,
+                                           sessionStore: signalProtocolStore.sessionStore,
+                                           identityStore: identityManager.store(for: .aci, transaction: transaction),
                                            context: transaction)
 
             switch result.messageType {
@@ -1204,7 +1216,7 @@ extension MessageSender {
         }
 
         // We had better have a session after encrypting for this recipient!
-        let session = try Self.sessionStore.loadSession(for: protocolAddress, context: transaction)!
+        let session = try signalProtocolStore.sessionStore.loadSession(for: protocolAddress, context: transaction)!
 
         // Returns the per-device-message parameters used when submitting a message to
         // the Signal Web Service.
@@ -1247,7 +1259,7 @@ extension MessageSender {
             let outerBytes = try sealedSenderEncrypt(
                 usmc,
                 for: protocolAddress,
-                identityStore: identityManager,
+                identityStore: identityManager.store(for: .aci, transaction: transaction),
                 context: transaction)
 
             serializedMessage = Data(outerBytes)
@@ -1261,7 +1273,8 @@ extension MessageSender {
         // Returns the per-device-message parameters used when submitting a message to
         // the Signal Web Service.
         // See: https://github.com/signalapp/Signal-Server/blob/master/service/src/main/java/org/whispersystems/textsecuregcm/entities/IncomingMessage.java
-        let session = try Self.sessionStore.loadSession(for: protocolAddress, context: transaction)!
+        let session = try signalProtocolStore(for: .aci).sessionStore.loadSession(for: protocolAddress,
+                                                                                  context: transaction)!
         return [
             "type": messageType.rawValue,
             "destination": protocolAddress.name,

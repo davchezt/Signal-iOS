@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -128,6 +128,10 @@ class SubscriptionViewController: OWSTableViewController2 {
         return failureReason
     }
 
+    private var hasAnyDonationReceipts: Bool {
+        self.databaseStorage.read { DonationReceiptFinder.hasAny(transaction: $0) }
+    }
+
     private let bottomFooterStackView = UIStackView()
 
     open override var bottomFooter: UIView? {
@@ -137,7 +141,6 @@ class SubscriptionViewController: OWSTableViewController2 {
 
     private lazy var dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
-        formatter.locale = .current
         formatter.dateStyle = .medium
         return formatter
     }()
@@ -388,7 +391,7 @@ class SubscriptionViewController: OWSTableViewController2 {
         } else {
             databaseStorage.read { readTx in
                 if self.avatarImage == nil {
-                    self.avatarImage = Self.avatarBuilder.avatarImageForLocalUser(diameterPoints: self.sizeClass.avatarDiameter,
+                    self.avatarImage = Self.avatarBuilder.avatarImageForLocalUser(diameterPoints: self.sizeClass.diameter,
                                                                                   localUserDisplayMode: .asUser,
                                                                                   transaction: readTx)
                 }
@@ -418,7 +421,7 @@ class SubscriptionViewController: OWSTableViewController2 {
                 section.add(.init(
                     customCellBlock: { [weak self] in
                         guard let self = self else { return UITableViewCell() }
-                        let cell = self.newCell()
+                        let cell = AppSettingsViewsUtil.newCell(cellOuterInsets: self.cellOuterInsets)
 
                         let stackView = UIStackView()
                         stackView.axis = .horizontal
@@ -508,7 +511,7 @@ class SubscriptionViewController: OWSTableViewController2 {
         section.add(.init(
             customCellBlock: { [weak self] in
                 guard let self = self else { return UITableViewCell() }
-                let cell = self.newCell()
+                let cell = AppSettingsViewsUtil.newCell(cellOuterInsets: self.cellOuterInsets)
 
                 let titleLabel = UILabel()
                 titleLabel.text = NSLocalizedString("SUSTAINER_VIEW_MY_SUPPORT", comment: "Existing subscriber support header")
@@ -527,7 +530,7 @@ class SubscriptionViewController: OWSTableViewController2 {
             section.add(.init(
                 customCellBlock: { [weak self] in
                     guard let self = self else { return UITableViewCell() }
-                    let cell = self.newCell()
+                    let cell = AppSettingsViewsUtil.newCell(cellOuterInsets: self.cellOuterInsets)
 
                     let containerStackView = UIStackView()
                     containerStackView.axis = .vertical
@@ -602,7 +605,7 @@ class SubscriptionViewController: OWSTableViewController2 {
                         let text = NSLocalizedString("SUSTAINER_VIEW_PROCESSING_TRANSACTION", comment: "Status text while processing a badge redemption")
                         statusText = NSMutableAttributedString(string: text, attributes: [.foregroundColor: Theme.secondaryTextAndIconColor, .font: UIFont.ows_dynamicTypeBody2])
                     } else if subscriptionFailed {
-                        let helpFormat = self.subscriptionRedemptionFailureReason == .paymentFailed ? NSLocalizedString("SUSTAINER_VIEW_PAYMENT_ERROR", comment: "Payment error occured text, embeds {{link to contact support}}")
+                        let helpFormat = self.subscriptionRedemptionFailureReason == .paymentFailed ? NSLocalizedString("SUSTAINER_VIEW_PAYMENT_ERROR", comment: "Payment error occurred text, embeds {{link to contact support}}")
                         : NSLocalizedString("SUSTAINER_VIEW_CANT_ADD_BADGE", comment: "Couldn't add badge text, embeds {{link to contact support}}")
                         let contactSupport = NSLocalizedString("SUSTAINER_VIEW_CONTACT_SUPPORT", comment: "Contact support link")
                         let text = String(format: helpFormat, contactSupport)
@@ -717,36 +720,21 @@ class SubscriptionViewController: OWSTableViewController2 {
             }
         ))
 
+        if hasAnyDonationReceipts {
+            managementSection.add(.disclosureItem(
+                icon: .settingsReceipts,
+                name: NSLocalizedString("DONATION_RECEIPTS", comment: "Title of view where you can see all of your donation receipts, or button to take you there"),
+                accessibilityIdentifier: UIView.accessibilityIdentifier(in: self, name: "subscriptionReceipts"),
+                actionBlock: { [weak self] in
+                    let vc = DonationReceiptsViewController()
+                    self?.navigationController?.pushViewController(vc, animated: true)
+                }
+            ))
+        }
     }
 
     private func buildTableForPendingState(contents: OWSTableContents, section: OWSTableSection) {
-        section.add(.init(
-            customCellBlock: { [weak self] in
-                guard let self = self else { return UITableViewCell() }
-                let cell = self.newCell()
-                let stackView = UIStackView()
-                stackView.axis = .vertical
-                stackView.alignment = .center
-                stackView.layoutMargins = UIEdgeInsets(top: 16, leading: 0, bottom: 16, trailing: 0)
-                stackView.isLayoutMarginsRelativeArrangement = true
-                cell.contentView.addSubview(stackView)
-                stackView.autoPinEdgesToSuperviewEdges()
-
-                let activitySpinner: UIActivityIndicatorView
-                if #available(iOS 13, *) {
-                    activitySpinner = UIActivityIndicatorView(style: .medium)
-                } else {
-                    activitySpinner = UIActivityIndicatorView(style: .gray)
-                }
-
-                activitySpinner.startAnimating()
-
-                stackView.addArrangedSubview(activitySpinner)
-
-                return cell
-            },
-            actionBlock: {}
-        ))
+        section.add(AppSettingsViewsUtil.loadingTableItem(cellOuterInsets: cellOuterInsets))
     }
 
     private func buildTableForUpdatingSubscriptionState(contents: OWSTableContents, section: OWSTableSection) {
@@ -982,14 +970,6 @@ class SubscriptionViewController: OWSTableViewController2 {
 
     }
 
-    private func newCell() -> UITableViewCell {
-        let cell = OWSTableItem.newCell()
-        cell.selectionStyle = .none
-        cell.layoutMargins = cellOuterInsets
-        cell.contentView.layoutMargins = .zero
-        return cell
-    }
-
     private func newSubscriptionCell() -> SubscriptionLevelCell {
         let cell = SubscriptionLevelCell()
         OWSTableItem.configureCell(cell)
@@ -1062,7 +1042,7 @@ extension SubscriptionViewController: PKPaymentAuthorizationControllerDelegate {
             paymentButtonStyle: Theme.isDarkThemeEnabled ? .white : .black
         )
 
-        if #available(iOS 12, *) { applePayContributeButton.cornerRadius = 12 }
+        applePayContributeButton.cornerRadius = 12
         applePayContributeButton.addTarget(self, action: #selector(self.requestApplePayDonation), for: .touchUpInside)
         return applePayContributeButton
     }
@@ -1463,7 +1443,8 @@ private class SubscriptionReadMoreSheet: InteractiveSheetViewController {
         stackView.isLayoutMarginsRelativeArrangement = true
         contentScrollView.addSubview(stackView)
         stackView.autoPinHeightToSuperview()
-        stackView.autoPinWidth(toWidthOf: view)
+        // Pin to the scroll view's viewport, not to its scrollable area
+        stackView.autoPinWidth(toWidthOf: contentScrollView)
 
         contentScrollView.autoPinWidthToSuperview()
         contentScrollView.autoPinEdge(toSuperviewEdge: .bottom)

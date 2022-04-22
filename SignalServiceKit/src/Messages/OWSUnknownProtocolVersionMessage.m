@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 #import "OWSUnknownProtocolVersionMessage.h"
@@ -78,12 +78,16 @@ NSUInteger const OWSUnknownProtocolVersionMessageSchemaVersion = 1;
                  expireStartedAt:(uint64_t)expireStartedAt
                        expiresAt:(uint64_t)expiresAt
                 expiresInSeconds:(unsigned int)expiresInSeconds
+               isGroupStoryReply:(BOOL)isGroupStoryReply
               isViewOnceComplete:(BOOL)isViewOnceComplete
                isViewOnceMessage:(BOOL)isViewOnceMessage
                      linkPreview:(nullable OWSLinkPreview *)linkPreview
                   messageSticker:(nullable MessageSticker *)messageSticker
                    quotedMessage:(nullable TSQuotedMessage *)quotedMessage
     storedShouldStartExpireTimer:(BOOL)storedShouldStartExpireTimer
+           storyAuthorUuidString:(nullable NSString *)storyAuthorUuidString
+              storyReactionEmoji:(nullable NSString *)storyReactionEmoji
+                  storyTimestamp:(nullable NSNumber *)storyTimestamp
               wasRemotelyDeleted:(BOOL)wasRemotelyDeleted
                    customMessage:(nullable NSString *)customMessage
              infoMessageUserInfo:(nullable NSDictionary<InfoMessageUserInfoKey, id> *)infoMessageUserInfo
@@ -106,12 +110,16 @@ NSUInteger const OWSUnknownProtocolVersionMessageSchemaVersion = 1;
                    expireStartedAt:expireStartedAt
                          expiresAt:expiresAt
                   expiresInSeconds:expiresInSeconds
+                 isGroupStoryReply:isGroupStoryReply
                 isViewOnceComplete:isViewOnceComplete
                  isViewOnceMessage:isViewOnceMessage
                        linkPreview:linkPreview
                     messageSticker:messageSticker
                      quotedMessage:quotedMessage
       storedShouldStartExpireTimer:storedShouldStartExpireTimer
+             storyAuthorUuidString:storyAuthorUuidString
+                storyReactionEmoji:storyReactionEmoji
+                    storyTimestamp:storyTimestamp
                 wasRemotelyDeleted:wasRemotelyDeleted
                      customMessage:customMessage
                infoMessageUserInfo:infoMessageUserInfo
@@ -143,12 +151,12 @@ NSUInteger const OWSUnknownProtocolVersionMessageSchemaVersion = 1;
     if (!self.sender.isValid) {
         // This was sent from a linked device.
         if (self.isProtocolVersionUnknown) {
-            return NSLocalizedString(@"UNKNOWN_PROTOCOL_VERSION_NEED_TO_UPGRADE_FROM_LINKED_DEVICE",
+            return OWSLocalizedString(@"UNKNOWN_PROTOCOL_VERSION_NEED_TO_UPGRADE_FROM_LINKED_DEVICE",
                 @"Info message recorded in conversation history when local user receives an "
                 @"unknown message from a linked device and needs to "
                 @"upgrade.");
         } else {
-            return NSLocalizedString(@"UNKNOWN_PROTOCOL_VERSION_UPGRADE_COMPLETE_FROM_LINKED_DEVICE",
+            return OWSLocalizedString(@"UNKNOWN_PROTOCOL_VERSION_UPGRADE_COMPLETE_FROM_LINKED_DEVICE",
                 @"Info message recorded in conversation history when local user has "
                 @"received an unknown unknown message from a linked device and "
                 @"has upgraded.");
@@ -160,7 +168,7 @@ NSUInteger const OWSUnknownProtocolVersionMessageSchemaVersion = 1;
     if (self.isProtocolVersionUnknown) {
         if (senderName.length > 0) {
             return [NSString
-                stringWithFormat:NSLocalizedString(@"UNKNOWN_PROTOCOL_VERSION_NEED_TO_UPGRADE_WITH_NAME_FORMAT",
+                stringWithFormat:OWSLocalizedString(@"UNKNOWN_PROTOCOL_VERSION_NEED_TO_UPGRADE_WITH_NAME_FORMAT",
                                      @"Info message recorded in conversation history when local user receives an "
                                      @"unknown message and needs to "
                                      @"upgrade. Embeds {{user's name or phone number}}."),
@@ -168,7 +176,7 @@ NSUInteger const OWSUnknownProtocolVersionMessageSchemaVersion = 1;
         } else {
             OWSFailDebug(@"Missing sender name.");
 
-            return NSLocalizedString(@"UNKNOWN_PROTOCOL_VERSION_NEED_TO_UPGRADE_WITHOUT_NAME",
+            return OWSLocalizedString(@"UNKNOWN_PROTOCOL_VERSION_NEED_TO_UPGRADE_WITHOUT_NAME",
                 @"Info message recorded in conversation history when local user receives an unknown message and needs "
                 @"to "
                 @"upgrade.");
@@ -176,7 +184,7 @@ NSUInteger const OWSUnknownProtocolVersionMessageSchemaVersion = 1;
     } else {
         if (senderName.length > 0) {
             return [NSString
-                stringWithFormat:NSLocalizedString(@"UNKNOWN_PROTOCOL_VERSION_UPGRADE_COMPLETE_WITH_NAME_FORMAT",
+                stringWithFormat:OWSLocalizedString(@"UNKNOWN_PROTOCOL_VERSION_UPGRADE_COMPLETE_WITH_NAME_FORMAT",
                                      @"Info message recorded in conversation history when local user has received an "
                                      @"unknown message and has "
                                      @"upgraded. Embeds {{user's name or phone number}}."),
@@ -184,7 +192,7 @@ NSUInteger const OWSUnknownProtocolVersionMessageSchemaVersion = 1;
         } else {
             OWSFailDebug(@"Missing sender name.");
 
-            return NSLocalizedString(@"UNKNOWN_PROTOCOL_VERSION_UPGRADE_COMPLETE_WITHOUT_NAME",
+            return OWSLocalizedString(@"UNKNOWN_PROTOCOL_VERSION_UPGRADE_COMPLETE_WITHOUT_NAME",
                 @"Info message recorded in conversation history when local user has received an unknown message and "
                 @"has upgraded.");
         }

@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -105,7 +105,7 @@ public class AttachmentApprovalViewController: UIPageViewController, UIPageViewC
 
     @available(*, unavailable, message: "use attachment: constructor instead.")
     required public init?(coder aDecoder: NSCoder) {
-        notImplemented()
+        fatalError("init(coder:) has not been implemented")
     }
 
     let kSpacingBetweenItems: CGFloat = 20
@@ -237,6 +237,13 @@ public class AttachmentApprovalViewController: UIPageViewController, UIPageViewC
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(didTapTouchInterceptorView(gesture:)))
         touchInterceptorView.addGestureRecognizer(tapGesture)
 
+        let bottomToolViewWidth = view.bounds.width
+        let bottomToolViewHeight = bottomToolView.systemLayoutSizeFitting(view.bounds.size, withHorizontalFittingPriority: .required, verticalFittingPriority: .fittingSizeLevel).height
+        bottomToolView.frame = CGRect(x: 0, y: view.bounds.maxY - bottomToolViewHeight, width: bottomToolViewWidth, height: bottomToolViewHeight)
+        UIView.performWithoutAnimation {
+            bottomToolView.setNeedsLayout()
+            bottomToolView.layoutIfNeeded()
+        }
         view.addSubview(bottomToolView)
         bottomToolView.autoPinWidthToSuperview()
         bottomToolViewBottomConstraint =  bottomToolView.autoPinEdge(toSuperviewEdge: .bottom)
@@ -337,7 +344,7 @@ public class AttachmentApprovalViewController: UIPageViewController, UIPageViewC
 
         guard !isEditingCaptions else {
             // Hide all navigation bar items while the caption view is open.
-            self.navigationItem.leftBarButtonItem = UIBarButtonItem(title: NSLocalizedString("ATTACHMENT_APPROVAL_CAPTION_TITLE", comment: "Title for 'caption' mode of the attachment approval view."), style: .plain, target: nil, action: nil)
+            self.navigationItem.leftBarButtonItem = UIBarButtonItem(title: OWSLocalizedString("ATTACHMENT_APPROVAL_CAPTION_TITLE", comment: "Title for 'caption' mode of the attachment approval view."), style: .plain, target: nil, action: nil)
 
             let doneButton = navigationBarButton(imageName: "image_editor_checkmark_full",
                                                  selector: #selector(didTapCaptionDone(sender:)))
@@ -824,7 +831,7 @@ public class AttachmentApprovalViewController: UIPageViewController, UIPageViewC
     }
 
     public func didTapSave() {
-            let errorText = NSLocalizedString("ATTACHMENT_APPROVAL_FAILED_TO_SAVE",
+            let errorText = OWSLocalizedString("ATTACHMENT_APPROVAL_FAILED_TO_SAVE",
                                               comment: "alert text when Signal was unable to save a copy of the attachment to the system photo library")
             do {
                 let saveableAsset: SaveableAsset = try SaveableAsset(attachmentApprovalItem: self.currentItem)
@@ -846,7 +853,7 @@ public class AttachmentApprovalViewController: UIPageViewController, UIPageViewC
                     }) { didSucceed, error in
                         DispatchQueue.main.async {
                             if didSucceed {
-                                let toastController = ToastController(text: NSLocalizedString("ATTACHMENT_APPROVAL_MEDIA_DID_SAVE",
+                                let toastController = ToastController(text: OWSLocalizedString("ATTACHMENT_APPROVAL_MEDIA_DID_SAVE",
                                                                                               comment: "toast alert shown after user taps the 'save' button"))
                                 let inset = self.bottomToolView.height + 16
                                 toastController.presentToastView(fromBottomOfView: self.view, inset: inset)
@@ -907,7 +914,7 @@ extension AttachmentApprovalViewController: AttachmentTextToolbarDelegate {
                     modalVC.dismiss {
                         let actionSheet = ActionSheetController(
                             title: CommonStrings.errorAlertTitle,
-                            message: NSLocalizedString(
+                            message: OWSLocalizedString(
                                 "ATTACHMENT_APPROVAL_FAILED_TO_EXPORT",
                                 comment: "Error that outgoing attachments could not be exported."))
                         actionSheet.addAction(ActionSheetAction(title: CommonStrings.okButton, style: .default))
@@ -943,7 +950,7 @@ extension AttachmentApprovalViewController: AttachmentTextToolbarDelegate {
         let buttonStack = UIStackView(arrangedSubviews: [
             buildOutputQualityButton(
                 title: ImageQualityLevel.standard.localizedString,
-                subtitle: NSLocalizedString(
+                subtitle: OWSLocalizedString(
                     "ATTACHMENT_APPROVAL_MEDIA_QUALITY_STANDARD_OPTION_SUBTITLE",
                     comment: "Subtitle for the 'standard' option for media quality."
                 ),
@@ -955,7 +962,7 @@ extension AttachmentApprovalViewController: AttachmentTextToolbarDelegate {
             ),
             buildOutputQualityButton(
                 title: ImageQualityLevel.high.localizedString,
-                subtitle: NSLocalizedString(
+                subtitle: OWSLocalizedString(
                     "ATTACHMENT_APPROVAL_MEDIA_QUALITY_HIGH_OPTION_SUBTITLE",
                     comment: "Subtitle for the 'high' option for media quality."
                 ),
@@ -976,7 +983,7 @@ extension AttachmentApprovalViewController: AttachmentTextToolbarDelegate {
         titleLabel.font = .ows_dynamicTypeSubheadlineClamped
         titleLabel.textColor = Theme.darkThemePrimaryColor
         titleLabel.textAlignment = .center
-        titleLabel.text = NSLocalizedString(
+        titleLabel.text = OWSLocalizedString(
             "ATTACHMENT_APPROVAL_MEDIA_QUALITY_TITLE",
             comment: "Title for the attachment approval media quality sheet"
         )
@@ -1228,13 +1235,13 @@ private extension SaveableAsset {
     init(attachment: SignalAttachment) throws {
         if attachment.isValidImage {
             guard let imageUrl = attachment.dataUrl else {
-                throw OWSAssertionError("imageUrl was unexpetedly nil")
+                throw OWSAssertionError("imageUrl was unexpectedly nil")
             }
 
             self = .imageUrl(imageUrl)
         } else if attachment.isValidVideo {
             guard let videoUrl = attachment.dataUrl else {
-                throw OWSAssertionError("videoUrl was unexpetedly nil")
+                throw OWSAssertionError("videoUrl was unexpectedly nil")
             }
 
             self = .videoUrl(videoUrl)

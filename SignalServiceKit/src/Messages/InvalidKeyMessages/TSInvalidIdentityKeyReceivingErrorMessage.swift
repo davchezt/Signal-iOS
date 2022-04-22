@@ -1,9 +1,9 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
-import SignalClient
+import LibSignalClient
 
 extension TSInvalidIdentityKeyReceivingErrorMessage {
     @objc(identityKeyFromEncodedPreKeySignalMessage:error:)
@@ -25,7 +25,6 @@ extension TSInvalidIdentityKeyReceivingErrorMessage {
                 continue
             }
             messageProcessor.processEncryptedEnvelopeData(envelopeData,
-                                                          encryptedEnvelope: nil,
                                                           serverDeliveryTimestamp: 0,
                                                           envelopeSource: .identityChangeError) { _ in
                 // Here we remove the existing error message because handleReceivedEnvelope will

@@ -1,8 +1,10 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 #import "OWSFakeProfileManager.h"
+#import "FunctionalUtil.h"
+#import "NSString+SSK.h"
 #import "TSThread.h"
 #import <SignalCoreKit/Cryptography.h>
 #import <SignalCoreKit/NSData+OWS.h>
@@ -43,7 +45,7 @@ NS_ASSUME_NONNULL_BEGIN
     _profileKeys = [NSMutableDictionary new];
     _recipientWhitelist = [NSMutableSet new];
     _threadWhitelist = [NSMutableSet new];
-    _stubbedUuidCapabilitiesMap = [NSMutableDictionary new];
+    _stubbedStoriesCapabilitiesMap = [NSMutableDictionary new];
     _badgeStore = [[BadgeStore alloc] init];
 
     return self;
@@ -61,6 +63,13 @@ NS_ASSUME_NONNULL_BEGIN
                                           transaction:(SDSAnyReadTransaction *)transaction
 {
     return nil;
+}
+
+- (NSDictionary<SignalServiceAddress *, OWSUserProfile *> *)
+    getUserProfilesForAddresses:(NSArray<SignalServiceAddress *> *)addresses
+                    transaction:(SDSAnyReadTransaction *)transaction
+{
+    return @{};
 }
 
 - (void)setProfileKeyData:(NSData *)profileKey
@@ -254,12 +263,12 @@ NS_ASSUME_NONNULL_BEGIN
     // Do nothing.
 }
 
-- (BOOL)recipientAddressIsUuidCapable:(nonnull SignalServiceAddress *)address
-                          transaction:(nonnull SDSAnyReadTransaction *)transaction
+- (BOOL)recipientAddressIsStoriesCapable:(nonnull SignalServiceAddress *)address
+                             transaction:(nonnull SDSAnyReadTransaction *)transaction
 {
-    NSNumber *_Nullable capability = self.stubbedUuidCapabilitiesMap[address];
+    NSNumber *_Nullable capability = self.stubbedStoriesCapabilitiesMap[address];
     if (capability == nil) {
-        OWSFailDebug(@"unknown address %@ must be added to stubbedUuidCapabilitiesMap.", address);
+        OWSFailDebug(@"unknown address %@ must be added to stubbedStoriesCapabilitiesMap.", address);
         return NO;
     }
     return capability.boolValue;
@@ -296,7 +305,7 @@ NS_ASSUME_NONNULL_BEGIN
                             bio:(nullable NSString *)bio
                        bioEmoji:(nullable NSString *)bioEmoji
                        username:(nullable NSString *)username
-                  isUuidCapable:(BOOL)isUuidCapable
+               isStoriesCapable:(BOOL)isStoriesCapable
                   avatarUrlPath:(nullable NSString *)avatarUrlPath
           optionalAvatarFileUrl:(nullable NSURL *)optionalAvatarFileUrl
                   profileBadges:(nullable NSArray<OWSUserProfileBadgeInfo *> *)profileBadges
@@ -317,6 +326,10 @@ NS_ASSUME_NONNULL_BEGIN
                                                       profileKey:(OWSAES256Key *)profileKey
 {
     return [AnyPromise promiseWithValue:@(1)];
+}
+
+- (nullable ModelReadCacheSizeLease *)leaseCacheSize:(NSInteger)size {
+    return nil;
 }
 
 - (BOOL)hasProfileAvatarData:(SignalServiceAddress *)address transaction:(SDSAnyReadTransaction *)transaction
@@ -351,11 +364,39 @@ NS_ASSUME_NONNULL_BEGIN
     return nil;
 }
 
+- (nonnull NSArray<id<SSKMaybeString>> *)fullNamesForAddresses:(nonnull NSArray<SignalServiceAddress *> *)addresses
+                                                   transaction:(nonnull SDSAnyReadTransaction *)transaction
+{
+    NSMutableArray<id<SSKMaybeString>> *result = [NSMutableArray array];
+    for (NSUInteger i = 0; i < addresses.count; i++) {
+        if (self.fakeDisplayNames == nil) {
+            [result addObject:@"some fake profile name"];
+        } else {
+            NSString *fakeName = self.fakeDisplayNames[addresses[i]];
+            [result addObject:fakeName ?: [NSNull null]];
+        }
+    }
+    return result;
+}
+
 
 - (void)migrateWhitelistedGroupsWithTransaction:(SDSAnyWriteTransaction *)transaction
 {
     // Do nothing.
 }
+
+- (nullable NSString *)usernameForAddress:(SignalServiceAddress *)address
+                              transaction:(SDSAnyReadTransaction *)transaction
+{
+    return self.fakeUsernames[address];
+}
+
+- (nonnull NSArray<id<SSKMaybeString>> *)usernamesForAddresses:(nonnull NSArray<SignalServiceAddress *> *)addresses
+                                                   transaction:(nonnull SDSAnyReadTransaction *)transaction
+{
+    return [addresses map:^(SignalServiceAddress *address) { return self.fakeUsernames[address] ?: [NSNull null]; }];
+}
+
 
 @end
 

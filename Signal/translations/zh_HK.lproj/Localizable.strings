@@ -154,6 +154,9 @@
 /* Title for the 'app launch failed' alert. */
 "APP_LAUNCH_FAILURE_ALERT_TITLE" = "錯誤";
 
+/* No comment provided by engineer. */
+"APP_LAUNCH_FAILURE_CHECK_DATABASE" = "Run Database Integrity Check";
+
 /* Error indicating that the app could not launch because the database could not be loaded. */
 "APP_LAUNCH_FAILURE_COULD_NOT_LOAD_DATABASE" = "無法載入資料庫";
 
@@ -371,22 +374,22 @@
 "BADGE_CONFIGURATION_TITLE" = "徽章";
 
 /* Text prompting the user to become a signal sustainer */
-"BADGE_DETAILS_BECOME_A_SUSTAINER" = "成為力撐派";
+"BADGE_DETAILS_BECOME_A_SUSTAINER" = "成為延續人";
 
 /* Text prompting the user to boost */
 "BADGE_DETAILS_GIVE_A_BOOST" = "齊集氣，為 Signal 加加油";
 
 /* String explaing to the user that their boost badge has expired on the badge expiry sheetsheet. */
-"BADGE_EXIPRED_BOOST_BODY_FORMAT" = "您的集氣徽章已到時限，不再在您的個人資料中看見。\n\n您可如常使用 Signal，沒有關係。假如您希望支持為您而設的科技，請考慮成為月供力撐派。";
+"BADGE_EXIPRED_BOOST_BODY_FORMAT" = "Your Boost badge has expired and is no longer visible on your profile.\n\nYou can keep using Signal but to support technology that is built for you, consider becoming a sustainer by making a monthly donation.";
 
 /* String explaing to the user that their boost badge has expired while they are a current subscription sustainer on the badge expiry sheetsheet. */
 "BADGE_EXIPRED_BOOST_CURRENT_SUSTAINER_BODY_FORMAT" = "您的集氣徽章已到時限，不再在您的個人資料中看見。\n\n您可憑單次捐款，將您的「集氣」徽章再延續 30 天。";
 
 /* String explaing to the user that their subscription badge has expired on the badge expiry sheetsheet. Embed {badge name}. */
-"BADGE_EXIPRED_SUBSCRIPTION_BODY_FORMAT" = "有見您已有好一段日子未曾使用，您的力撐派訂閱已自動取消。您的「%@」徽章不再在您的個人資料中讓別人看見。\n\n您可如常使用 Signal，沒有關係。假如您希望支持此應用程式並延續您的徽章，請立即續期。";
+"BADGE_EXIPRED_SUBSCRIPTION_BODY_FORMAT" = "Your recurring monthly donation was automatically cancelled because you were inactive for too long. Your %@ badge is no longer visible on your profile.\n\nYou can keep using Signal but to support the app and reactivate your badge, renew now.";
 
 /* Button title for boost on the badge expiration sheet, used if the user is not already a sustainer. */
-"BADGE_EXPIRED_BOOST_RENEWAL_BUTTON" = "成為力撐派";
+"BADGE_EXPIRED_BOOST_RENEWAL_BUTTON" = "成為延續人";
 
 /* Button title for boost on the badge expiration sheet, used if the user is already a sustainer. */
 "BADGE_EXPIRED_BOOST_RENEWAL_BUTTON_SUSTAINER" = "新增集氣";
@@ -398,7 +401,7 @@
 "BADGE_EXPIRED_SUBSCRIPTION_RENEWAL_BUTTON" = "為訂閱續期";
 
 /* Title for subscription on the badge expiration sheet. */
-"BADGE_EXPIRED_SUBSCRIPTION_TITLE" = "訂閱已取消";
+"BADGE_EXPIRED_SUBSCRIPTION_TITLE" = "每月捐款已取消";
 
 /* Title for boost on the thank you sheet. */
 "BADGE_THANKS_BOOST_TITLE" = "感謝您加油集氣！";
@@ -416,7 +419,7 @@
 "BADGE_THANKS_TOGGLE_FOOTER" = "若您有多於一枚徽章，您可選取一枚作為別注徽章，在個人資料中供其他人看見。";
 
 /* String explaing to the user that they've earned a badge on the badge thank you sheet. Embed {badge name}. */
-"BADGE_THANKS_YOU_EARNED_FORMAT" = "您已獲贈一枚「%@」徽章！不妨在您的個人資料中展覽徽章，讓人一呼百應撐起 Signal。";
+"BADGE_THANKS_YOU_EARNED_FORMAT" = "You’ve earned a %@ badge. Display this badge on your profile to build awareness for donating to Signal.";
 
 /* Accessibility label for banner close button */
 "BANNER_CLOSE_ACCESSIBILITY_LABEL" = "關閉橫額";
@@ -497,7 +500,7 @@
 "BOOST_VIEW_AMOUNT_LABEL" = "設定貨幣";
 
 /* The body text for the donate to signal view */
-"BOOST_VIEW_BODY" = "小小心意，燃起星星爐火。凡捐款即獲贈「集氣」徽章，足以在個人資料中配戴 30 天，以謝善舉。";
+"BOOST_VIEW_BODY" = "Make a one-time donation and earn a Boost badge for 30 days.";
 
 /* The body text for the donate to signal view, embeds {{Expiration}} */
 "BOOST_VIEW_BODY_WITH_EXPIRATION_FORMAT" = "您的「集氣」徽章將於 %@ 屆滿。";
@@ -586,8 +589,17 @@
 /* notification body */
 "CALL_AUDIO_INCOMING_NOTIFICATION_BODY" = "📞 語音來電……";
 
-/* notification body */
+/* notification body for a missed call in the last 24 hours. Embeds {{time}}, e.g. '3:30 PM'. */
+"CALL_AUDIO_MISSED_24_HOURS_NOTIFICATION_BODY_FORMAT" = "📞 已錯過 %@ 的語音通話";
+
+/* notification body for a call that was just missed */
 "CALL_AUDIO_MISSED_NOTIFICATION_BODY" = "📞 未接語音通話";
+
+/* notification body for a missed call from more than a week ago. Embeds {{short date}}, e.g. '6/28'. */
+"CALL_AUDIO_MISSED_PAST_NOTIFICATION_BODY_FORMAT" = "📞 於 %@ 已錯過語音通話";
+
+/* notification body for a missed call from the last week. Embeds {{weekday}}, e.g. 'Monday'. */
+"CALL_AUDIO_MISSED_WEEK_NOTIFICATION_BODY_FORMAT" = "📞 已錯過%@的語音通話";
 
 /* Alert message when calling and permissions for microphone are missing */
 "CALL_AUDIO_PERMISSION_MESSAGE" = "你可以在設定中允許 Signal 存取咪高峰來進行語音通話或傳送語音訊息。";
@@ -619,8 +631,17 @@
 /* notification body */
 "CALL_VIDEO_INCOMING_NOTIFICATION_BODY" = "📹 視像來電…";
 
-/* notification body */
+/* notification body for a missed call in the last 24 hours. Embeds {{time}}, e.g. '3:30 PM'. */
+"CALL_VIDEO_MISSED_24_HOURS_NOTIFICATION_BODY_FORMAT" = "📹 已錯過 %@ 的視像通話";
+
+/* notification body for a call that was just missed */
 "CALL_VIDEO_MISSED_NOTIFICATION_BODY" = "📹 未接視像通話";
+
+/* notification body for a missed call from more than a week ago. Embeds {{short date}}, e.g. '6/28'. */
+"CALL_VIDEO_MISSED_PAST_NOTIFICATION_BODY_FORMAT" = "📹 於 %@ 已錯過視像通話";
+
+/* notification body for a missed call from the last week. Embeds {{weekday}}, e.g. 'Monday'. */
+"CALL_VIDEO_MISSED_WEEK_NOTIFICATION_BODY_FORMAT" = "📹 已錯過%@的視像通話";
 
 /* label for accepting incoming video calls as audio  only */
 "CALL_VIEW_ACCEPT_INCOMING_CALL_AUDIO_ONLY_LABEL" = "接聽電話，但不開啟視像";
@@ -735,6 +756,9 @@
 
 /* Tooltip highlighting the auto chat color option. */
 "CHAT_COLORS_AUTO_TOOLTIP" = "自動按背景配選色彩";
+
+/* Title for the chat list's default mode. */
+"CHAT_LIST_TITLE_INBOX" = "聊天";
 
 /* Title for the color & wallpaper settings view. */
 "COLOR_AND_WALLPAPER_SETTINGS_TITLE" = "聊天色彩與背景";
@@ -938,10 +962,10 @@
 "CONTACT_SUPPORT_FILTER_SOMETHING_NOT_WORKING_SHORT" = "運作異常";
 
 /* The localized representation of the 'Sustainers & Signal Boost' support filter. */
-"CONTACT_SUPPORT_FILTER_SUSTAINERS" = "力撐派以及 Signal 集氣";
+"CONTACT_SUPPORT_FILTER_SUSTAINERS" = "延續人以及 Signal 集氣";
 
 /* A brief localized representation of the 'Sustainers & Signal Boost' support filter. */
-"CONTACT_SUPPORT_FILTER_SUSTAINERS_SHORT" = "力撐派以及集氣";
+"CONTACT_SUPPORT_FILTER_SUSTAINERS_SHORT" = "延續人以及集氣";
 
 /* Alert body */
 "CONTACT_SUPPORT_PROMPT_ERROR_ALERT_BODY" = "Signal 未能完成您的支援要求。";
@@ -1306,6 +1330,21 @@
 /* Tooltip highlighting the custom chat color controls. */
 "CUSTOM_CHAT_COLOR_SETTINGS_TOOLTIP" = "拖曳以變更漸層的方向";
 
+/* Button to run the database integrity check */
+"DATABASE_INTEGRITY_CHECK_ACTION_RUN" = "Run";
+
+/* Message for alert before running a database integrity check */
+"DATABASE_INTEGRITY_CHECK_MESSAGE" = "This may take a while (several minutes or more) depending on how much you have used Signal. It is safe to close Signal if it is taking too long.";
+
+/* Button to save database integrity check results to the debug log */
+"DATABASE_INTEGRITY_CHECK_RESULTS_ACTION_LOG" = "Add to Debug Log";
+
+/* Title for alert after running a database integrity check */
+"DATABASE_INTEGRITY_CHECK_RESULTS_TITLE" = "Integrity check results";
+
+/* Title for alert before running a database integrity check */
+"DATABASE_INTEGRITY_CHECK_TITLE" = "Run database integrity check?";
+
 /* Subtitle shown while the app is updating its database. */
 "DATABASE_VIEW_OVERLAY_SUBTITLE" = "可能需要數分鐘。";
 
@@ -1330,9 +1369,6 @@
 /* The day before today. */
 "DATE_YESTERDAY" = "昨天";
 
-/* Error indicating that the debug logs could not be copied. */
-"DEBUG_LOG_ALERT_COULD_NOT_COPY_LOGS" = "無法複製日誌。";
-
 /* Error indicating that the debug logs could not be packaged. */
 "DEBUG_LOG_ALERT_COULD_NOT_PACKAGE_LOGS" = "無法包裝日誌。";
 
@@ -1353,6 +1389,9 @@
 
 /* Label for the 'email debug log' option of the debug log alert. */
 "DEBUG_LOG_ALERT_OPTION_EMAIL" = "電郵支援";
+
+/* Label for the 'Export Logs' fallback option for the alert when debug log uploading fails. */
+"DEBUG_LOG_ALERT_OPTION_EXPORT_LOG_ARCHIVE" = "匯出錯誤日誌";
 
 /* Label for the 'send to self' option of the debug log alert. */
 "DEBUG_LOG_ALERT_OPTION_SEND_TO_SELF" = "傳送給自己";
@@ -1480,7 +1519,7 @@
 /* A warning for the device transfer 'choice' view indicating you can only have one device registered with your number */
 "DEVICE_TRANSFER_CHOICE_WARNING" = "如果繼續，將會禁用在其他裝置上使用同一電話號碼登記的Signal。";
 
-/* An error indicating that we were unable to verify the indentity of the new device to complete the transfer */
+/* An error indicating that we were unable to verify the identity of the new device to complete the transfer */
 "DEVICE_TRANSFER_ERROR_CERTIFICATE_MISMATCH" = "無法驗證你的新裝置，請重試。";
 
 /* An error indicating that something went wrong with the transfer and it could not complete */
@@ -1585,38 +1624,41 @@
 /* Section title for the 'domain fronting country' view. */
 "DOMAIN_FRONTING_COUNTRY_VIEW_SECTION_HEADER" = "審查規避地點";
 
-/* Donation amount label for the donate to signal view */
-"DONATION_VIEW_AMOUNT_LABEL" = "捐贈金額";
+/* Section title for donation amount on receipts */
+"DONATION_RECEIPT_AMOUNT" = "金額";
 
-/* Default text for the custom amount field of the donation view. */
-"DONATION_VIEW_CUSTOM_AMOUNT_PLACEHOLDER" = "請輸入自訂金額";
+/* Section title for donation date on receipts */
+"DONATION_RECEIPT_DATE_PAID" = "付款日期";
+
+/* Title on the view where you can see a single receipt */
+"DONATION_RECEIPT_DETAILS" = "詳細資料";
+
+/* Text on the button that exports the receipt */
+"DONATION_RECEIPT_EXPORT_RECEIPT_BUTTON" = "Share Receipt";
+
+/* Footer text at the bottom of donation receipts */
+"DONATION_RECEIPT_FOOTER" = "Thank you for supporting Signal. Your contribution helps fuel the mission of developing open source privacy technology that protects free expression and enables secure global communication for millions around the world. If you’re a resident of the United States, please retain this receipt for your tax records. Signal Technology Foundation is a tax-exempt nonprofit organization in the United States under section 501c3 of the Internal Revenue Code. Our Federal Tax ID is 82-4506840.";
+
+/* Title for one-time donation receipts */
+"DONATION_RECEIPT_ONE_TIME" = "單次";
+
+/* Title for recurring donation receipts */
+"DONATION_RECEIPT_RECURRING" = "週期";
+
+/* Title on donation receipts */
+"DONATION_RECEIPT_TITLE" = "捐款收據";
+
+/* Section title for donation type on receipts */
+"DONATION_RECEIPT_TYPE" = "Type";
+
+/* Title of view where you can see all of your donation receipts, or button to take you there */
+"DONATION_RECEIPTS" = "捐款收據";
+
+/* Text at the bottom of the donation receipts list, telling users that receipts might not be available */
+"DONATION_RECEIPTS_MIGHT_BE_MISSING_IF_YOU_REINSTALLED" = "若您已重新安裝 Signal，先前捐款的收據恕未能提供。";
 
 /* Text describing to the user that they're going to pay a donation to Signal */
 "DONATION_VIEW_DONATION_TO_SIGNAL" = "捐款給 Signal";
-
-/* Text explaining there are other ways to donate on the donation view. */
-"DONATION_VIEW_OTHER_WAYS" = "其他捐贈方法";
-
-/* Error text notifying the user they must select a large amount on the donate to signal view */
-"DONATION_VIEW_SELECT_A_LARGER_AMOUNT" = "請選擇較大的捐贈金額";
-
-/* Error text notifying the user they must select a smaller amount on the donate to signal view */
-"DONATION_VIEW_SELECT_A_SMALLER_AMOUNT" = "請選擇較小的捐贈金額";
-
-/* Error text notifying the user they must select an amount on the donate to signal view */
-"DONATION_VIEW_SELECT_AN_AMOUNT" = "請選擇要捐贈的金額";
-
-/* Thank you message on the donate to signal view */
-"DONATION_VIEW_THANKS_FOR_YOUR_SUPPORT" = "多謝您的支持！";
-
-/* Title for the donate to signal view */
-"DONATION_VIEW_TITLE" = "Signal 由您這樣的人提供動力。";
-
-/* The body of the 'Why Donate' section of the donate to signal view */
-"DONATION_VIEW_WHY_DONATE_BODY" = "Signal 團隊的使命是致力開發開源私隱技術，以保障自由表達並實現安全的全球通訊。您的捐款有助實現這一夢想。無廣告、無追蹤器、無講笑。\n\n您的捐款有助支付應用程式的開發、伺服器及寬頻費用。該應用程式受到數以百萬計的使用者使用，用於私密及即時通訊。";
-
-/* The title of the 'Why Donate' section of the donate to signal view */
-"DONATION_VIEW_WHY_DONATE_TITLE" = "為什麼要捐贈？";
 
 /* Alert body for when the user has just tried to edit a contacts after declining to give Signal contacts permissions */
 "EDIT_CONTACT_WITHOUT_CONTACTS_PERMISSION_ALERT_BODY" = "您可以在 iOS 設定 app 允許存取權限。";
@@ -1984,10 +2026,10 @@
 /* Title for alert explaining that a group call participant is blocked. Embeds {{ user's name }} */
 "GROUP_CALL_BLOCKED_ALERT_TITLE_FORMAT" = "%@ 已封鎖";
 
-/* Message for eror alert indicating that only group administrators can start calls in announcement-only groups. */
+/* Message for error alert indicating that only group administrators can start calls in announcement-only groups. */
 "GROUP_CALL_BLOCKED_BY_ANNOUNCEMENT_ONLY_MESSAGE" = "只有此群組的管理員可以開始通話。";
 
-/* Title for eror alert indicating that only group administrators can start calls in announcement-only groups. */
+/* Title for error alert indicating that only group administrators can start calls in announcement-only groups. */
 "GROUP_CALL_BLOCKED_BY_ANNOUNCEMENT_ONLY_TITLE" = "不得開始群組通話";
 
 /* String displayed in group call grid cell when a user is blocked. Embeds {user's name} */
@@ -2260,6 +2302,9 @@
 /* Message indicating that 'announcement-only' mode was enabled by a remote user. Embeds {{ user who enabled 'announcement-only' mode }}. */
 "GROUP_IS_ANNOUNCEMENT_ONLY_ENABLED_BY_REMOTE_USER_FORMAT" = "%@ 已將群組設定變更為僅允許管理員傳送訊息。";
 
+/* Subtitle indicating that the local user has been blocked from joining the group */
+"GROUP_LINK_ACTION_SHEET_VIEW_BLOCKED_FROM_JOINING_SUBTITLE" = "您不能透過群組連結加入此群組，因為管理員已移除您。";
+
 /* Subtitle indicating that the group invite link has expired in the 'group invite link' action sheet. */
 "GROUP_LINK_ACTION_SHEET_VIEW_EXPIRED_LINK_SUBTITLE" = "此群組連結已失效。";
 
@@ -2404,7 +2449,7 @@
 /* Message indicating that the local user was removed from the group by an unknown user. */
 "GROUP_LOCAL_USER_REMOVED_BY_UNKNOWN_USER" = "您已從此群組中被移除。";
 
-/* Message indicating that the local user's request to join the group was approved by another user. Embeds {{ %@ the name of the user who approved the reuqest }}. */
+/* Message indicating that the local user's request to join the group was approved by another user. Embeds {{ %@ the name of the user who approved the request }}. */
 "GROUP_LOCAL_USER_REQUEST_APPROVED_BY_REMOTE_USER_FORMAT" = "%@ 已批准您加入此群組的請求。";
 
 /* Message indicating that the local user cancelled their request to join the group. */
@@ -2598,6 +2643,9 @@
 
 /* The title for the 'group requests and invites' view. */
 "GROUP_REQUESTS_AND_INVITES_VIEW_TITLE" = "請求與邀請";
+
+/* Name for a group story on the stories list. Embeds {author's name}, {group name} */
+"GROUP_STORY_NAME_FORMAT" = "由 %1$@ 發給 %2$@";
 
 /* Info message indicating that the group was updated by an unknown user. */
 "GROUP_UPDATED" = "群組已更新。";
@@ -2941,13 +2989,10 @@
 /* Title for the conversation list's 'archive' mode. */
 "HOME_VIEW_TITLE_ARCHIVE" = "將通話紀錄移走去存檔";
 
-/* Title for the conversation list's default mode. */
-"HOME_VIEW_TITLE_INBOX" = "Signal";
-
-/* Title for the 'Select Chats' option in the HomeView. */
+/* Title for the 'Select Chats' option in the ChatList. */
 "HOME_VIEW_TITLE_SELECT_CHATS" = "選取聊天";
 
-/* Title 'Read All' button in the toolbar of the homeview if multi-section is active. */
+/* Title 'Read All' button in the toolbar of the ChatList if multi-section is active. */
 "HOME_VIEW_TOOLBAR_READ_ALL" = "全部已讀";
 
 /* The image editor hint that you can draw blur */
@@ -4280,10 +4325,10 @@
 "PIN_ACTION" = "釘選";
 
 /* Error body indicating that the attempt to change a PIN failed. */
-"PIN_CHANGE_ERROR_MESSAGE" = "Couldn't create your new PIN. Your existing PIN has been disabled. Check your connection and try again.";
+"PIN_CHANGE_ERROR_MESSAGE" = "無法建立您的新 PIN 碼。您現有的 PIN 碼已停用。請檢查您的連線，然後再試一次。";
 
 /* Error title indicating that the attempt to change a PIN failed. */
-"PIN_CHANGE_ERROR_TITLE" = "PIN Change Failed";
+"PIN_CHANGE_ERROR_TITLE" = "PIN 碼變更失敗";
 
 /* Label indicating the user must use at least 4 characters */
 "PIN_CREATION_ALPHANUMERIC_HINT" = "PIN 碼須至少為 4 個字元";
@@ -4328,10 +4373,10 @@
 "PIN_CREATION_MISMATCH_ERROR" = "PIN 碼不匹配。請再試一次。";
 
 /* Error body indicating that the attempt to create a PIN failed due to network issues. */
-"PIN_CREATION_NO_NETWORK_ERROR_MESSAGE" = "Check your connection and try again.";
+"PIN_CREATION_NO_NETWORK_ERROR_MESSAGE" = "請檢查您的連線，然後再試一次。";
 
 /* Error title indicating that the attempt to create a PIN failed due to network issues. */
-"PIN_CREATION_NO_NETWORK_ERROR_TITLE" = "No Network Connection";
+"PIN_CREATION_NO_NETWORK_ERROR_TITLE" = "無網絡連線";
 
 /* Label indicating the user must use at least 4 digits */
 "PIN_CREATION_NUMERIC_HINT" = "PIN 須至少為 4 個字元";
@@ -4345,9 +4390,6 @@
 /* The re-creation explanation in the 'pin creation' view. */
 "PIN_CREATION_RECREATION_EXPLANATION" = "只要此裝置維持登記，您可隨時變更您的 PIN 碼。";
 
-/* Title of the 'pin creation' recreation view. */
-"PIN_CREATION_RECREATION_TITLE" = "變更您的 PIN 碼";
-
 /* Action of the 'pin disable' reglock action sheet. */
 "PIN_CREATION_REGLOCK_CONFIRMATION_ACTION" = "關閉";
 
@@ -4358,10 +4400,10 @@
 "PIN_CREATION_REGLOCK_CONFIRMATION_TITLE" = "要關閉註冊鎖？";
 
 /* Error body indicating that the attempt to create a PIN succeeded but enabling reglock failed. */
-"PIN_CREATION_REGLOCK_ERROR_MESSAGE" = "PIN creation succeeded, but registration lock could not be enabled. Check your connection and try again.";
+"PIN_CREATION_REGLOCK_ERROR_MESSAGE" = "PIN 碼建立成功，惟註冊鎖定無法啟用。請檢查您的連線，然後再試一次。";
 
 /* Error title indicating that the attempt to create a PIN succeeded but enabling reglock failed. */
-"PIN_CREATION_REGLOCK_ERROR_TITLE" = "Enable Registration Lock Failed";
+"PIN_CREATION_REGLOCK_ERROR_TITLE" = "啟用註冊鎖定失敗";
 
 /* Skip action on the pin creation view */
 "PIN_CREATION_SKIP" = "停用 PIN 碼";
@@ -4382,7 +4424,7 @@
 "PIN_RECREATION_ERROR_TITLE" = "PIN 碼建立失敗";
 
 /* Error body indicating that the attempt to recreate a PIN failed. */
-"PIN_RECRETION_ERROR_MESSAGE" = "Couldn’t create your PIN. Check your connection and try again.";
+"PIN_RECRETION_ERROR_MESSAGE" = "無法建立您的 PIN 碼。請檢查您的連線，然後再試一次。";
 
 /* The explanation for the 'pin reminder' dialog. */
 "PIN_REMINDER_EXPLANATION" = "為幫助您記住您的 PIN 碼，我們將定期要求您輸入 PIN 碼。隨著時間過去，我們會減少要求。";
@@ -4430,7 +4472,7 @@
 "PINS_MEGAPHONE_ACTION" = "建立 PIN 碼";
 
 /* Body for PIN megaphone when user doesn't have a PIN */
-"PINS_MEGAPHONE_BODY" = "Finish creating your Signal PIN.";
+"PINS_MEGAPHONE_BODY" = "完成建立您的 Signal PIN 碼。";
 
 /* Toast indication that the user will be reminded later to setup their PIN. Embeds {{time until mandatory}} */
 "PINS_MEGAPHONE_SNOOZE_TOAST_FORMAT" = "我們稍後會提醒您。您必須在 %ld 天內建立 PIN 碼。";
@@ -4490,7 +4532,7 @@
 "PRIVACY_VERIFY_BUTTON" = "標記為已驗證";
 
 /* No comment provided by engineer. */
-"PROCEED_BUTTON" = "好，請繼續。";
+"PROCEED_BUTTON" = "繼續";
 
 /* Placeholder text for the bio field of the profile bio view. */
 "PROFILE_BIO_VIEW_BIO_PLACEHOLDER" = "不妨寫句話自我介紹一下…";
@@ -4502,13 +4544,13 @@
 "PROFILE_BIO_VIEW_DEFAULT_BIO_COFFEE_LOVER" = "無盛世 無亂世 坐在咖啡店";
 
 /* The 'Encrypted' default bio in the profile bio view. */
-"PROFILE_BIO_VIEW_DEFAULT_BIO_ENCRYPTED" = "清風不識字";
+"PROFILE_BIO_VIEW_DEFAULT_BIO_ENCRYPTED" = "不說果 不說因";
 
 /* The 'free to chat' default bio in the profile bio view. */
 "PROFILE_BIO_VIEW_DEFAULT_BIO_FREE_TO_CHAT" = "即使要蒙著我嘴 我亦可高呼";
 
 /* The 'Speak Freely' default bio in the profile bio view. */
-"PROFILE_BIO_VIEW_DEFAULT_BIO_SPEAK_FREELY" = "☝️息尚存";
+"PROFILE_BIO_VIEW_DEFAULT_BIO_SPEAK_FREELY" = "其實我只想 棲身☝️抹暖光";
 
 /* The 'Taking a break' default bio in the profile bio view. */
 "PROFILE_BIO_VIEW_DEFAULT_BIO_TAKING_A_BREAK" = "人間有味是清歡";
@@ -4596,6 +4638,15 @@
 
 /* Toast alert text shown when tapping on a quoted message which we cannot scroll to because the local copy of the message didn't exist when the quote was received. */
 "QUOTED_REPLY_ORIGINAL_MESSAGE_REMOTELY_SOURCED" = "找不到原始訊息";
+
+/* Header label that appears above quoted messages when the quoted content was includes a reaction to your own story. */
+"QUOTED_REPLY_REACTION_TO_OWN_STORY" = "對您的限時動態表達了心情";
+
+/* Header label that appears above quoted messages when the quoted content was includes a reaction to a story. Embeds {{ story author name }} */
+"QUOTED_REPLY_REACTION_TO_STORY_FORMAT" = "Reacted to %@’s story";
+
+/* Message header when you are quoting a story. Embeds {{ story author name }} */
+"QUOTED_REPLY_STORY_AUTHOR_INDICATOR_FORMAT" = "%@ · Story";
 
 /* Indicates this message is a quoted reply to an attachment of unknown type. */
 "QUOTED_REPLY_TYPE_ATTACHMENT" = "附件";
@@ -5108,10 +5159,7 @@
 "SEND_MEDIA_CONFIRM_ABANDON_ALBUM" = "放棄媒體";
 
 /* alert action when the user decides not to cancel the media flow after all. */
-"SEND_MEDIA_RETURN_TO_CAMERA" = "返回至相機";
-
-/* alert action when the user decides not to cancel the media flow after all. */
-"SEND_MEDIA_RETURN_TO_MEDIA_LIBRARY" = "返回至媒體庫";
+"SEND_MEDIA_RETURN_TO_CAMERA" = "返回相機";
 
 /* No comment provided by engineer. */
 "SEND_SMS_CONFIRM_TITLE" = "用唔安全嘅SMS去邀請人？";
@@ -5258,7 +5306,7 @@
 "SETTINGS_CHANGE_PHONE_NUMBER_PROGRESS_FORMAT" = "正在驗證 %@";
 
 /* Description text in the 'change phone number splash' view. */
-"SETTINGS_CHANGE_PHONE_NUMBER_SPLASH_DESCRIPTION" = "以此將您目前的電話號碼變更為新的電話號碼。您將無法復原此變更。\n\n在繼續之前，請確定您的新號碼可以接收短訊或來電。";
+"SETTINGS_CHANGE_PHONE_NUMBER_SPLASH_DESCRIPTION" = "藉此將您現用的電話號碼變更為新的電話號碼。您將無法復原此變更。\n\n在繼續之前，請確定您的新號碼可以接收短訊或來電。";
 
 /* Title text in the 'change phone number splash' view. */
 "SETTINGS_CHANGE_PHONE_NUMBER_SPLASH_TITLE" = "變更電話號碼";
@@ -5353,9 +5401,6 @@
 /* Settings table view cell label */
 "SETTINGS_INVITE_TITLE" = "邀請您的好友";
 
-/* content of tweet when inviting via twitter - please do not translate URL */
-"SETTINGS_INVITE_TWITTER_TEXT" = "你可以用@signalapp聯絡我。立即下載：https://signal.org/download/";
-
 /* Label for settings view that allows user to change the chat color and wallpaper. */
 "SETTINGS_ITEM_COLOR_AND_WALLPAPER" = "聊天色彩與背景";
 
@@ -5421,6 +5466,9 @@
 
 /* The title for the notification settings. */
 "SETTINGS_NOTIFICATIONS" = "通知";
+
+/* Title for the 'one-time donation' link in settings. */
+"SETTINGS_ONE_TIME_DONATION" = "單次捐款";
 
 /* Label for the 'agree to payments terms' button in the 'activate payments confirmation' UI in the payment settings. */
 "SETTINGS_PAYMENTS_ACTIVATE_PAYMENTS_CONFIRM_AGREE" = "啟用";
@@ -5935,11 +5983,8 @@
 /* Footer for setting for enabling & disabling contact and notification sharing with iOS. */
 "SETTINGS_SHARING_SUGGESTIONS_NOTIFICATIONS_FOOTER" = "允許 iOS 存取 Signal 聯絡人和聊天以便用於分享建議和通知等功能。";
 
-/* Title for the 'signal boost' link in settings. */
-"SETTINGS_SIGNAL_BOOST" = "Signal 有團伙";
-
-/* Title for the 'become a sustainer' link in settings. */
-"SETTINGS_SUBSCRIPTION" = "成為 Signal 力撐派";
+/* Title for the 'monthly donation' link in settings. */
+"SETTINGS_SUBSCRIPTION" = "每月捐款";
 
 /* Label for the 'enable registration lock' switch of the privacy settings. */
 "SETTINGS_TWO_FACTOR_AUTH_SWITCH_LABEL" = "註冊鎖定";
@@ -5974,9 +6019,6 @@
 /* action sheet item to open native messages app */
 "SHARE_ACTION_MESSAGE" = "訊息";
 
-/* action sheet item */
-"SHARE_ACTION_TWEET" = "Twitter";
-
 /* alert body when sharing file failed because of untrusted/changed identity keys */
 "SHARE_EXTENSION_FAILED_SENDING_BECAUSE_UNTRUSTED_IDENTITY_FORMAT" = "您與 %@ 的安全碼近期已更改。建議您在主應用程式中驗證新安全碼後，再重新傳送訊息。";
 
@@ -6002,7 +6044,7 @@
 "SHARE_EXTENSION_SENDING_IN_PROGRESS_FORMAT" = "正在上載 %1$@ 個附件，共 %2$@ 個……";
 
 /* Alert title */
-"SHARE_EXTENSION_SENDING_IN_PROGRESS_TITLE" = "正在上載%";
+"SHARE_EXTENSION_SENDING_IN_PROGRESS_TITLE" = "正在上載……";
 
 /* Shown when trying to share content to a Signal user for the share extension. Followed by failure details. */
 "SHARE_EXTENSION_UNABLE_TO_BUILD_ATTACHMENT_ALERT_TITLE" = "無法準備附件";
@@ -6091,6 +6133,60 @@
 /* Label for the 'uninstall sticker pack' button. */
 "STICKERS_UNINSTALL_BUTTON" = "移除";
 
+/* Text indication a story caption can be tapped to read more. */
+"STORIES_CAPTION_READ_MORE" = "閱讀全文";
+
+/* Context menu action to copy the selected story reply */
+"STORIES_COPY_REPLY_ACTION" = "複製";
+
+/* Context menu action to delete the selected story reply */
+"STORIES_DELETE_REPLY_ACTION" = "刪除";
+
+/* Context menu action to forward the selected story */
+"STORIES_FORWARD_STORY_ACTION" = "轉發";
+
+/* Context menu action to open the chat associated with the selected story */
+"STORIES_GO_TO_CHAT_ACTION" = "前往聊天";
+
+/* Context menu action to hide the selected story */
+"STORIES_HIDE_STORY_ACTION" = "隱藏限時動態";
+
+/* Indicates that there are no recent stories to render */
+"STORIES_NO_RECENT_MESSAGES" = "目前沒有可顯示的近況更新。";
+
+/* Indicates that this story has no replies yet */
+"STORIES_NO_REPLIES_YET" = "未有回覆";
+
+/* Context menu action to share the selected story */
+"STORIES_SHARE_STORY_ACTION" = "分享";
+
+/* Title for the stories view. */
+"STORIES_TITLE" = "限時動態";
+
+/* Tooltip prompting the user to visit a story link. */
+"STORY_LINK_PREVIEW_VISIT_LINK_TOOLTIP" = "造訪連結";
+
+/* Text indicating a story that was replied to is no longer available. */
+"STORY_NO_LONGER_AVAILABLE" = "不再可用";
+
+/* Button for replying to a story with a single existing reply. */
+"STORY_REPLY_BUTTON_WITH_1_REPLY" = "<bold>1</bold> 個回覆";
+
+/* Button for replying to a story with N existing replies. {embeds the number of replies} */
+"STORY_REPLY_BUTTON_WITH_N_REPLIES_FORMAT" = "<bold>%@</bold> 個回覆";
+
+/* Button for replying to a story with no existing replies. */
+"STORY_REPLY_BUTTON_WITH_NO_REPLIES" = "回覆";
+
+/* Text indicating a story has been reacted to */
+"STORY_REPLY_REACTION" = "對此限時動態表達了心情";
+
+/* placeholder text for replying to a story */
+"STORY_REPLY_TEXT_FIELD_PLACEHOLDER" = "回覆";
+
+/* Author text when the local user author's a story reply */
+"STORY_REPLY_YOU_AUTHOR" = "您";
+
 /* Title for the 'Badges' button in sustainer view. */
 "SUBSCRIBER_BADGES" = "徽章";
 
@@ -6101,16 +6197,16 @@
 "SUBSCRIBER_SUBSCRIPTION_FAQ" = "訂閱常見問答";
 
 /* Action text for subscription megaphone */
-"SUBSCRIPTION_MEGAPHONE_ACTION" = "我捐款";
+"SUBSCRIPTION_MEGAPHONE_ACTION" = "捐款";
 
 /* Body for subscription megaphone */
-"SUBSCRIPTION_MEGAPHONE_BODY" = "不論一表人才，還是年輕有為，唯獨這麼三個字撈起 Signal 的位位多麼似您。請隨心捐款，並笑納一枚徽章聊作謝意。";
+"SUBSCRIPTION_MEGAPHONE_BODY" = "萬家燈火照，將點點光輝，放進 Signal。凡捐款即獲贈徽章。";
 
 /* Cancel text for subscription megaphone */
-"SUBSCRIPTION_MEGAPHONE_CANCEL" = "在心中";
+"SUBSCRIPTION_MEGAPHONE_CANCEL" = "現在不要";
 
 /* Title for subscription megaphone */
-"SUBSCRIPTION_MEGAPHONE_TITLE" = "成為力撐派";
+"SUBSCRIPTION_MEGAPHONE_TITLE" = "成為延續人";
 
 /* Alert body after verifying privacy with {{other user's name}} */
 "SUCCESSFUL_VERIFICATION_DESCRIPTION" = "您與 %@ 之間的安全碼一致。您可將此聯絡人標記為「已驗證」。";
@@ -6170,13 +6266,13 @@
 "SUPPORT_LOG_UPLOAD_IN_PROGRESS" = "正在載入";
 
 /* First block of description text in read more sheet */
-"SUSTAINER_READ_MORE_DESCRIPTION_BLOCK_ONE" = "Signal 是非牟利機構，並無廣告商或投資者，純粹仰賴使用並珍重 Signal 的人維持。祈盼樂善好施，力所能及作月供捐款，奉贈一枚個人資料徽章，與人分享您的支持。";
+"SUSTAINER_READ_MORE_DESCRIPTION_BLOCK_ONE" = "Signal 是非牟利機構，並無廣告商或投資者，純粹仰賴使用並珍重 Signal 的人維持。祈盼樂善好施，力所能及作每月捐款，並笑納一枚個人資料徽章，好與人分享您的支持。";
 
 /* Second block of description text in read more sheet */
-"SUSTAINER_READ_MORE_DESCRIPTION_BLOCK_TWO" = "Signal 致力開發開放原始碼的私隱技術，保護自由表達並讓全球通訊變得安全。\n\n您的捐款，驅動這因由，並有助補貼程式開發與運作，讓世界各地數以百萬計「惜爐」使用者，共星光中作私密通訊。無廣告 · 無追蹤 · 無戲言。";
+"SUSTAINER_READ_MORE_DESCRIPTION_BLOCK_TWO" = "Signal is committed to developing open source privacy technology that protects free expression and enables secure global communication.\n\nYour donation fuels this cause and pays for the development and operations of an app used by millions for private communication. No ads. No trackers. No kidding.";
 
 /* Title for the signal sustainer read more view */
-"SUSTAINER_READ_MORE_TITLE" = "支持為您而設—而非為您的資料而造—的科技，擔起力撐派，成為延續爐火的一分子。";
+"SUSTAINER_READ_MORE_TITLE" = "Support technology that is built for you—not for your data—by joining the community that sustains it.";
 
 /* Why Contribute title for the signal sustainer read more view */
 "SUSTAINER_READ_MORE_WHY_CONTRIBUTE" = "為何要捐款？";
@@ -6223,7 +6319,7 @@
 /* Existing subscriber support header */
 "SUSTAINER_VIEW_MY_SUPPORT" = "我的支持";
 
-/* Payment error occured text, embeds {{link to contact support}} */
+/* Payment error occurred text, embeds {{link to contact support}} */
 "SUSTAINER_VIEW_PAYMENT_ERROR" = "處理付款時發生錯誤。%@";
 
 /* Pricing text for sustainer view badges, embeds {{price}} */
@@ -6242,7 +6338,7 @@
 "SUSTAINER_VIEW_PROCESSING_TRANSACTION" = "正在處理交易...";
 
 /* Read More tappable text in sustainer view body */
-"SUSTAINER_VIEW_READ_MORE" = "閱讀全文。";
+"SUSTAINER_VIEW_READ_MORE" = "Read more.";
 
 /* Renewal date text for sustainer view level, embeds {{renewal date}} */
 "SUSTAINER_VIEW_RENEWAL" = "%@ 續期";
@@ -6269,7 +6365,7 @@
 "SUSTAINER_VIEW_UPDATE_SUBSCRIPTION_CONFIRMATION_UPDATE" = "更新";
 
 /* The body text for the signal sustainer view */
-"SUSTAINER_VIEW_WHY_DONATE_BODY" = "支持為您而設—而非為您的資料而造—的科技，擔起力撐派，成為延續爐火的一分子。";
+"SUSTAINER_VIEW_WHY_DONATE_BODY" = "恆常向 Signal 每月捐款，以支持為你而設、而非為您的資料而造的科技。";
 
 /* Label for 'off' state of a switch control. */
 "SWITCH_OFF" = "關閉";
@@ -6465,12 +6561,6 @@
 
 /* Error indicating that a group could not be updated due to network connectivity problems. */
 "UPDATE_GROUP_FAILED_DUE_TO_NETWORK" = "無法升級群組。請檢查您的網絡連線，然後重試。";
-
-/* Message for the alert indicating that user should upgrade iOS. */
-"UPGRADE_IOS_ALERT_MESSAGE" = "Signal 很快將要求 iOS 11 或更新版本。請前往「設定 >> 一般 >> 軟件更新」進行更新。";
-
-/* Title for the alert indicating that user should upgrade iOS. */
-"UPGRADE_IOS_ALERT_TITLE" = "升級 iOS";
 
 /* An explanation of how usernames work on the username view. */
 "USERNAME_DESCRIPTION" = "Signal 上的使用者名稱為選用。若您選擇建立使用者名稱，其他 Signal 使用者將可使用此使用者名稱找到您並與您聯絡，而不需知道您的電話號碼。";

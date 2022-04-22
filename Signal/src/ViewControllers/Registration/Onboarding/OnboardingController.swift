@@ -336,7 +336,7 @@ public class OnboardingController: NSObject {
     }
 
     func buildPinSetupViewController() -> PinSetupViewController {
-        return PinSetupViewController.creating { [weak self] pinSetupVC, _ in
+        return PinSetupViewController.onboardingCreating { [weak self] pinSetupVC, _ in
             guard let self = self else { return }
 
             guard let navigationController = pinSetupVC.navigationController else {
@@ -417,7 +417,7 @@ public class OnboardingController: NSObject {
 
     public private(set) var twoFAPin: String?
 
-    private var kbsAuth: RemoteAttestationAuth?
+    private var kbsAuth: RemoteAttestation.Auth?
 
     public private(set) var verificationRequestCount: UInt = 0
 

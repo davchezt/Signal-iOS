@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import UIKit
@@ -48,7 +48,7 @@ class ImageEditorCropViewController: OWSViewController {
 
         @available(*, unavailable, message: "use other init() instead.")
         required public init?(coder aDecoder: NSCoder) {
-            notImplemented()
+            fatalError("init(coder:) has not been implemented")
         }
     }
 
@@ -421,7 +421,7 @@ class ImageEditorCropViewController: OWSViewController {
                                        viewBounds: CGRect,
                                        oldTransform: ImageEditorTransform) -> CGPoint {
 
-        // The beauty of using an SRT (scale-rotate-translation) tranform ordering
+        // The beauty of using an SRT (scale-rotate-translation) transform ordering
         // is that the translation is applied last, so it's trivial to convert
         // translations from view coordinates to transform translation.
         // Our (view bounds == canvas bounds) so no need to convert.
@@ -668,7 +668,7 @@ class ImageEditorCropViewController: OWSViewController {
         // We determine the pre-crop render frame for the image.
         let oldImageFrameCanvas = ImageEditorCanvasView.imageFrame(forViewSize: viewBounds.size, imageSize: model.srcImageSizePixels, transform: transform)
         // We project it into pre-crop view coordinates (the coordinate
-        // system of the crop rectangle).  Note that a CALayer's tranform
+        // system of the crop rectangle).  Note that a CALayer's transform
         // is applied using its "anchor point", the center of the layer.
         // so we translate before and after the projection to be consistent.
         let oldImageCenterView = oldImageFrameCanvas.center.minus(viewBounds.center).applying(oldAffineTransform).plus(viewBounds.center)

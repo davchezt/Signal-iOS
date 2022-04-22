@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -40,6 +40,7 @@ protocol QRCodeScanDelegate: AnyObject {
     // expect a URL.  Similarly, if a String payload is required and
     // not present, we probably want to ignore the scanned QR code and
     // continue scanning.
+    @discardableResult
     func qrCodeScanViewScanned(_ qrCodeScanViewController: QRCodeScanViewController,
                                qrCodeData: Data?,
                                qrCodeString: String?) -> QRCodeScanOutcome

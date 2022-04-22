@@ -1,9 +1,8 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
-import SignalMetadataKit
 
 @objc
 public enum ProfileFetchError: Int, Error {
@@ -257,7 +256,7 @@ public class ProfileFetcherJob: NSObject {
             if error.httpStatusCode == 404 {
                 return future.reject(ProfileFetchError.missing)
             }
-            if error.httpStatusCode == 413 {
+            if error.httpStatusCode == 413 || error.httpStatusCode == 429 {
                 return future.reject(ProfileFetchError.rateLimit)
             }
 
@@ -270,7 +269,7 @@ public class ProfileFetcherJob: NSObject {
             case SignalServiceProfile.ValidationError.invalidIdentityKey:
                 // There will be invalid identity keys on staging that can be safely ignored.
                 // This should not be retried.
-                if FeatureFlags.isUsingProductionService {
+                if TSConstants.isUsingProductionService {
                     owsFailDebug("skipping updateProfile retry. Invalid profile for: \(subject) error: \(error)")
                 } else {
                     Logger.warn("skipping updateProfile retry. Invalid profile for: \(subject) error: \(error)")
@@ -583,7 +582,7 @@ public class ProfileFetcherJob: NSObject {
                        bio: bio,
                        bioEmoji: bioEmoji,
                        username: profile.username,
-                       isUuidCapable: true,
+                    isStoriesCapable: profile.isStoriesCapable,
                        avatarUrlPath: profile.avatarUrlPath,
                        optionalAvatarFileUrl: avatarUrl,
                        profileBadges: profileBadgeMetadata,
@@ -598,14 +597,8 @@ public class ProfileFetcherJob: NSObject {
                                       verifier: profile.unidentifiedAccessVerifier,
                                       hasUnrestrictedAccess: profile.hasUnrestrictedUnidentifiedAccess)
 
-        if address.isLocalAddress,
-           DebugFlags.groupsV2memberStatusIndicators {
-            Logger.info("supportsGroupsV2: \(profile.supportsGroupsV2)")
-        }
-
         return databaseStorage.write(.promise) { transaction in
             GroupManager.setUserCapabilities(address: address,
-                                             hasGroupsV2Capability: profile.supportsGroupsV2,
                                              hasGroupsV2MigrationCapability: profile.supportsGroupsV2Migration,
                                              hasAnnouncementOnlyGroupsCapability: profile.supportsAnnouncementOnlyGroups,
                                              hasSenderKeyCapability: profile.supportsSenderKey,
@@ -637,7 +630,7 @@ public class ProfileFetcherJob: NSObject {
                bio: nil,
                bioEmoji: nil,
                username: nil,
-               isUuidCapable: true,
+            isStoriesCapable: false,
                avatarUrlPath: nil,
                optionalAvatarFileUrl: nil,
                profileBadges: nil,
@@ -647,7 +640,6 @@ public class ProfileFetcherJob: NSObject {
         )
 
         GroupManager.setUserCapabilities(address: address,
-                                         hasGroupsV2Capability: false,
                                          hasGroupsV2MigrationCapability: false,
                                          hasAnnouncementOnlyGroupsCapability: false,
                                          hasSenderKeyCapability: false,
@@ -699,7 +691,8 @@ public class ProfileFetcherJob: NSObject {
                                         transaction: SDSAnyWriteTransaction) {
         if self.identityManager.saveRemoteIdentity(latestIdentityKey, address: address, transaction: transaction) {
             Logger.info("updated identity key with fetched profile for recipient: \(address)")
-            self.sessionStore.archiveAllSessions(for: address, transaction: transaction)
+            // PNI TODO: clear PNI sessions too...but doesn't OWSIdentityManager.saveRemoteIdentity(...) already do this?
+            self.signalProtocolStore(for: .aci).sessionStore.archiveAllSessions(for: address, transaction: transaction)
         } else {
             // no change in identity.
         }

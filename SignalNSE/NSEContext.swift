@@ -106,10 +106,9 @@ class NSEContext: NSObject, AppContext {
         desiredBadgeNumber.set(value)
     }
 
-    func setStatusBarHidden(_ isHidden: Bool, animated isAnimated: Bool) {}
-
     func frontmostViewController() -> UIViewController? { nil }
     func openSystemSettings() {}
+    func open(_ url: URL, completion: ((Bool) -> Void)? = nil) {}
 
     func setNetworkActivityIndicatorVisible(_ value: Bool) {}
 

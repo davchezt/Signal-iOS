@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -168,7 +168,7 @@ class ReactionsDetailSheet: InteractiveSheetViewController {
     private var numberOfPages: CGFloat { return CGFloat(emojiReactorsViews.count) }
 
     // These thresholds indicate the offset at which we update the next / previous page.
-    // They're not exactly half way through the transition, to avoid us continously
+    // They're not exactly half way through the transition, to avoid us continuously
     // bouncing back and forth between pages.
     private var previousPageThreshold: CGFloat { return pageWidth * 0.45 }
     private var nextPageThreshold: CGFloat { return pageWidth + previousPageThreshold }

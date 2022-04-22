@@ -1,9 +1,10 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
 import SignalMessaging
+import UIKit
 
 public protocol ConversationPickerDelegate: AnyObject {
     func conversationPickerSelectionDidChange(_ conversationPickerViewController: ConversationPickerViewController)
@@ -184,7 +185,7 @@ open class ConversationPickerViewController: OWSTableViewController2 {
     }
 
     func buildGroupItem(_ groupThread: TSGroupThread, transaction: SDSAnyReadTransaction) -> GroupConversationItem {
-        let isBlocked = self.blockingManager.isThreadBlocked(groupThread)
+        let isBlocked = self.blockingManager.isThreadBlocked(groupThread, transaction: transaction)
         let dmConfig = groupThread.disappearingMessagesConfiguration(with: transaction)
         return GroupConversationItem(groupThreadId: groupThread.uniqueId,
                                      isBlocked: isBlocked,
@@ -192,7 +193,7 @@ open class ConversationPickerViewController: OWSTableViewController2 {
     }
 
     func buildContactItem(_ address: SignalServiceAddress, transaction: SDSAnyReadTransaction) -> ContactConversationItem {
-        let isBlocked = self.blockingManager.isAddressBlocked(address)
+        let isBlocked = self.blockingManager.isAddressBlocked(address, transaction: transaction)
         let dmConfig = TSContactThread.getWithContactAddress(address, transaction: transaction)?.disappearingMessagesConfiguration(with: transaction)
 
         let contactName = contactsManager.displayName(for: address,
@@ -345,7 +346,7 @@ open class ConversationPickerViewController: OWSTableViewController2 {
         AssertIsOnMainThread()
 
         self.defaultSeparatorInsetLeading = (OWSTableViewController2.cellHInnerMargin +
-                                                CGFloat(ContactCellView.avatarSizeClass.avatarDiameter) +
+                                                CGFloat(ContactCellView.avatarSizeClass.diameter) +
                                                 ContactCellView.avatarTextHSpacing)
 
         let conversationCollection = self.conversationCollection
@@ -396,7 +397,7 @@ open class ConversationPickerViewController: OWSTableViewController2 {
         if conversationCollection.isSearchResults,
            !hasContents {
             let section = OWSTableSection()
-            section.add(.label(withText: NSLocalizedString("CONVERSATION_SEARCH_NO_RESULTS",
+            section.add(.label(withText: OWSLocalizedString("CONVERSATION_SEARCH_NO_RESULTS",
                                                            comment: "keyboard toolbar label when no messages match the search string")))
             contents.addSection(section)
         }
@@ -493,8 +494,8 @@ open class ConversationPickerViewController: OWSTableViewController2 {
     private func didSelect(conversation: ConversationItem) {
         AssertIsOnMainThread()
 
-        let isBlocked: Bool = databaseStorage.write { transaction in
-            guard let thread = conversation.thread(transaction: transaction) else {
+        let isBlocked: Bool = databaseStorage.read { transaction in
+            guard let thread = conversation.getExistingThread(transaction: transaction) else {
                 return false
             }
             return !thread.canSendChatMessagesToThread(ignoreAnnouncementOnly: false)
@@ -511,7 +512,7 @@ open class ConversationPickerViewController: OWSTableViewController2 {
     private func showBlockedByAnnouncementOnlyToast() {
         Logger.info("")
 
-        let toastFormat = NSLocalizedString("CONVERSATION_PICKER_BLOCKED_BY_ANNOUNCEMENT_ONLY",
+        let toastFormat = OWSLocalizedString("CONVERSATION_PICKER_BLOCKED_BY_ANNOUNCEMENT_ONLY",
                                             comment: "Message indicating that only administrators can send message to an announcement-only group.")
 
         let toastText = String(format: toastFormat, NSNumber(value: kMaxPickerSelection))
@@ -529,12 +530,13 @@ open class ConversationPickerViewController: OWSTableViewController2 {
         let conversations = selection.conversations
         let labelText = conversations.map { $0.title }.joined(separator: ", ")
         footerView.setNamesText(labelText, animated: animated)
+        footerView.proceedButton.isEnabled = !conversations.isEmpty
     }
 
     private func showTooManySelectedToast() {
         Logger.info("")
 
-        let toastFormat = NSLocalizedString("CONVERSATION_PICKER_CAN_SELECT_NO_MORE_CONVERSATIONS",
+        let toastFormat = OWSLocalizedString("CONVERSATION_PICKER_CAN_SELECT_NO_MORE_CONVERSATIONS",
                                             comment: "Momentarily shown to the user when attempting to select more conversations than is allowed. Embeds {{max number of conversations}} that can be selected.")
 
         let toastText = String(format: toastFormat, NSNumber(value: kMaxPickerSelection))
@@ -644,10 +646,10 @@ extension ConversationPickerViewController: ApprovalFooterDelegate {
 
 extension ConversationPickerViewController {
     private struct Strings {
-        static let title = NSLocalizedString("CONVERSATION_PICKER_TITLE", comment: "navbar header")
-        static let recentsSection = NSLocalizedString("CONVERSATION_PICKER_SECTION_RECENTS", comment: "table section header for section containing recent conversations")
-        static let signalContactsSection = NSLocalizedString("CONVERSATION_PICKER_SECTION_SIGNAL_CONTACTS", comment: "table section header for section containing contacts")
-        static let groupsSection = NSLocalizedString("CONVERSATION_PICKER_SECTION_GROUPS", comment: "table section header for section containing groups")
+        static let title = OWSLocalizedString("CONVERSATION_PICKER_TITLE", comment: "navbar header")
+        static let recentsSection = OWSLocalizedString("CONVERSATION_PICKER_SECTION_RECENTS", comment: "table section header for section containing recent conversations")
+        static let signalContactsSection = OWSLocalizedString("CONVERSATION_PICKER_SECTION_SIGNAL_CONTACTS", comment: "table section header for section containing contacts")
+        static let groupsSection = OWSLocalizedString("CONVERSATION_PICKER_SECTION_GROUPS", comment: "table section header for section containing groups")
     }
 }
 
@@ -701,19 +703,16 @@ private class ConversationPickerCell: ContactTableViewCell {
 
     // MARK: - Subviews
 
-    static let selectedBadgeImage = #imageLiteral(resourceName: "image_editor_checkmark_full").withRenderingMode(.alwaysTemplate)
+    let selectionBadgeSize = CGSize(square: 24)
 
-    let selectionBadgeSize = CGSize(square: 20)
     lazy var selectionView: UIView = {
         let container = UIView()
-        container.layoutMargins = .zero
-        container.autoSetDimensions(to: selectionBadgeSize)
 
         container.addSubview(unselectedBadgeView)
-        unselectedBadgeView.autoPinEdgesToSuperviewMargins()
+        unselectedBadgeView.autoPinEdgesToSuperviewEdges()
 
         container.addSubview(selectedBadgeView)
-        selectedBadgeView.autoPinEdgesToSuperviewMargins()
+        selectedBadgeView.autoPinEdgesToSuperviewEdges()
 
         return container
     }()
@@ -749,18 +748,14 @@ private class ConversationPickerCell: ContactTableViewCell {
     }
 
     lazy var unselectedBadgeView: UIView = {
-        let circleView = CircleView()
-        circleView.autoSetDimensions(to: selectionBadgeSize)
-        circleView.layer.borderWidth = 1.0
-        circleView.layer.borderColor = Theme.primaryIconColor.cgColor
-        return circleView
+        let imageView = UIImageView(image: #imageLiteral(resourceName: "empty-circle-outline-24").withRenderingMode(.alwaysTemplate))
+        imageView.tintColor = .ows_gray25
+        return imageView
     }()
 
     lazy var selectedBadgeView: UIView = {
-        let imageView = UIImageView()
-        imageView.autoSetDimensions(to: selectionBadgeSize)
-        imageView.image = ConversationPickerCell.selectedBadgeImage
-        imageView.tintColor = .ows_accentBlue
+        let imageView = UIImageView(image: #imageLiteral(resourceName: "check-circle-solid-24").withRenderingMode(.alwaysTemplate))
+        imageView.tintColor = Theme.accentBlueColor
         return imageView
     }()
 }

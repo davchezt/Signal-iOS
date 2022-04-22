@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 #import "ContactsViewHelper.h"
@@ -45,7 +45,7 @@ NS_ASSUME_NONNULL_BEGIN
 
     _observers = [NSHashTable weakObjectsHashTable];
 
-    AppReadinessRunNowOrWhenAppDidBecomeReadySync(^{
+    AppReadinessRunNowOrWhenUIDidBecomeReadySync(^{
         // setup() - especially updateContacts() - can
         // be expensive, so we don't want to run that
         // directly in runNowOrWhenAppDidBecomeReadySync().
@@ -61,7 +61,7 @@ NS_ASSUME_NONNULL_BEGIN
         // the app becomes ready.
         //
         // Therefore we dispatch async to the main queue.
-        // We'll run very soon after app becomes ready,
+        // We'll run very soon after app UI becomes ready,
         // without introducing the risk of a 0x8badf00d
         // crash.
         dispatch_async(dispatch_get_main_queue(), ^{ [self setup]; });
@@ -182,38 +182,6 @@ NS_ASSUME_NONNULL_BEGIN
     return TSAccountManager.localAddress;
 }
 
-- (BOOL)isSignalServiceAddressBlocked:(SignalServiceAddress *)address
-{
-    OWSAssertIsOnMainThread();
-    OWSAssertDebug(!CurrentAppContext().isNSE);
-
-    return [self.blockingManager isAddressBlocked:address];
-}
-
-- (BOOL)isGroupIdBlocked:(NSData *)groupId
-{
-    OWSAssertIsOnMainThread();
-    OWSAssertDebug(!CurrentAppContext().isNSE);
-
-    return [self.blockingManager isGroupIdBlocked:groupId];
-}
-
-- (BOOL)isThreadBlocked:(TSThread *)thread
-{
-    OWSAssertDebug(!CurrentAppContext().isNSE);
-
-    if ([thread isKindOfClass:[TSContactThread class]]) {
-        TSContactThread *contactThread = (TSContactThread *)thread;
-        return [self isSignalServiceAddressBlocked:contactThread.contactAddress];
-    } else if ([thread isKindOfClass:[TSGroupThread class]]) {
-        TSGroupThread *groupThread = (TSGroupThread *)thread;
-        return [self isGroupIdBlocked:groupThread.groupModel.groupId];
-    } else {
-        OWSFailDebug(@"%@ failure: unexpected thread: %@", self.logTag, thread.class);
-        return NO;
-    }
-}
-
 - (BOOL)hasUpdatedContactsAtLeastOnce
 {
     OWSAssertDebug(!CurrentAppContext().isNSE);
@@ -237,7 +205,7 @@ NS_ASSUME_NONNULL_BEGIN
         allSignalAccounts = [self.contactsManagerImpl unsortedSignalAccountsWithTransaction:transaction];
         whitelistedAddresses = [self.profileManagerImpl allWhitelistedRegisteredAddressesWithTransaction:transaction];
         contactsMaps = [self.contactsManagerImpl contactsMapsWithTransaction:transaction];
-    }];
+    } file:__FILE__ function:__FUNCTION__ line:__LINE__];
 
     NSMutableArray<SignalAccount *> *accountsToProcess = [allSignalAccounts mutableCopy];
     for (SignalServiceAddress *address in whitelistedAddresses) {
@@ -416,17 +384,17 @@ NS_ASSUME_NONNULL_BEGIN
     OWSAssertDebug(!CurrentAppContext().isNSE);
 
     ActionSheetController *alert = [[ActionSheetController alloc]
-        initWithTitle:NSLocalizedString(@"EDIT_CONTACT_WITHOUT_CONTACTS_PERMISSION_ALERT_TITLE", comment
+        initWithTitle:OWSLocalizedString(@"EDIT_CONTACT_WITHOUT_CONTACTS_PERMISSION_ALERT_TITLE", comment
                                         : @"Alert title for when the user has just tried to edit a "
                                           @"contacts after declining to give Signal contacts "
                                           @"permissions")
-              message:NSLocalizedString(@"EDIT_CONTACT_WITHOUT_CONTACTS_PERMISSION_ALERT_BODY", comment
+              message:OWSLocalizedString(@"EDIT_CONTACT_WITHOUT_CONTACTS_PERMISSION_ALERT_BODY", comment
                                         : @"Alert body for when the user has just tried to edit a "
                                           @"contacts after declining to give Signal contacts "
                                           @"permissions")];
 
     [alert addAction:[[ActionSheetAction alloc]
-                                   initWithTitle:NSLocalizedString(@"AB_PERMISSION_MISSING_ACTION_NOT_NOW",
+                                   initWithTitle:OWSLocalizedString(@"AB_PERMISSION_MISSING_ACTION_NOT_NOW",
                                                      @"Button text to dismiss missing contacts permission alert")
                          accessibilityIdentifier:ACCESSIBILITY_IDENTIFIER_WITH_NAME(self, @"not_now")
                                            style:ActionSheetActionStyleCancel

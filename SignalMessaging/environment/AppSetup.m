@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 #import "AppSetup.h"
@@ -7,7 +7,6 @@
 #import "OWSProfileManager.h"
 #import "VersionMigrations.h"
 #import <SignalMessaging/SignalMessaging-Swift.h>
-#import <SignalMetadataKit/SignalMetadataKit-Swift.h>
 #import <SignalServiceKit/OWS2FAManager.h>
 #import <SignalServiceKit/OWSBackgroundTask.h>
 #import <SignalServiceKit/OWSDisappearingMessagesJob.h>
@@ -25,7 +24,7 @@ NS_ASSUME_NONNULL_BEGIN
 + (void)setupEnvironmentWithPaymentsEvents:(id<PaymentsEvents>)paymentsEvents
                           mobileCoinHelper:(id<MobileCoinHelper>)mobileCoinHelper
                           webSocketFactory:(id<WebSocketFactory>)webSocketFactory
-                 appSpecificSingletonBlock:(dispatch_block_t)appSpecificSingletonBlock
+                 appSpecificSingletonBlock:(NS_NOESCAPE dispatch_block_t)appSpecificSingletonBlock
                        migrationCompletion:(void (^)(NSError *_Nullable error))migrationCompletion
 {
     OWSAssertDebug(appSpecificSingletonBlock);
@@ -71,9 +70,8 @@ NS_ASSUME_NONNULL_BEGIN
         BlockingManager *blockingManager = [BlockingManager new];
         OWSIdentityManager *identityManager = [[OWSIdentityManager alloc] initWithDatabaseStorage:databaseStorage];
         id<RemoteConfigManager> remoteConfigManager = [ServiceRemoteConfigManager new];
-        SSKSessionStore *sessionStore = [SSKSessionStore new];
-        SSKSignedPreKeyStore *signedPreKeyStore = [SSKSignedPreKeyStore new];
-        SSKPreKeyStore *preKeyStore = [SSKPreKeyStore new];
+        SignalProtocolStore *aciSignalProtocolStore = [[SignalProtocolStore alloc] initForIdentity:OWSIdentityACI];
+        SignalProtocolStore *pniSignalProtocolStore = [[SignalProtocolStore alloc] initForIdentity:OWSIdentityPNI];
         id<OWSUDManager> udManager = [OWSUDManagerImpl new];
         OWSMessageDecrypter *messageDecrypter = [OWSMessageDecrypter new];
         GroupsV2MessageProcessor *groupsV2MessageProcessor = [GroupsV2MessageProcessor new];
@@ -105,7 +103,8 @@ NS_ASSUME_NONNULL_BEGIN
         BulkProfileFetch *bulkProfileFetch = [BulkProfileFetch new];
         BulkUUIDLookup *bulkUUIDLookup = [BulkUUIDLookup new];
         id<VersionedProfiles> versionedProfiles = [VersionedProfilesImpl new];
-        ModelReadCaches *modelReadCaches = [ModelReadCaches new];
+        ModelReadCaches *modelReadCaches =
+            [[ModelReadCaches alloc] initWithModelReadCacheFactory:[ModelReadCacheFactory new]];
         EarlyMessageManager *earlyMessageManager = [EarlyMessageManager new];
         OWSMessagePipelineSupervisor *messagePipelineSupervisor =
             [OWSMessagePipelineSupervisor createStandardSupervisor];
@@ -142,9 +141,8 @@ NS_ASSUME_NONNULL_BEGIN
                                                                   blockingManager:blockingManager
                                                                   identityManager:identityManager
                                                               remoteConfigManager:remoteConfigManager
-                                                                     sessionStore:sessionStore
-                                                                signedPreKeyStore:signedPreKeyStore
-                                                                      preKeyStore:preKeyStore
+                                                           aciSignalProtocolStore:aciSignalProtocolStore
+                                                           pniSignalProtocolStore:pniSignalProtocolStore
                                                                         udManager:udManager
                                                                  messageDecrypter:messageDecrypter
                                                          groupsV2MessageProcessor:groupsV2MessageProcessor
@@ -236,6 +234,11 @@ NS_ASSUME_NONNULL_BEGIN
                         backgroundTask = nil;
                     }];
                 });
+
+                // Do this after we've let the main thread know that storage setup is complete.
+                if (SSKDebugFlags.internalLogging) {
+                    [SDSKeyValueStore logCollectionStatistics];
+                }
             });
         };
 

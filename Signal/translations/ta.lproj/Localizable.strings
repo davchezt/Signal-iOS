@@ -154,6 +154,9 @@
 /* Title for the 'app launch failed' alert. */
 "APP_LAUNCH_FAILURE_ALERT_TITLE" = "பிழை";
 
+/* No comment provided by engineer. */
+"APP_LAUNCH_FAILURE_CHECK_DATABASE" = "Run Database Integrity Check";
+
 /* Error indicating that the app could not launch because the database could not be loaded. */
 "APP_LAUNCH_FAILURE_COULD_NOT_LOAD_DATABASE" = "தரவுத்தளத்தை ஏற்ற முடியவில்லை";
 
@@ -377,13 +380,13 @@
 "BADGE_DETAILS_GIVE_A_BOOST" = "Give Signal a Boost";
 
 /* String explaing to the user that their boost badge has expired on the badge expiry sheetsheet. */
-"BADGE_EXIPRED_BOOST_BODY_FORMAT" = "Your Boost badge has expired, and is no longer visible on your profile.\n\nYou can continue using Signal but to support technology that is built for you, please consider becoming a monthly Sustainer.";
+"BADGE_EXIPRED_BOOST_BODY_FORMAT" = "Your Boost badge has expired and is no longer visible on your profile.\n\nYou can keep using Signal but to support technology that is built for you, consider becoming a sustainer by making a monthly donation.";
 
 /* String explaing to the user that their boost badge has expired while they are a current subscription sustainer on the badge expiry sheetsheet. */
 "BADGE_EXIPRED_BOOST_CURRENT_SUSTAINER_BODY_FORMAT" = "Your Boost badge has expired, and is no longer visible on your profile.\n\nYou can reactivate your Boost badge for another 30 days with a one-time contribution.";
 
 /* String explaing to the user that their subscription badge has expired on the badge expiry sheetsheet. Embed {badge name}. */
-"BADGE_EXIPRED_SUBSCRIPTION_BODY_FORMAT" = "Your Sustainer subscription was automatically cancelled because you were inactive for too long. Your %@ badge is no longer visible on your profile.\n\nYou can keep using Signal but to support the app and reactivate your badge, renew now.";
+"BADGE_EXIPRED_SUBSCRIPTION_BODY_FORMAT" = "Your recurring monthly donation was automatically cancelled because you were inactive for too long. Your %@ badge is no longer visible on your profile.\n\nYou can keep using Signal but to support the app and reactivate your badge, renew now.";
 
 /* Button title for boost on the badge expiration sheet, used if the user is not already a sustainer. */
 "BADGE_EXPIRED_BOOST_RENEWAL_BUTTON" = "Become a Sustainer";
@@ -398,7 +401,7 @@
 "BADGE_EXPIRED_SUBSCRIPTION_RENEWAL_BUTTON" = "Renew Subscription";
 
 /* Title for subscription on the badge expiration sheet. */
-"BADGE_EXPIRED_SUBSCRIPTION_TITLE" = "Subscription Cancelled";
+"BADGE_EXPIRED_SUBSCRIPTION_TITLE" = "Monthly Donation Cancelled";
 
 /* Title for boost on the thank you sheet. */
 "BADGE_THANKS_BOOST_TITLE" = "Thanks for the Boost!";
@@ -416,7 +419,7 @@
 "BADGE_THANKS_TOGGLE_FOOTER" = "When you have more than one badge, you can choose one to feature for others to see on your profile.";
 
 /* String explaing to the user that they've earned a badge on the badge thank you sheet. Embed {badge name}. */
-"BADGE_THANKS_YOU_EARNED_FORMAT" = "You’ve earned the %@ badge! Help Signal build awareness by displaying this badge on your profile.";
+"BADGE_THANKS_YOU_EARNED_FORMAT" = "You’ve earned a %@ badge. Display this badge on your profile to build awareness for donating to Signal.";
 
 /* Accessibility label for banner close button */
 "BANNER_CLOSE_ACCESSIBILITY_LABEL" = "பதாகையை மூடு";
@@ -497,7 +500,7 @@
 "BOOST_VIEW_AMOUNT_LABEL" = "Set currency";
 
 /* The body text for the donate to signal view */
-"BOOST_VIEW_BODY" = "Say “Thanks!” and earn the Boost badge for 30 days.";
+"BOOST_VIEW_BODY" = "Make a one-time donation and earn a Boost badge for 30 days.";
 
 /* The body text for the donate to signal view, embeds {{Expiration}} */
 "BOOST_VIEW_BODY_WITH_EXPIRATION_FORMAT" = "Your Boost badge will expire on %@.";
@@ -586,8 +589,17 @@
 /* notification body */
 "CALL_AUDIO_INCOMING_NOTIFICATION_BODY" = "📞 உள்வரும் ஒலி அழைப்பு…";
 
-/* notification body */
+/* notification body for a missed call in the last 24 hours. Embeds {{time}}, e.g. '3:30 PM'. */
+"CALL_AUDIO_MISSED_24_HOURS_NOTIFICATION_BODY_FORMAT" = "📞 Missed audio call at %@";
+
+/* notification body for a call that was just missed */
 "CALL_AUDIO_MISSED_NOTIFICATION_BODY" = "📞 ஒலி அழைப்பு தவறவிட்டது";
+
+/* notification body for a missed call from more than a week ago. Embeds {{short date}}, e.g. '6/28'. */
+"CALL_AUDIO_MISSED_PAST_NOTIFICATION_BODY_FORMAT" = "📞 Missed audio call on %@";
+
+/* notification body for a missed call from the last week. Embeds {{weekday}}, e.g. 'Monday'. */
+"CALL_AUDIO_MISSED_WEEK_NOTIFICATION_BODY_FORMAT" = "📞 Missed audio call on %@";
 
 /* Alert message when calling and permissions for microphone are missing */
 "CALL_AUDIO_PERMISSION_MESSAGE" = "Signal லில் அழைப்புகள் மற்றும் குரல் செய்திகளைப் பதிவுசெய்ய iOS அமைப்புகள் பயன்பாடு மைக்ரோஃபோன் அணுகலை இயக்கலாம்.";
@@ -619,8 +631,17 @@
 /* notification body */
 "CALL_VIDEO_INCOMING_NOTIFICATION_BODY" = "📹 உள்வரும் காணொளி அழைப்பு…";
 
-/* notification body */
+/* notification body for a missed call in the last 24 hours. Embeds {{time}}, e.g. '3:30 PM'. */
+"CALL_VIDEO_MISSED_24_HOURS_NOTIFICATION_BODY_FORMAT" = "📹 Missed video call at %@";
+
+/* notification body for a call that was just missed */
 "CALL_VIDEO_MISSED_NOTIFICATION_BODY" = "📹 காணொளி அழைப்பு தவறவிட்டது";
+
+/* notification body for a missed call from more than a week ago. Embeds {{short date}}, e.g. '6/28'. */
+"CALL_VIDEO_MISSED_PAST_NOTIFICATION_BODY_FORMAT" = "📹 Missed video call on %@";
+
+/* notification body for a missed call from the last week. Embeds {{weekday}}, e.g. 'Monday'. */
+"CALL_VIDEO_MISSED_WEEK_NOTIFICATION_BODY_FORMAT" = "📹 Missed video call on %@";
 
 /* label for accepting incoming video calls as audio  only */
 "CALL_VIEW_ACCEPT_INCOMING_CALL_AUDIO_ONLY_LABEL" = "வீடியோ இல்லாமல் பதில்";
@@ -735,6 +756,9 @@
 
 /* Tooltip highlighting the auto chat color option. */
 "CHAT_COLORS_AUTO_TOOLTIP" = "ஆட்டோ வண்ணத்துடன் பொருந்துகிறது பின்னணிப்படம்";
+
+/* Title for the chat list's default mode. */
+"CHAT_LIST_TITLE_INBOX" = "உரையாடல்கள்\n ";
 
 /* Title for the color & wallpaper settings view. */
 "COLOR_AND_WALLPAPER_SETTINGS_TITLE" = "அரட்டை நிறம் & பின்னணிப்படம்";
@@ -1306,6 +1330,21 @@
 /* Tooltip highlighting the custom chat color controls. */
 "CUSTOM_CHAT_COLOR_SETTINGS_TOOLTIP" = "இழுக்கவும் மாற்றம் சாய்வு திசை";
 
+/* Button to run the database integrity check */
+"DATABASE_INTEGRITY_CHECK_ACTION_RUN" = "Run";
+
+/* Message for alert before running a database integrity check */
+"DATABASE_INTEGRITY_CHECK_MESSAGE" = "This may take a while (several minutes or more) depending on how much you have used Signal. It is safe to close Signal if it is taking too long.";
+
+/* Button to save database integrity check results to the debug log */
+"DATABASE_INTEGRITY_CHECK_RESULTS_ACTION_LOG" = "Add to Debug Log";
+
+/* Title for alert after running a database integrity check */
+"DATABASE_INTEGRITY_CHECK_RESULTS_TITLE" = "Integrity check results";
+
+/* Title for alert before running a database integrity check */
+"DATABASE_INTEGRITY_CHECK_TITLE" = "Run database integrity check?";
+
 /* Subtitle shown while the app is updating its database. */
 "DATABASE_VIEW_OVERLAY_SUBTITLE" = "இதற்கு சில நிமிடங்கள் ஆகலாம்.";
 
@@ -1330,9 +1369,6 @@
 /* The day before today. */
 "DATE_YESTERDAY" = "நேற்று";
 
-/* Error indicating that the debug logs could not be copied. */
-"DEBUG_LOG_ALERT_COULD_NOT_COPY_LOGS" = "பதிவுகளை நகலெடுக்க முடியவில்லை.";
-
 /* Error indicating that the debug logs could not be packaged. */
 "DEBUG_LOG_ALERT_COULD_NOT_PACKAGE_LOGS" = "பதிவுகளை தொகுக்க முடியவில்லை.";
 
@@ -1353,6 +1389,9 @@
 
 /* Label for the 'email debug log' option of the debug log alert. */
 "DEBUG_LOG_ALERT_OPTION_EMAIL" = "மின்னஞ்சல் ஆதரவு";
+
+/* Label for the 'Export Logs' fallback option for the alert when debug log uploading fails. */
+"DEBUG_LOG_ALERT_OPTION_EXPORT_LOG_ARCHIVE" = "Export Logs";
 
 /* Label for the 'send to self' option of the debug log alert. */
 "DEBUG_LOG_ALERT_OPTION_SEND_TO_SELF" = "சுயமாக அனுப்பு";
@@ -1480,7 +1519,7 @@
 /* A warning for the device transfer 'choice' view indicating you can only have one device registered with your number */
 "DEVICE_TRANSFER_CHOICE_WARNING" = "தொடரும் விருப்பம் முடக்கு Signal ஆன் மற்றவை தற்போது பதிவுசெய்யப்பட்ட சாதனங்கள் தொலைபேசி எண்.";
 
-/* An error indicating that we were unable to verify the indentity of the new device to complete the transfer */
+/* An error indicating that we were unable to verify the identity of the new device to complete the transfer */
 "DEVICE_TRANSFER_ERROR_CERTIFICATE_MISMATCH" = "சரிபார்க்க முடியவில்லை உங்கள் புதியது சாதனம், தயவு செய்து மீண்டும் முயற்சி செய்";
 
 /* An error indicating that something went wrong with the transfer and it could not complete */
@@ -1585,38 +1624,41 @@
 /* Section title for the 'domain fronting country' view. */
 "DOMAIN_FRONTING_COUNTRY_VIEW_SECTION_HEADER" = "தணிக்கை சுற்றறிக்கை இடம்";
 
-/* Donation amount label for the donate to signal view */
-"DONATION_VIEW_AMOUNT_LABEL" = "நன்கொடை தொகை";
+/* Section title for donation amount on receipts */
+"DONATION_RECEIPT_AMOUNT" = "Amount";
 
-/* Default text for the custom amount field of the donation view. */
-"DONATION_VIEW_CUSTOM_AMOUNT_PLACEHOLDER" = "உள்ளிடவும் தனிப்பயன் தொகை";
+/* Section title for donation date on receipts */
+"DONATION_RECEIPT_DATE_PAID" = "Date paid";
+
+/* Title on the view where you can see a single receipt */
+"DONATION_RECEIPT_DETAILS" = "விவரங்கள்";
+
+/* Text on the button that exports the receipt */
+"DONATION_RECEIPT_EXPORT_RECEIPT_BUTTON" = "Share Receipt";
+
+/* Footer text at the bottom of donation receipts */
+"DONATION_RECEIPT_FOOTER" = "Thank you for supporting Signal. Your contribution helps fuel the mission of developing open source privacy technology that protects free expression and enables secure global communication for millions around the world. If you’re a resident of the United States, please retain this receipt for your tax records. Signal Technology Foundation is a tax-exempt nonprofit organization in the United States under section 501c3 of the Internal Revenue Code. Our Federal Tax ID is 82-4506840.";
+
+/* Title for one-time donation receipts */
+"DONATION_RECEIPT_ONE_TIME" = "One-time";
+
+/* Title for recurring donation receipts */
+"DONATION_RECEIPT_RECURRING" = "Recurring";
+
+/* Title on donation receipts */
+"DONATION_RECEIPT_TITLE" = "Donation receipt";
+
+/* Section title for donation type on receipts */
+"DONATION_RECEIPT_TYPE" = "Type";
+
+/* Title of view where you can see all of your donation receipts, or button to take you there */
+"DONATION_RECEIPTS" = "Donation Receipts";
+
+/* Text at the bottom of the donation receipts list, telling users that receipts might not be available */
+"DONATION_RECEIPTS_MIGHT_BE_MISSING_IF_YOU_REINSTALLED" = "If you have reinstalled Signal, receipts from previous donations will not be available.";
 
 /* Text describing to the user that they're going to pay a donation to Signal */
 "DONATION_VIEW_DONATION_TO_SIGNAL" = "நன்கொடை க்கு Signal\n ";
-
-/* Text explaining there are other ways to donate on the donation view. */
-"DONATION_VIEW_OTHER_WAYS" = "மற்றவை தானம் செய்வதற்கான வழிகள்";
-
-/* Error text notifying the user they must select a large amount on the donate to signal view */
-"DONATION_VIEW_SELECT_A_LARGER_AMOUNT" = "தேர்ந்தெடு நன்கொடை அளிக்க ஒரு பெரிய தொகை";
-
-/* Error text notifying the user they must select a smaller amount on the donate to signal view */
-"DONATION_VIEW_SELECT_A_SMALLER_AMOUNT" = "தேர்ந்தெடு நன்கொடை அளிக்க ஒரு சிறிய தொகை";
-
-/* Error text notifying the user they must select an amount on the donate to signal view */
-"DONATION_VIEW_SELECT_AN_AMOUNT" = "தேர்ந்தெடு நன்கொடையாக ஒரு தொகை";
-
-/* Thank you message on the donate to signal view */
-"DONATION_VIEW_THANKS_FOR_YOUR_SUPPORT" = "உங்கள் நன்றி ஆதரவு!";
-
-/* Title for the donate to signal view */
-"DONATION_VIEW_TITLE" = "Signal இயக்கப்படுகிறது மக்கள் உன்னைப்போல.";
-
-/* The body of the 'Why Donate' section of the donate to signal view */
-"DONATION_VIEW_WHY_DONATE_BODY" = "இல் அணி Signal வளரும் பணிக்கு உறுதியளித்துள்ளார் திறந்த மூல தனியுரிமை இலவச வெளிப்பாட்டைப் பாதுகாக்கும் மற்றும் பாதுகாப்பான உலகளாவியத்தை இயக்கும் தொழில்நுட்பம் தொடர்பு. உங்கள் பங்களிப்பு இந்த காரணத்தை எரிபொருளாகக் கொண்டுள்ளது.இல்லை விளம்பரங்கள். இல்லை டிராக்கர்கள். இல்லை விளையாடினேன்.\n\nஉங்கள் நன்கொடை உலகெங்கிலும் உள்ள மில்லியன் கணக்கானவர்கள் பயன்படுத்தும் பயன்பாட்டின் மேம்பாடு, சேவையகங்கள் மற்றும் அலைவரிசையை செலுத்த உதவுகிறது தனிப்பட்ட மற்றும் உடனடி தொடர்பு.";
-
-/* The title of the 'Why Donate' section of the donate to signal view */
-"DONATION_VIEW_WHY_DONATE_TITLE" = "ஏன் நன்கொடை?";
 
 /* Alert body for when the user has just tried to edit a contacts after declining to give Signal contacts permissions */
 "EDIT_CONTACT_WITHOUT_CONTACTS_PERMISSION_ALERT_BODY" = "IOS செயலி அமைப்புகள் அணுகலை இயக்கலாம்.";
@@ -1984,10 +2026,10 @@
 /* Title for alert explaining that a group call participant is blocked. Embeds {{ user's name }} */
 "GROUP_CALL_BLOCKED_ALERT_TITLE_FORMAT" = "%@ தடுக்கப்பட்டுள்ளது";
 
-/* Message for eror alert indicating that only group administrators can start calls in announcement-only groups. */
+/* Message for error alert indicating that only group administrators can start calls in announcement-only groups. */
 "GROUP_CALL_BLOCKED_BY_ANNOUNCEMENT_ONLY_MESSAGE" = "மட்டும் நிர்வாகிகள் இதனுடைய குழு அழைப்பைத் தொடங்கலாம்.";
 
-/* Title for eror alert indicating that only group administrators can start calls in announcement-only groups. */
+/* Title for error alert indicating that only group administrators can start calls in announcement-only groups. */
 "GROUP_CALL_BLOCKED_BY_ANNOUNCEMENT_ONLY_TITLE" = "தொடங்க முடியாது குழு அழைப்பு";
 
 /* String displayed in group call grid cell when a user is blocked. Embeds {user's name} */
@@ -2260,6 +2302,9 @@
 /* Message indicating that 'announcement-only' mode was enabled by a remote user. Embeds {{ user who enabled 'announcement-only' mode }}. */
 "GROUP_IS_ANNOUNCEMENT_ONLY_ENABLED_BY_REMOTE_USER_FORMAT" = "%@ மாற்றப்பட்டது குழு அமைப்புகள் மட்டும் அனுமதி நிர்வாகிகள் க்கு அனுப்பு செய்திகள்.";
 
+/* Subtitle indicating that the local user has been blocked from joining the group */
+"GROUP_LINK_ACTION_SHEET_VIEW_BLOCKED_FROM_JOINING_SUBTITLE" = "You can't join this group via the group link because an admin removed you.";
+
 /* Subtitle indicating that the group invite link has expired in the 'group invite link' action sheet. */
 "GROUP_LINK_ACTION_SHEET_VIEW_EXPIRED_LINK_SUBTITLE" = "இது குழு இணைப்பு இருக்கிறது இல்லை நீண்டது செல்லுபடியாகும்.";
 
@@ -2404,7 +2449,7 @@
 /* Message indicating that the local user was removed from the group by an unknown user. */
 "GROUP_LOCAL_USER_REMOVED_BY_UNKNOWN_USER" = "நீங்கள் குழுவிலிருந்து அகற்றப்பட்டது.";
 
-/* Message indicating that the local user's request to join the group was approved by another user. Embeds {{ %@ the name of the user who approved the reuqest }}. */
+/* Message indicating that the local user's request to join the group was approved by another user. Embeds {{ %@ the name of the user who approved the request }}. */
 "GROUP_LOCAL_USER_REQUEST_APPROVED_BY_REMOTE_USER_FORMAT" = "%@  உங்கள் கோரிக்கையை அங்கீகரித்தது சேர தி குழு.";
 
 /* Message indicating that the local user cancelled their request to join the group. */
@@ -2598,6 +2643,9 @@
 
 /* The title for the 'group requests and invites' view. */
 "GROUP_REQUESTS_AND_INVITES_VIEW_TITLE" = "கோரிக்கைகள் மற்றும் அழைப்புகள்";
+
+/* Name for a group story on the stories list. Embeds {author's name}, {group name} */
+"GROUP_STORY_NAME_FORMAT" = "%1$@ to %2$@";
 
 /* Info message indicating that the group was updated by an unknown user. */
 "GROUP_UPDATED" = "குழு புதுப்பிக்கப்பட்டது.";
@@ -2941,13 +2989,10 @@
 /* Title for the conversation list's 'archive' mode. */
 "HOME_VIEW_TITLE_ARCHIVE" = "காப்பகம்";
 
-/* Title for the conversation list's default mode. */
-"HOME_VIEW_TITLE_INBOX" = "Signal";
-
-/* Title for the 'Select Chats' option in the HomeView. */
+/* Title for the 'Select Chats' option in the ChatList. */
 "HOME_VIEW_TITLE_SELECT_CHATS" = "Select Chats";
 
-/* Title 'Read All' button in the toolbar of the homeview if multi-section is active. */
+/* Title 'Read All' button in the toolbar of the ChatList if multi-section is active. */
 "HOME_VIEW_TOOLBAR_READ_ALL" = "Read All";
 
 /* The image editor hint that you can draw blur */
@@ -4345,9 +4390,6 @@
 /* The re-creation explanation in the 'pin creation' view. */
 "PIN_CREATION_RECREATION_EXPLANATION" = "நீங்கள் முடியும் மாற்றம் உங்கள் பின் இந்த வரை சாதனம் பதிவு செய்யப்பட்டுள்ளது.";
 
-/* Title of the 'pin creation' recreation view. */
-"PIN_CREATION_RECREATION_TITLE" = "உங்கள் பின்னை மாற்றவும்";
-
 /* Action of the 'pin disable' reglock action sheet. */
 "PIN_CREATION_REGLOCK_CONFIRMATION_ACTION" = "அணைக்கவும்";
 
@@ -4596,6 +4638,15 @@
 
 /* Toast alert text shown when tapping on a quoted message which we cannot scroll to because the local copy of the message didn't exist when the quote was received. */
 "QUOTED_REPLY_ORIGINAL_MESSAGE_REMOTELY_SOURCED" = "அசல் செய்தி கிடைக்கவில்லை.";
+
+/* Header label that appears above quoted messages when the quoted content was includes a reaction to your own story. */
+"QUOTED_REPLY_REACTION_TO_OWN_STORY" = "Reacted to your story";
+
+/* Header label that appears above quoted messages when the quoted content was includes a reaction to a story. Embeds {{ story author name }} */
+"QUOTED_REPLY_REACTION_TO_STORY_FORMAT" = "Reacted to %@’s story";
+
+/* Message header when you are quoting a story. Embeds {{ story author name }} */
+"QUOTED_REPLY_STORY_AUTHOR_INDICATOR_FORMAT" = "%@ · Story";
 
 /* Indicates this message is a quoted reply to an attachment of unknown type. */
 "QUOTED_REPLY_TYPE_ATTACHMENT" = "இணைப்பு";
@@ -5110,9 +5161,6 @@
 /* alert action when the user decides not to cancel the media flow after all. */
 "SEND_MEDIA_RETURN_TO_CAMERA" = "கேமராவுக்குத் திரும்பு";
 
-/* alert action when the user decides not to cancel the media flow after all. */
-"SEND_MEDIA_RETURN_TO_MEDIA_LIBRARY" = "மீடியா நூலகத்திற்குத் திரும்பு";
-
 /* No comment provided by engineer. */
 "SEND_SMS_CONFIRM_TITLE" = "பாதுகாப்பற்ற எஸ்எம்எஸ் வழியாக நண்பரை அழைக்கவா?";
 
@@ -5353,9 +5401,6 @@
 /* Settings table view cell label */
 "SETTINGS_INVITE_TITLE" = "உங்கள் நண்பர்களை அழைக்கவும்";
 
-/* content of tweet when inviting via twitter - please do not translate URL */
-"SETTINGS_INVITE_TWITTER_TEXT" = "@signalapp பயன்படுத்தி நீங்கள் என்னை அணுகலாம். இப்போது கிடைக்கும்: https://signal.org/download/";
-
 /* Label for settings view that allows user to change the chat color and wallpaper. */
 "SETTINGS_ITEM_COLOR_AND_WALLPAPER" = "அரட்டை நிறம் & வால்பேப்பர்";
 
@@ -5421,6 +5466,9 @@
 
 /* The title for the notification settings. */
 "SETTINGS_NOTIFICATIONS" = "அறிவிப்புகள்";
+
+/* Title for the 'one-time donation' link in settings. */
+"SETTINGS_ONE_TIME_DONATION" = "One-time Donation";
 
 /* Label for the 'agree to payments terms' button in the 'activate payments confirmation' UI in the payment settings. */
 "SETTINGS_PAYMENTS_ACTIVATE_PAYMENTS_CONFIRM_AGREE" = "செயல்படுத்த";
@@ -5935,11 +5983,8 @@
 /* Footer for setting for enabling & disabling contact and notification sharing with iOS. */
 "SETTINGS_SHARING_SUGGESTIONS_NOTIFICATIONS_FOOTER" = "Allow iOS access to Signal contacts and chats for features such as sharing suggestions and notifications.";
 
-/* Title for the 'signal boost' link in settings. */
-"SETTINGS_SIGNAL_BOOST" = "Signal Boost";
-
-/* Title for the 'become a sustainer' link in settings. */
-"SETTINGS_SUBSCRIPTION" = "Become a Signal Sustainer";
+/* Title for the 'monthly donation' link in settings. */
+"SETTINGS_SUBSCRIPTION" = "Monthly Donation";
 
 /* Label for the 'enable registration lock' switch of the privacy settings. */
 "SETTINGS_TWO_FACTOR_AUTH_SWITCH_LABEL" = "பதிவு பூட்டு";
@@ -5973,9 +6018,6 @@
 
 /* action sheet item to open native messages app */
 "SHARE_ACTION_MESSAGE" = "செய்தி";
-
-/* action sheet item */
-"SHARE_ACTION_TWEET" = "Twitter";
 
 /* alert body when sharing file failed because of untrusted/changed identity keys */
 "SHARE_EXTENSION_FAILED_SENDING_BECAUSE_UNTRUSTED_IDENTITY_FORMAT" = "%@  உடன் உங்கள் பாதுகாப்பு எண் சமீபத்தில் மாற்றப்பட்டது. மீண்டும் அனுப்புவதற்கு முன்பு அதை முக்கிய பயன்பாட்டு செயலியில் சரிபார்க்க விரும்பலாம்.";
@@ -6091,6 +6133,60 @@
 /* Label for the 'uninstall sticker pack' button. */
 "STICKERS_UNINSTALL_BUTTON" = "நீக்குதல்";
 
+/* Text indication a story caption can be tapped to read more. */
+"STORIES_CAPTION_READ_MORE" = "மேலும் படிக்க";
+
+/* Context menu action to copy the selected story reply */
+"STORIES_COPY_REPLY_ACTION" = "நகல்";
+
+/* Context menu action to delete the selected story reply */
+"STORIES_DELETE_REPLY_ACTION" = "நீக்கு";
+
+/* Context menu action to forward the selected story */
+"STORIES_FORWARD_STORY_ACTION" = "முன்னனுப்புக";
+
+/* Context menu action to open the chat associated with the selected story */
+"STORIES_GO_TO_CHAT_ACTION" = "Go to Chat";
+
+/* Context menu action to hide the selected story */
+"STORIES_HIDE_STORY_ACTION" = "Hide Story";
+
+/* Indicates that there are no recent stories to render */
+"STORIES_NO_RECENT_MESSAGES" = "No recent updates to show right now.";
+
+/* Indicates that this story has no replies yet */
+"STORIES_NO_REPLIES_YET" = "No replies yet";
+
+/* Context menu action to share the selected story */
+"STORIES_SHARE_STORY_ACTION" = "பகிர்";
+
+/* Title for the stories view. */
+"STORIES_TITLE" = "Stories";
+
+/* Tooltip prompting the user to visit a story link. */
+"STORY_LINK_PREVIEW_VISIT_LINK_TOOLTIP" = "Visit link";
+
+/* Text indicating a story that was replied to is no longer available. */
+"STORY_NO_LONGER_AVAILABLE" = "No longer available";
+
+/* Button for replying to a story with a single existing reply. */
+"STORY_REPLY_BUTTON_WITH_1_REPLY" = "<bold>1</bold> reply";
+
+/* Button for replying to a story with N existing replies. {embeds the number of replies} */
+"STORY_REPLY_BUTTON_WITH_N_REPLIES_FORMAT" = "<bold>%@</bold> replies";
+
+/* Button for replying to a story with no existing replies. */
+"STORY_REPLY_BUTTON_WITH_NO_REPLIES" = "பதில்";
+
+/* Text indicating a story has been reacted to */
+"STORY_REPLY_REACTION" = "Reacted to the story";
+
+/* placeholder text for replying to a story */
+"STORY_REPLY_TEXT_FIELD_PLACEHOLDER" = "பதில்";
+
+/* Author text when the local user author's a story reply */
+"STORY_REPLY_YOU_AUTHOR" = "நீங்கள்";
+
 /* Title for the 'Badges' button in sustainer view. */
 "SUBSCRIBER_BADGES" = "Badges";
 
@@ -6101,13 +6197,13 @@
 "SUBSCRIBER_SUBSCRIPTION_FAQ" = "Subscription FAQ";
 
 /* Action text for subscription megaphone */
-"SUBSCRIPTION_MEGAPHONE_ACTION" = "Contribute";
+"SUBSCRIPTION_MEGAPHONE_ACTION" = "நன்கொடை";
 
 /* Body for subscription megaphone */
-"SUBSCRIPTION_MEGAPHONE_BODY" = "Signal is powered by people like you. Contribute and receive a badge.";
+"SUBSCRIPTION_MEGAPHONE_BODY" = "Signal is powered by people like you. Donate and receive a badge.";
 
 /* Cancel text for subscription megaphone */
-"SUBSCRIPTION_MEGAPHONE_CANCEL" = "வேண்டாம், நன்றி";
+"SUBSCRIPTION_MEGAPHONE_CANCEL" = "இப்போது வேண்டாம் ";
 
 /* Title for subscription megaphone */
 "SUBSCRIPTION_MEGAPHONE_TITLE" = "Become a Sustainer";
@@ -6170,16 +6266,16 @@
 "SUPPORT_LOG_UPLOAD_IN_PROGRESS" = "ஏற்றுதல்";
 
 /* First block of description text in read more sheet */
-"SUSTAINER_READ_MORE_DESCRIPTION_BLOCK_ONE" = "Signal is a nonprofit with no advertisers or investors, sustained only by the people who use and value it. Make a recurring monthly contribution and receive a profile badge to share your support.";
+"SUSTAINER_READ_MORE_DESCRIPTION_BLOCK_ONE" = "Signal is a nonprofit with no advertisers or investors, sustained only by the people who use and value it. Make a recurring monthly donation and receive a profile badge to share your support.";
 
 /* Second block of description text in read more sheet */
-"SUSTAINER_READ_MORE_DESCRIPTION_BLOCK_TWO" = "Signal is committed to developing open source privacy technology that protects free expression and enables secure global communication.\n\nYour contribution fuels this cause and pays for the development and operations of an app used by millions for private communication. No ads. No trackers. No kidding.";
+"SUSTAINER_READ_MORE_DESCRIPTION_BLOCK_TWO" = "Signal is committed to developing open source privacy technology that protects free expression and enables secure global communication.\n\nYour donation fuels this cause and pays for the development and operations of an app used by millions for private communication. No ads. No trackers. No kidding.";
 
 /* Title for the signal sustainer read more view */
-"SUSTAINER_READ_MORE_TITLE" = "Support technology that is built for you - not for your data - by joining the community that sustains it.";
+"SUSTAINER_READ_MORE_TITLE" = "Support technology that is built for you—not for your data—by joining the community that sustains it.";
 
 /* Why Contribute title for the signal sustainer read more view */
-"SUSTAINER_READ_MORE_WHY_CONTRIBUTE" = "Why Contribute?";
+"SUSTAINER_READ_MORE_WHY_CONTRIBUTE" = "ஏன் நன்கொடை?";
 
 /* Action sheet title for Still Processing Badge sheet */
 "SUSTAINER_STILL_PROCESSING_BADGE_TITLE" = "Still Processing";
@@ -6223,7 +6319,7 @@
 /* Existing subscriber support header */
 "SUSTAINER_VIEW_MY_SUPPORT" = "My Support";
 
-/* Payment error occured text, embeds {{link to contact support}} */
+/* Payment error occurred text, embeds {{link to contact support}} */
 "SUSTAINER_VIEW_PAYMENT_ERROR" = "Error processing payment. %@";
 
 /* Pricing text for sustainer view badges, embeds {{price}} */
@@ -6242,7 +6338,7 @@
 "SUSTAINER_VIEW_PROCESSING_TRANSACTION" = "Processing Transaction...";
 
 /* Read More tappable text in sustainer view body */
-"SUSTAINER_VIEW_READ_MORE" = "Read More.";
+"SUSTAINER_VIEW_READ_MORE" = "Read more.";
 
 /* Renewal date text for sustainer view level, embeds {{renewal date}} */
 "SUSTAINER_VIEW_RENEWAL" = "Renews %@";
@@ -6269,7 +6365,7 @@
 "SUSTAINER_VIEW_UPDATE_SUBSCRIPTION_CONFIRMATION_UPDATE" = "புதுப்பிக்கப்பட்டது";
 
 /* The body text for the signal sustainer view */
-"SUSTAINER_VIEW_WHY_DONATE_BODY" = "Support technology that is built for you - not for your data - by joining the community of people that sustain it.";
+"SUSTAINER_VIEW_WHY_DONATE_BODY" = "Make a recurring monthly donation to Signal to support technology built for you, not your data.";
 
 /* Label for 'off' state of a switch control. */
 "SWITCH_OFF" = "அணை";
@@ -6465,12 +6561,6 @@
 
 /* Error indicating that a group could not be updated due to network connectivity problems. */
 "UPDATE_GROUP_FAILED_DUE_TO_NETWORK" = "குழுவைப் புதுப்பிக்க முடியவில்லை. உங்கள் இணைய இணைப்பைச் சரிபார்த்து மீண்டும் முயற்சிக்கவும்.";
-
-/* Message for the alert indicating that user should upgrade iOS. */
-"UPGRADE_IOS_ALERT_MESSAGE" = "Signal விரைவில் தேவைப்படும் iOS 11 அல்லது அதற்குப் பிறகு. தயவு செய்து மேம்படுத்தல் இல் அமைப்புகள் செயலி >> பொது >> மென்பொருள் புதுப்பிப்பு.";
-
-/* Title for the alert indicating that user should upgrade iOS. */
-"UPGRADE_IOS_ALERT_TITLE" = "IOS ஐ மேம்படுத்தவும்";
 
 /* An explanation of how usernames work on the username view. */
 "USERNAME_DESCRIPTION" = "Signal லில் உள்ள பயனர்பெயர்கள் விருப்பமானது. பயனர்பெயரை உருவாக்க நீங்கள் தேர்வுசெய்தால், மற்ற Signal பயனர்கள் இந்த பயனர்பெயர் மூலம் உங்களைக் கண்டுபிடித்து, உங்கள் தொலைபேசி எண்ணைத் தெரியாமல் உங்களைத் தொடர்பு கொள்ள முடியும்.";

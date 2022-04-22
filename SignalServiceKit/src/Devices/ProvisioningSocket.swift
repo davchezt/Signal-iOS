@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -21,7 +21,7 @@ public class ProvisioningSocket {
         // TODO: Will this work with censorship circumvention?
         // TODO: Should we (sometimes?) use the unidentified service?
         let serviceBaseURL = URL(string: TSConstants.mainServiceWebSocketAPI_identified)!
-        let socketURL = URL(string: "/v1/websocket/provisioning/?agent=\(OWSUserAgent)",
+        let socketURL = URL(string: "/v1/websocket/provisioning/?agent=\(OWSDeviceProvisioner.userAgent)",
                             relativeTo: serviceBaseURL)!
 
         let request = URLRequest(url: socketURL)
@@ -70,7 +70,15 @@ extension ProvisioningSocket: SSKWebSocketDelegate {
         }
     }
 
-    public func websocket(_ socket: SSKWebSocket, didReceiveMessage message: WebSocketProtoWebSocketMessage) {
+    public func websocket(_ socket: SSKWebSocket, didReceiveData data: Data) {
+        let message: WebSocketProtoWebSocketMessage
+        do {
+            message = try WebSocketProtoWebSocketMessage(serializedData: data)
+        } catch {
+            owsFailDebug("Failed to deserialize message: \(error)")
+            return
+        }
+
         guard let request = message.request else {
             owsFailDebug("unexpected message: \(message)")
             return

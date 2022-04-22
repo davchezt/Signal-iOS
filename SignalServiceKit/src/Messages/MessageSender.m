@@ -43,8 +43,7 @@
 #import <SignalCoreKit/NSData+OWS.h>
 #import <SignalCoreKit/NSDate+OWS.h>
 #import <SignalCoreKit/Threading.h>
-#import <SignalMetadataKit/NSData+messagePadding.h>
-#import <SignalMetadataKit/SignalMetadataKit-Swift.h>
+#import <SignalServiceKit/NSData+messagePadding.h>
 #import <SignalServiceKit/SignalServiceKit-Swift.h>
 
 NS_ASSUME_NONNULL_BEGIN
@@ -419,8 +418,7 @@ NSString *const MessageSenderSpamChallengeResolvedException = @"SpamChallengeRes
 
         OWSLogInfo(@"Sending message: %@, timestamp: %llu.", message.class, message.timestamp);
 
-        BOOL canUseV3 = (SSKFeatureFlags.attachmentUploadV3ForV1GroupAvatars
-            || message.groupMetaMessage == TSGroupMetaMessageUnspecified
+        BOOL canUseV3 = (message.groupMetaMessage == TSGroupMetaMessageUnspecified
             || message.groupMetaMessage == TSGroupMetaMessageDeliver);
 
         // We create a PendingTask so we can block on flushing all current message sends.
@@ -583,7 +581,7 @@ NSString *const MessageSenderSpamChallengeResolvedException = @"SpamChallengeRes
             // Only try to update the signed prekey; updating it is sufficient to
             // re-enable message sending.
             [TSPreKeyManager
-                rotateSignedPreKeyWithSuccess:^{
+                rotateSignedPreKeysWithSuccess:^{
                     OWSLogInfo(@"New prekeys registered with server.");
                     [future resolveWithValue:@(1)];
                 }
@@ -1063,8 +1061,9 @@ NSString *const MessageSenderSpamChallengeResolvedException = @"SpamChallengeRes
             }
 
             SignalServiceAddress *destinationAddress;
-            if ([[NSUUID alloc] initWithUUIDString:destination]) {
-                destinationAddress = [[SignalServiceAddress alloc] initWithUuidString:destination];
+            NSUUID *uuid = [[NSUUID alloc] initWithUUIDString:destination];
+            if (uuid) {
+                destinationAddress = [[SignalServiceAddress alloc] initWithUuid:uuid];
             } else {
                 destinationAddress = [[SignalServiceAddress alloc] initWithPhoneNumber:destination];
             }
@@ -1187,11 +1186,6 @@ NSString *const MessageSenderSpamChallengeResolvedException = @"SpamChallengeRes
     }
 
     if (!message.shouldSyncTranscript) {
-        return success();
-    }
-
-    BOOL shouldSendTranscript = (SSKFeatureFlags.sendRecipientUpdates || !message.hasSyncedTranscript);
-    if (!shouldSendTranscript) {
         return success();
     }
 
@@ -1374,9 +1368,10 @@ NSString *const MessageSenderSpamChallengeResolvedException = @"SpamChallengeRes
 
     __block BOOL hasSession;
     [self.databaseStorage readWithBlock:^(SDSAnyReadTransaction *transaction) {
-        hasSession = [self.sessionStore containsActiveSessionForAccountId:accountId
-                                                                 deviceId:[deviceId intValue]
-                                                              transaction:transaction];
+        SSKSessionStore *sessionStore = [self signalProtocolStoreForIdentity:OWSIdentityACI].sessionStore;
+        hasSession = [sessionStore containsActiveSessionForAccountId:accountId
+                                                            deviceId:[deviceId intValue]
+                                                         transaction:transaction];
     }];
     if (hasSession) {
         return;

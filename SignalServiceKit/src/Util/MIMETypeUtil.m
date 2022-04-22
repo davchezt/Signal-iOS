@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 #import "MIMETypeUtil.h"
@@ -115,16 +115,12 @@ NSString *const kLottieStickerFileExtension = @"lottiesticker";
     dispatch_once(&onceToken, ^{
         NSMutableDictionary<NSString *, NSString *> *value = [@ {
             OWSMimeTypeImageGif : @"gif",
+            OWSMimeTypeImageApng1 : @"png",
+            OWSMimeTypeImageApng2 : @"png",
+            OWSMimeTypeImageWebp : @"webp"
         } mutableCopy];
-        if (SSKFeatureFlags.supportAnimatedStickers_AnimatedWebp) {
-            value[OWSMimeTypeImageWebp] = @"webp";
-        }
         if (SSKFeatureFlags.supportAnimatedStickers_Lottie) {
             value[OWSMimeTypeLottieSticker] = kLottieStickerFileExtension;
-        }
-        if (SSKFeatureFlags.supportAnimatedStickers_Apng) {
-            value[OWSMimeTypeImageApng1] = @"png";
-            value[OWSMimeTypeImageApng2] = @"png";
         }
         result = [value copy];
     });
@@ -1548,7 +1544,7 @@ NSString *const kLottieStickerFileExtension = @"lottiesticker";
             @"text/x-script.lisp" : @"lsp",
             @"text/x-script.perl" : @"pl",
             @"text/x-script.perl-module" : @"pm",
-            @"text/x-script.phyton" : @"py",
+            @"text/x-script.python" : @"py",
             @"text/x-script.rexx" : @"rexx",
             @"text/x-script.scheme" : @"scm",
             @"text/x-script.sh" : @"sh",

@@ -1,9 +1,10 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
 import MobileCoin
+import SignalServiceKit
 
 @objc
 class TestingViewController: OWSTableViewController2 {
@@ -41,7 +42,7 @@ class TestingViewController: OWSTableViewController2 {
                                 selector: testableFlag.switchSelector)
         }
 
-        var testableFlags = FeatureFlags.allTestableFlags + DebugFlags.allTestableFlags
+        var testableFlags = FeatureFlags.allTestableFlags() + DebugFlags.allTestableFlags()
         testableFlags.sort { (lhs, rhs) -> Bool in
             lhs.title < rhs.title
         }
@@ -63,7 +64,7 @@ class TestingViewController: OWSTableViewController2 {
             })
             contents.addSection(section)
 
-            if !FeatureFlags.isUsingProductionService {
+            if !TSConstants.isUsingProductionService {
                 let subscriberIDSection = OWSTableSection()
                 subscriberIDSection.footerTitle = LocalizationNotNeeded("Resets subscriberID, which clears current subscription state. Do not do this in prod environment")
                 subscriberIDSection.add(OWSTableItem.actionItem(withText: LocalizationNotNeeded("Clear subscriberID State")) {

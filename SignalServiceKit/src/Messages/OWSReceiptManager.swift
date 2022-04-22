@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -116,26 +116,6 @@ public extension OWSReceiptManager {
         }
     }
 
-    func sendLinkedDeviceReadReceipt(forMessages messages: [TSOutgoingMessage],
-                                     thread: TSThread,
-                                     transaction: SDSAnyWriteTransaction) {
-        assert(messages.count > 0)
-        guard let localAddress = TSAccountManager.localAddress else {
-            return owsFailDebug("missing local address")
-        }
-        let readTimestamp = Date.ows_millisecondTimestamp()
-        let receiptsForMessage = messages.map {
-            OWSLinkedDeviceReadReceipt(
-                senderAddress: localAddress,
-                messageUniqueId: $0.uniqueId,
-                messageIdTimestamp: $0.timestamp,
-                readTimestamp: readTimestamp
-            )
-        }
-        let message = OWSReadReceiptsForLinkedDevicesMessage(thread: thread, readReceipts: receiptsForMessage)
-        self.messageSenderJobQueue.add(message: message.asPreparer, transaction: transaction)
-    }
-
     func enqueueLinkedDeviceReadReceipt(forMessage message: TSIncomingMessage,
                                         transaction: SDSAnyWriteTransaction) {
         let threadUniqueId = message.uniqueThreadId
@@ -193,4 +173,158 @@ public extension OWSReceiptManager {
             owsFailDebug("Error: \(error).")
         }
     }
+
+    func enqueueLinkedDeviceViewedReceipt(forStoryMessage message: StoryMessage,
+                                          transaction: SDSAnyWriteTransaction) {
+        // Unlike TSMessage, we need to send a viewed receipt for *every* StoryMessage
+        let uniqueId = "story-\(message.timestamp)"
+
+        let messageAuthorAddress = message.authorAddress
+        assert(messageAuthorAddress.isValid)
+
+        let newViewedReceipt = ReceiptForLinkedDevice(
+            senderAddress: messageAuthorAddress,
+            messageUniqueId: uniqueId,
+            messageIdTimestamp: message.timestamp,
+            timestamp: Date.ows_millisecondTimestamp()
+        )
+
+        do {
+            if let oldViewedReceipt: ReceiptForLinkedDevice = try toLinkedDevicesViewedReceiptMapStore.getCodableValue(forKey: uniqueId, transaction: transaction),
+                oldViewedReceipt.messageIdTimestamp > newViewedReceipt.messageIdTimestamp {
+                // If there's an existing "linked device" viewed receipt for the same thread with
+                // a newer timestamp, discard this "linked device" read receipt.
+                Logger.verbose("Ignoring redundant viewed receipt for linked devices.")
+            } else {
+                Logger.verbose("Enqueuing viewed receipt for linked devices.")
+                try toLinkedDevicesViewedReceiptMapStore.setCodable(newViewedReceipt, key: uniqueId, transaction: transaction)
+            }
+        } catch {
+            owsFailDebug("Error: \(error).")
+        }
+    }
+
+    func markAsReadLocally(beforeSortId sortId: UInt64,
+                           thread: TSThread,
+                           hasPendingMessageRequest: Bool,
+                           completion: @escaping () -> Void) {
+        DispatchQueue.global().async {
+            let interactionFinder = InteractionFinder(threadUniqueId: thread.uniqueId)
+
+            let (unreadCount, messagesWithUnreadReactionsCount) = self.databaseStorage.read { transaction in
+                (
+                    interactionFinder.countUnreadMessages(beforeSortId: sortId,
+                                                          transaction: transaction.unwrapGrdbRead),
+                    interactionFinder.countMessagesWithUnreadReactions(beforeSortId: sortId,
+                                                                       transaction: transaction.unwrapGrdbRead)
+                )
+            }
+
+            if unreadCount == 0 && messagesWithUnreadReactionsCount == 0 {
+                // Avoid unnecessary writes.
+                DispatchQueue.main.async(execute: completion)
+                return
+            }
+
+            let localAddress = self.tsAccountManager.localAddress
+            let readTimestamp = Date.ows_millisecondTimestamp()
+            let maxBatchSize = 500
+
+            let circumstance: OWSReceiptCircumstance
+            let logSuffix: String
+            if hasPendingMessageRequest {
+                circumstance = .onThisDeviceWhilePendingMessageRequest
+                logSuffix = " while pending message request"
+            } else {
+                circumstance = .onThisDevice
+                logSuffix = ""
+            }
+            Logger.info("Marking \(unreadCount) received messages and \(messagesWithUnreadReactionsCount) sent messages with reactions as read locally\(logSuffix) (in batches of \(maxBatchSize))")
+
+            var batchQuotaRemaining: Int
+            repeat {
+                batchQuotaRemaining = maxBatchSize
+                self.databaseStorage.write { transaction in
+                    var cursor = interactionFinder.fetchUnreadMessages(beforeSortId: sortId,
+                                                                       transaction: transaction.unwrapGrdbRead)
+                    do {
+                        while batchQuotaRemaining > 0, let readItem = try cursor.next() {
+                            readItem.markAsRead(atTimestamp: readTimestamp,
+                                                thread: thread,
+                                                circumstance: circumstance,
+                                                transaction: transaction)
+                            batchQuotaRemaining -= 1
+                        }
+                    } catch {
+                        owsFailDebug("unexpected failure fetching unread messages: \(error)")
+                        // Bail out of the outer loop by leaving the quota > 0;
+                        // we're likely to hit the error multiple times.
+                    }
+                }
+                // Continue until we process a batch and have some quota left.
+            } while batchQuotaRemaining == 0
+
+            // Mark outgoing messages with unread reactions as well.
+            repeat {
+                batchQuotaRemaining = maxBatchSize
+                self.databaseStorage.write { transaction in
+                    var receiptsForMessage: [OWSLinkedDeviceReadReceipt] = []
+                    var cursor = interactionFinder.fetchMessagesWithUnreadReactions(
+                        beforeSortId: sortId,
+                        transaction: transaction.unwrapGrdbRead)
+
+                    do {
+                        while batchQuotaRemaining > 0, let message = try cursor.next() {
+                            message.markUnreadReactionsAsRead(transaction: transaction)
+
+                            if let localAddress = localAddress {
+                                let receipt = OWSLinkedDeviceReadReceipt(senderAddress: localAddress,
+                                                                         messageUniqueId: message.uniqueId,
+                                                                         messageIdTimestamp: message.timestamp,
+                                                                         readTimestamp: readTimestamp)
+                                receiptsForMessage.append(receipt)
+                            }
+
+                            batchQuotaRemaining -= 1
+                        }
+                    } catch {
+                        owsFailDebug("unexpected failure fetching messages with unread reactions: \(error)")
+                        // Bail out of the outer loop by leaving the quota > 0;
+                        // we're likely to hit the error multiple times.
+                    }
+
+                    if !receiptsForMessage.isEmpty {
+                        let message = OWSReadReceiptsForLinkedDevicesMessage(thread: thread,
+                                                                             readReceipts: receiptsForMessage)
+                        self.messageSenderJobQueue.add(message: message.asPreparer, transaction: transaction)
+                    }
+                }
+                // Continue until we process a batch and have some quota left.
+            } while batchQuotaRemaining == 0
+
+            DispatchQueue.main.async(execute: completion)
+        }
+    }
+
+    func markAsRead(beforeSortId sortId: UInt64,
+                    thread: TSThread,
+                    readTimestamp: UInt64,
+                    circumstance: OWSReceiptCircumstance,
+                    transaction: SDSAnyWriteTransaction) {
+        owsAssertDebug(sortId > 0)
+        let interactionFinder = InteractionFinder(threadUniqueId: thread.uniqueId)
+        var cursor = interactionFinder.fetchUnreadMessages(beforeSortId: sortId,
+                                                           transaction: transaction.unwrapGrdbRead)
+        do {
+            while let readItem = try cursor.next() {
+                readItem.markAsRead(atTimestamp: readTimestamp,
+                                    thread: thread,
+                                    circumstance: circumstance,
+                                    transaction: transaction)
+            }
+        } catch {
+            owsFailDebug("unexpected failure fetching unread messages: \(error)")
+        }
+    }
+
 }

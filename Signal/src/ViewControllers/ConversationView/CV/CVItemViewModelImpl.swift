@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -223,15 +223,8 @@ extension CVItemViewModelImpl {
         switch messageCellType {
         case .unknown, .dateHeader, .typingIndicator, .unreadIndicator, .threadDetails, .systemMessage, .unknownThreadWarning, .defaultDisappearingMessageTimer:
             return false
-        case .textOnlyMessage, .audio, .genericAttachment, .contactShare, .bodyMedia, .viewOnce, .stickerMessage:
+        case .textOnlyMessage, .audio, .genericAttachment, .contactShare, .bodyMedia, .viewOnce, .stickerMessage, .quoteOnlyMessage:
             return !hasUnloadedAttachments
-        }
-    }
-
-    func deleteAction() {
-        let interaction = self.interaction
-        databaseStorage.asyncWrite { transaction in
-            interaction.anyRemove(transaction: transaction)
         }
     }
 }

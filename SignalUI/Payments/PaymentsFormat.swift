@@ -51,7 +51,7 @@ public extension PaymentsFormat {
     // Used for formatting decimal numbers in the
     // send payment flow.  _NOT_ used for display.
     // The format is convenient to parse into an "input string"
-    // the correponds to our custom keyboard.
+    // the corresponds to our custom keyboard.
     private static var doubleFormat: NumberFormatter = {
         // For formatting numbers as arabic numerals without
         // any commas, etc. 1234567.890123
@@ -75,13 +75,13 @@ public extension PaymentsFormat {
                        withPaymentType paymentType: TSPaymentType? = nil) -> String {
         guard paymentAmount.currency == .mobileCoin else {
             owsFailDebug("Unknown currency.")
-            return NSLocalizedString("PAYMENTS_CURRENCY_UNKNOWN",
+            return OWSLocalizedString("PAYMENTS_CURRENCY_UNKNOWN",
                                      comment: "Indicator for unknown currency.")
         }
         guard let amountString = format(picoMob: paymentAmount.picoMob,
                                         isShortForm: isShortForm) else {
             owsFailDebug("Couldn't format currency.")
-            return NSLocalizedString("PAYMENTS_CURRENCY_UNKNOWN",
+            return OWSLocalizedString("PAYMENTS_CURRENCY_UNKNOWN",
                                      comment: "Indicator for unknown currency.")
         }
 
@@ -105,7 +105,7 @@ public extension PaymentsFormat {
     static func formatOrError(picoMob: UInt64, isShortForm: Bool) -> String {
         guard let string = format(picoMob: picoMob, isShortForm: isShortForm) else {
             owsFailDebug("Couldn't format currency.")
-            return NSLocalizedString("PAYMENTS_CURRENCY_UNKNOWN",
+            return OWSLocalizedString("PAYMENTS_CURRENCY_UNKNOWN",
                                      comment: "Indicator for unknown currency.")
         }
         return string
@@ -144,7 +144,7 @@ public extension PaymentsFormat {
                                  withSpace: Bool = false) -> NSAttributedString {
         guard paymentAmount.currency == .mobileCoin else {
             owsFailDebug("Unknown currency.")
-            return NSAttributedString(string: NSLocalizedString("PAYMENTS_CURRENCY_UNKNOWN",
+            return NSAttributedString(string: OWSLocalizedString("PAYMENTS_CURRENCY_UNKNOWN",
                                                                 comment: "Indicator for unknown currency."))
         }
 

@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 #import "OWSPreferences.h"
@@ -9,6 +9,7 @@
 #import <SignalServiceKit/SignalServiceKit-Swift.h>
 #import <SignalServiceKit/StorageCoordinator.h>
 #import <SignalServiceKit/TSThread.h>
+#import <SignalMessaging/SignalMessaging-Swift.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -50,6 +51,7 @@ NSString *const OWSPreferencesKeyWasDeleteForEveryoneConfirmationShown
 NSString *const OWSPreferencesKeyWasBlurTooltipShown = @"OWSPreferencesKeyWasBlurTooltipShown";
 NSString *const OWSPreferencesKeyWasGroupCallTooltipShown = @"OWSPreferencesKeyWasGroupCallTooltipShown";
 NSString *const OWSPreferencesKeyWasGroupCallTooltipShownCount = @"OWSPreferencesKeyWasGroupCallTooltipShownCount";
+NSString *const OWSPreferencesKeyDeviceScale = @"OWSPreferencesKeyDeviceScale";
 
 @interface OWSPreferences ()
 
@@ -72,6 +74,13 @@ NSString *const OWSPreferencesKeyWasGroupCallTooltipShownCount = @"OWSPreference
     _keyValueStore = [[SDSKeyValueStore alloc] initWithCollection:OWSPreferencesSignalDatabaseCollection];
 
     OWSSingletonAssert();
+
+    // In the NSE, the main screen scale is inaccurate so we need to record it
+    // when we're in a context that has a valid UI / screen for use later.
+    if (CurrentAppContext().hasUI) {
+        [CurrentAppContext().appUserDefaults setObject:@(UIScreen.mainScreen.scale)
+                                                forKey:OWSPreferencesKeyDeviceScale];
+    }
 
     return self;
 }
@@ -107,7 +116,7 @@ NSString *const OWSPreferencesKeyWasGroupCallTooltipShownCount = @"OWSPreference
     __block BOOL result;
     [self.databaseStorage readWithBlock:^(SDSAnyReadTransaction *transaction) {
         result = [self.keyValueStore getBool:key defaultValue:defaultValue transaction:transaction];
-    }];
+    } file:__FILE__ function:__FUNCTION__ line:__LINE__];
     return result;
 }
 
@@ -155,7 +164,7 @@ NSString *const OWSPreferencesKeyWasGroupCallTooltipShownCount = @"OWSPreference
     __block NSString *_Nullable result;
     [self.databaseStorage readWithBlock:^(SDSAnyReadTransaction *transaction) {
         result = [self.keyValueStore getString:key transaction:transaction];
-    }];
+    } file:__FILE__ function:__FUNCTION__ line:__LINE__];
     return result;
 }
 
@@ -306,6 +315,17 @@ NSString *const OWSPreferencesKeyWasGroupCallTooltipShownCount = @"OWSPreference
     [self.keyValueStore setBool:newValue key:OWSPreferencesKeyShouldNotifyOfNewAccountKey transaction:transaction];
 }
 
+- (CGFloat)cachedDeviceScale
+{
+    NSNumber *scale = [CurrentAppContext().appUserDefaults objectForKey:OWSPreferencesKeyDeviceScale];
+
+    if (!scale || CurrentAppContext().hasUI) {
+        return UIScreen.mainScreen.scale;
+    }
+
+    return scale.floatValue;
+}
+
 #pragma mark - Calling
 
 #pragma mark CallKit
@@ -423,11 +443,11 @@ NSString *const OWSPreferencesKeyWasGroupCallTooltipShownCount = @"OWSPreference
 {
     switch (notificationType) {
         case NotificationNamePreview:
-            return NSLocalizedString(@"NOTIFICATIONS_SENDER_AND_MESSAGE", nil);
+            return OWSLocalizedString(@"NOTIFICATIONS_SENDER_AND_MESSAGE", nil);
         case NotificationNameNoPreview:
-            return NSLocalizedString(@"NOTIFICATIONS_SENDER_ONLY", nil);
+            return OWSLocalizedString(@"NOTIFICATIONS_SENDER_ONLY", nil);
         case NotificationNoNameNoPreview:
-            return NSLocalizedString(@"NOTIFICATIONS_NONE", nil);
+            return OWSLocalizedString(@"NOTIFICATIONS_NONE", nil);
         default:
             OWSLogWarn(@"Undefined NotificationType in Settings");
             return @"";

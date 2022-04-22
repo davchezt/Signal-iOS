@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -11,21 +11,6 @@ class AudioMessageView: ManualStackView {
     private var attachment: TSAttachment { audioAttachment.attachment }
     private var attachmentStream: TSAttachmentStream? { audioAttachment.attachmentStream }
     private var durationSeconds: TimeInterval { audioAttachment.durationSeconds }
-    private var isDownloaded: Bool { audioAttachment.attachmentStream != nil }
-    private var isDownloading: Bool {
-        guard let attachmentPointer = audioAttachment.attachmentPointer else {
-            return false
-        }
-        switch attachmentPointer.state {
-        case .failed, .pendingMessageRequest, .pendingManualDownload:
-            return false
-        case .enqueued, .downloading:
-            return true
-        @unknown default:
-            owsFailDebug("Invalid value.")
-            return false
-        }
-    }
 
     private let isIncoming: Bool
     private weak var componentDelegate: CVComponentDelegate?
@@ -96,7 +81,7 @@ class AudioMessageView: ManualStackView {
         progressSlider.setThumbImage(UIImage(named: "audio_message_thumb")?.asTintedImage(color: thumbColor), for: .normal)
         progressSlider.setMinimumTrackImage(trackImage(color: playedColor), for: .normal)
         progressSlider.setMaximumTrackImage(trackImage(color: unplayedColor), for: .normal)
-        progressSlider.isEnabled = isDownloaded
+        progressSlider.isEnabled = audioAttachment.isDownloaded
         progressSlider.isUserInteractionEnabled = false
 
         waveformContainer.addSubview(progressSlider) { [progressSlider] view in
@@ -112,7 +97,7 @@ class AudioMessageView: ManualStackView {
         playbackTimeLabel.setContentHuggingHigh()
 
         let leftView: UIView
-        if isDownloaded {
+        if audioAttachment.isDownloaded {
             let playPauseAnimation = self.playPauseAnimation
             let playedDotAnimation = self.playedDotAnimation
 
@@ -150,7 +135,7 @@ class AudioMessageView: ManualStackView {
         } else if let attachmentPointer = audioAttachment.attachmentPointer {
             leftView = CVAttachmentProgressView(direction: .download(attachmentPointer: attachmentPointer),
                                                 style: .withoutCircle(diameter: Self.animationSize),
-                                                conversationStyle: conversationStyle,
+                                                isDarkThemeEnabled: conversationStyle.isDarkThemeEnabled,
                                                 mediaCache: mediaCache)
         } else {
             owsFailDebug("Unexpected state.")
@@ -321,7 +306,7 @@ class AudioMessageView: ManualStackView {
                                                                conversationStyle: ConversationStyle) -> CVLabelConfig {
         // playbackTimeLabel uses a monospace font, so we measure the
         // worst-case width using the full duration of the audio.
-        let text = OWSFormat.formatDurationSeconds(Int(audioAttachment.durationSeconds))
+        let text = OWSFormat.localizedDurationString(from: audioAttachment.durationSeconds)
         return playbackTimeLabelConfig(text: text,
                                        isIncoming: isIncoming,
                                        conversationStyle: conversationStyle)
@@ -436,12 +421,6 @@ class AudioMessageView: ManualStackView {
     }
 
     private func updateViewedState(animated: Bool = true) {
-        var isViewed = self.isViewed
-
-        // If we don't support viewed receipts yet, never show
-        // the unviewed dot.
-        if !RemoteConfig.viewedReceiptSending { isViewed = true }
-
         let destination: AnimationProgressTime = isViewed ? 1 : 0
 
         // Do nothing if we're already there.
@@ -458,8 +437,8 @@ class AudioMessageView: ManualStackView {
     }
 
     private func updateElapsedTime(_ elapsedSeconds: TimeInterval) {
-        let timeRemaining = Int(durationSeconds - elapsedSeconds)
-        playbackTimeLabel.text = OWSFormat.formatDurationSeconds(timeRemaining)
+        let timeRemaining = durationSeconds - elapsedSeconds
+        playbackTimeLabel.text = OWSFormat.localizedDurationString(from: timeRemaining)
     }
 
     private func updateAudioProgress() {

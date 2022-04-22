@@ -1,6 +1,6 @@
 #!/usr/bin/env xcrun --sdk macosx swift
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -127,7 +127,7 @@ struct EmojiModel {
             if hasMultipleComponents, skinToneComponents == nil {
                 // If you hit this, this means a new emoji was added where a skintone modifier sequence specifies multiple
                 // skin tones for multiple emoji components: e.g. 👫 -> 🧍‍♀️+🧍‍♂️
-                // These are defind in `skinToneComponents`. You'll need to add a new case.
+                // These are defined in `skinToneComponents`. You'll need to add a new case.
                 throw EmojiError("\(baseEmoji):\(enumName) definition has variants with multiple skintone modifiers but no component emojis defined")
             }
         }
@@ -171,8 +171,20 @@ struct EmojiModel {
             case "womanHeartMan": return "[.woman, .man]"
             case "manHeartMan": return "[.man, .man]"
             case "womanHeartWoman": return "[.woman, .woman]"
+            case "handshake": return "[.rightwardsHand, .leftwardsHand]"
             default:
                 return nil
+            }
+        }
+
+        var isNormalized: Bool { enumName == normalizedEnumName }
+        var normalizedEnumName: String {
+            switch enumName {
+                // flagUm (US Minor Outlying Islands) looks identical to the
+                // US flag. We don't present it as a sendable reaction option
+                // This matches the iOS keyboard behavior.
+                case "flagUm": return "us"
+                default: return enumName
             }
         }
 
@@ -232,7 +244,7 @@ extension EmojiModel.SkinToneSequence {
 
 extension EmojiGenerator {
     static func writePrimaryFile(from emojiModel: EmojiModel) {
-        // Main enum: Create a string enum definining our enumNames equal to the baseEmoji string
+        // Main enum: Create a string enum defining our enumNames equal to the baseEmoji string
         // e.g. case grinning = "😀"
         writeBlock(fileName: "Emoji.swift") { fileHandle in
             fileHandle.writeLine("/// A sorted representation of all available emoji")
@@ -412,26 +424,28 @@ extension EmojiGenerator {
                     fileHandle.writeLine("")
 
                     // Emoji lookup per category
-                    fileHandle.writeLine("var emoji: [Emoji] {")
+                    fileHandle.writeLine("var normalizedEmoji: [Emoji] {")
                     fileHandle.indent {
                         fileHandle.writeLine("switch self {")
 
-                        let emojiPerCategory: [RemoteModel.EmojiCategory: [EmojiModel.EmojiDefinition]]
-                        emojiPerCategory = emojiModel.definitions.reduce(into: [:]) { result, emojiDef in
-                            var categoryList = result[emojiDef.category] ?? []
-                            categoryList.append(emojiDef)
-                            result[emojiDef.category] = categoryList
+                        let normalizedEmojiPerCategory: [RemoteModel.EmojiCategory: [EmojiModel.EmojiDefinition]]
+                        normalizedEmojiPerCategory = emojiModel.definitions.reduce(into: [:]) { result, emojiDef in
+                            if emojiDef.isNormalized {
+                                var categoryList = result[emojiDef.category] ?? []
+                                categoryList.append(emojiDef)
+                                result[emojiDef.category] = categoryList
+                            }
                         }
 
                         for category in outputCategories {
                             let emoji: [EmojiModel.EmojiDefinition] = {
                                 switch category {
                                 case .smileysAndPeople:
-                                    // Merge smileys & people. It's important we initially bucket these seperately,
+                                    // Merge smileys & people. It's important we initially bucket these separately,
                                     // because we want the emojis to be sorted smileys followed by people
-                                    return emojiPerCategory[.smileys]! + emojiPerCategory[.people]!
+                                    return normalizedEmojiPerCategory[.smileys]! + normalizedEmojiPerCategory[.people]!
                                 default:
-                                    return emojiPerCategory[category]!
+                                    return normalizedEmojiPerCategory[category]!
                                 }
                             }()
 
@@ -465,6 +479,20 @@ extension EmojiGenerator {
                     }
                     // Write a default case, because this enum is too long for the compiler to validate it's exhaustive
                     fileHandle.writeLine("default: fatalError(\"Unexpected case \\(self)\")")
+                    fileHandle.writeLine("}")
+                }
+                fileHandle.writeLine("}")
+                fileHandle.writeLine("")
+
+                // Normalized variant mapping
+                fileHandle.writeLine("var isNormalized: Bool { normalized == self }")
+                fileHandle.writeLine("var normalized: Emoji {")
+                fileHandle.indent {
+                    fileHandle.writeLine("switch self {")
+                    emojiModel.definitions.filter { !$0.isNormalized }.forEach {
+                        fileHandle.writeLine("case .\($0.enumName): return .\($0.normalizedEnumName)")
+                    }
+                    fileHandle.writeLine("default: return self")
                     fileHandle.writeLine("}")
                 }
                 fileHandle.writeLine("}")

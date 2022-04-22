@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -149,6 +149,7 @@ class NSEEnvironment: Dependencies {
             appSpecificSingletonBlock: {
                 SSKEnvironment.shared.callMessageHandlerRef = NSECallMessageHandler()
                 SSKEnvironment.shared.notificationsManagerRef = NotificationPresenter()
+                Environment.shared.lightweightCallManagerRef = LightweightCallManager()
             },
             migrationCompletion: { [weak self] error in
                 if let error = error {
@@ -182,7 +183,7 @@ class NSEEnvironment: Dependencies {
         Logger.info("Database password is not accessible, posting generic notification.")
 
         let content = UNMutableNotificationContent()
-        let notificationFormat = NSLocalizedString(
+        let notificationFormat = OWSLocalizedString(
             "NOTIFICATION_BODY_PHONE_LOCKED_FORMAT",
             comment: "Lock screen notification text presented after user powers on their device without unlocking. Embeds {{device model}} (either 'iPad' or 'iPhone')"
         )

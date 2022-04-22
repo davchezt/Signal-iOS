@@ -12,18 +12,13 @@ public class DonationUtilities: NSObject {
     }
 
     public static var supportedNetworks: [PKPaymentNetwork] {
-        let additionalNetworks: [PKPaymentNetwork]
-        if #available(iOS 12, *) {
-            additionalNetworks = [.maestro]
-        } else {
-            additionalNetworks = []
-        }
         return [
             .visa,
             .masterCard,
             .amex,
-            .discover
-        ] + additionalNetworks
+            .discover,
+            .maestro
+        ]
     }
 
     public enum Symbol: Equatable {
@@ -95,7 +90,7 @@ public class DonationUtilities: NSObject {
     public static func newPaymentRequest(for amount: NSDecimalNumber, currencyCode: String) -> PKPaymentRequest {
         let request = PKPaymentRequest()
         request.paymentSummaryItems = [PKPaymentSummaryItem(
-            label: NSLocalizedString(
+            label: OWSLocalizedString(
                 "DONATION_VIEW_DONATION_TO_SIGNAL",
                 comment: "Text describing to the user that they're going to pay a donation to Signal"
             ),

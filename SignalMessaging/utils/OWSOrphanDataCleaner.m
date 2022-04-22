@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 #import "OWSOrphanDataCleaner.h"
@@ -14,13 +14,11 @@
 #import <SignalServiceKit/OWSFileSystem.h>
 #import <SignalServiceKit/OWSIncomingContactSyncJobRecord.h>
 #import <SignalServiceKit/OWSIncomingGroupSyncJobRecord.h>
-#import <SignalServiceKit/OWSReaction.h>
 #import <SignalServiceKit/OWSUserProfile.h>
 #import <SignalServiceKit/SignalServiceKit-Swift.h>
 #import <SignalServiceKit/TSAccountManager.h>
 #import <SignalServiceKit/TSAttachmentStream.h>
 #import <SignalServiceKit/TSInteraction.h>
-#import <SignalServiceKit/TSMention.h>
 #import <SignalServiceKit/TSMessage.h>
 #import <SignalServiceKit/TSQuotedMessage.h>
 #import <SignalServiceKit/TSThread.h>
@@ -298,6 +296,12 @@ typedef void (^OrphanDataBlock)(OWSOrphanData *);
         return nil;
     }
 
+    NSSet<NSString *> *_Nullable allGroupAvatarFilePaths =
+        [self filePathsInDirectorySafe:TSGroupModel.avatarsDirectory.path];
+    if (!allGroupAvatarFilePaths || !self.isMainAppAndActive) {
+        return nil;
+    }
+
     NSString *stickersDirPath = StickerManager.cacheDirUrl.path;
     NSSet<NSString *> *_Nullable allStickerFilePaths = [self filePathsInDirectorySafe:stickersDirPath];
     if (!allStickerFilePaths || !self.isMainAppAndActive) {
@@ -315,6 +319,7 @@ typedef void (^OrphanDataBlock)(OWSOrphanData *);
     [allOnDiskFilePaths unionSet:sharedDataAttachmentFilePaths];
     [allOnDiskFilePaths unionSet:legacyProfileAvatarsFilePaths];
     [allOnDiskFilePaths unionSet:sharedDataProfileAvatarFilePaths];
+    [allOnDiskFilePaths unionSet:allGroupAvatarFilePaths];
     [allOnDiskFilePaths unionSet:allStickerFilePaths];
     [allOnDiskFilePaths unionSet:allVoiceMessageFilePaths];
     [allOnDiskFilePaths addObjectsFromArray:tempFilePaths];
@@ -364,7 +369,15 @@ typedef void (^OrphanDataBlock)(OWSOrphanData *);
         profileAvatarFilePaths = [OWSProfileManager allProfileAvatarFilePathsWithTransaction:transaction];
     }];
 
-    if (!self.isMainAppAndActive) {
+    __block NSSet<NSString *> *groupAvatarFilePaths;
+    __block NSError *groupAvatarFilePathError;
+    [self.databaseStorage readWithBlock:^(SDSAnyReadTransaction *transaction) {
+        groupAvatarFilePaths = [TSGroupModel allGroupAvatarFilePathsWithTransaction:transaction
+                                                                              error:&groupAvatarFilePathError];
+    }];
+
+    if (groupAvatarFilePathError) {
+        OWSFailDebug(@"Failed to query group avatar file paths %@", groupAvatarFilePathError);
         return nil;
     }
 
@@ -389,6 +402,7 @@ typedef void (^OrphanDataBlock)(OWSOrphanData *);
     // Messages
     NSMutableSet<NSString *> *orphanInteractionIds = [NSMutableSet new];
     NSMutableSet<NSString *> *allMessageAttachmentIds = [NSMutableSet new];
+    NSMutableSet<NSString *> *allStoryAttachmentIds = [NSMutableSet new];
     NSMutableSet<NSString *> *allMessageReactionIds = [NSMutableSet new];
     NSMutableSet<NSString *> *allMessageMentionIds = [NSMutableSet new];
     // Stickers
@@ -496,6 +510,24 @@ typedef void (^OrphanDataBlock)(OWSOrphanData *);
             return;
         }
 
+        [StoryMessage anyEnumerateWithTransaction:transaction
+                                          batched:YES
+                                            block:^(StoryMessage *message, BOOL *stop) {
+                                                if (!self.isMainAppAndActive) {
+                                                    shouldAbort = YES;
+                                                    *stop = YES;
+                                                    return;
+                                                }
+                                                if (![message isKindOfClass:[StoryMessage class]]) {
+                                                    return;
+                                                }
+                                                [allStoryAttachmentIds addObjectsFromArray:message.allAttachmentIds];
+                                            }];
+
+        if (shouldAbort) {
+            return;
+        }
+
         [MessageSenderJobQueue
             enumerateEnqueuedInteractionsWithTransaction:transaction
                                                    block:^(TSInteraction *interaction, BOOL *stop) {
@@ -571,6 +603,7 @@ typedef void (^OrphanDataBlock)(OWSOrphanData *);
     NSMutableSet<NSString *> *orphanFilePaths = [allOnDiskFilePaths mutableCopy];
     [orphanFilePaths minusSet:allAttachmentFilePaths];
     [orphanFilePaths minusSet:profileAvatarFilePaths];
+    [orphanFilePaths minusSet:groupAvatarFilePaths];
     [orphanFilePaths minusSet:voiceMessageDraftFilePaths];
     [orphanFilePaths minusSet:activeStickerFilePaths];
     NSMutableSet<NSString *> *missingAttachmentFilePaths = [allAttachmentFilePaths mutableCopy];
@@ -584,9 +617,11 @@ typedef void (^OrphanDataBlock)(OWSOrphanData *);
 
     OWSLogDebug(@"attachmentIds: %zu", allAttachmentIds.count);
     OWSLogDebug(@"allMessageAttachmentIds: %zu", allMessageAttachmentIds.count);
+    OWSLogDebug(@"allStoryAttachmentIds: %zu", allStoryAttachmentIds.count);
 
     NSMutableSet<NSString *> *orphanAttachmentIds = [allAttachmentIds mutableCopy];
     [orphanAttachmentIds minusSet:allMessageAttachmentIds];
+    [orphanAttachmentIds minusSet:allStoryAttachmentIds];
     NSMutableSet<NSString *> *missingAttachmentIds = [allMessageAttachmentIds mutableCopy];
     [missingAttachmentIds minusSet:allAttachmentIds];
 
@@ -634,7 +669,7 @@ typedef void (^OrphanDataBlock)(OWSOrphanData *);
             [self.keyValueStore getString:OWSOrphanDataCleaner_LastCleaningVersionKey transaction:transaction];
         lastCleaningDate =
             [self.keyValueStore getDate:OWSOrphanDataCleaner_LastCleaningDateKey transaction:transaction];
-    }];
+    } file:__FILE__ function:__FUNCTION__ line:__LINE__];
 
     // Clean up once per app version.
     NSString *currentAppReleaseVersion = self.appVersion.currentAppReleaseVersion;
@@ -900,25 +935,14 @@ typedef void (^OrphanDataBlock)(OWSOrphanData *);
                 shouldAbort = YES;
                 return;
             }
-            OWSReaction *_Nullable reaction =
-                [OWSReaction anyFetchWithUniqueId:reactionId transaction:transaction];
-            if (!reaction) {
-                // This could just be a race condition, but it should be very unlikely.
-                OWSLogWarn(@"Could not load reaction: %@", reactionId);
-                continue;
+
+            BOOL performedCleanup = [OWSReactionManager tryToCleanupOrphanedReactionWithUniqueId:reactionId
+                                                                                   thresholdDate:thresholdDate
+                                                                             shouldPerformRemove:shouldRemoveOrphans
+                                                                                     transaction:transaction];
+            if (performedCleanup) {
+                reactionsRemoved++;
             }
-            // Don't delete reactions which were created in the last N minutes.
-            NSDate *creationDate = [NSDate ows_dateWithMillisecondsSince1970:reaction.sentAtTimestamp];
-            if ([creationDate isAfterDate:thresholdDate]) {
-                OWSLogInfo(@"Skipping orphan reaction due to age: %f", fabs(creationDate.timeIntervalSinceNow));
-                continue;
-            }
-            OWSLogInfo(@"Removing orphan reaction: %@", reaction.uniqueId);
-            reactionsRemoved++;
-            if (!shouldRemoveOrphans) {
-                continue;
-            }
-            [reaction anyRemoveWithTransaction:transaction];
         }
         OWSLogInfo(@"Deleted orphan reactions: %zu", reactionsRemoved);
 
@@ -928,24 +952,14 @@ typedef void (^OrphanDataBlock)(OWSOrphanData *);
                 shouldAbort = YES;
                 return;
             }
-            TSMention *_Nullable mention = [TSMention anyFetchWithUniqueId:mentionId transaction:transaction];
-            if (!mention) {
-                // This could just be a race condition, but it should be very unlikely.
-                OWSLogWarn(@"Could not load mention: %@", mentionId);
-                continue;
+
+            BOOL performedCleanup = [MentionFinder tryToCleanupOrphanedMentionWithUniqueId:mentionId
+                                                                             thresholdDate:thresholdDate
+                                                                       shouldPerformRemove:shouldRemoveOrphans
+                                                                               transaction:transaction];
+            if (performedCleanup) {
+                mentionsRemoved++;
             }
-            // Don't delete mentions which were created in the last N minutes.
-            NSDate *creationDate = mention.creationTimestamp;
-            if ([creationDate isAfterDate:thresholdDate]) {
-                OWSLogInfo(@"Skipping orphan mention due to age: %f", fabs(creationDate.timeIntervalSinceNow));
-                continue;
-            }
-            OWSLogInfo(@"Removing orphan mention: %@", mention.uniqueId);
-            mentionsRemoved++;
-            if (!shouldRemoveOrphans) {
-                continue;
-            }
-            [mention anyRemoveWithTransaction:transaction];
         }
         OWSLogInfo(@"Deleted orphan mentions: %zu", mentionsRemoved);
     });

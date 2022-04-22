@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -189,7 +189,7 @@ public class GroupManager: NSObject {
 
         for recipientAddress in members {
             guard doesUserSupportGroupsV2(address: recipientAddress, transaction: transaction) else {
-                Logger.warn("Creating legacy group; member missing UUID or Groups v2 capability.")
+                Logger.warn("Creating legacy group; member missing UUID.")
                 return false
             }
             // GroupsV2 TODO: We should finalize the exact decision-making process here.
@@ -207,11 +207,6 @@ public class GroupManager: NSObject {
         }
         guard address.uuid != nil else {
             Logger.warn("Member without UUID.")
-            return false
-        }
-        guard doesUserHaveGroupsV2Capability(address: address,
-                                             transaction: transaction) else {
-            Logger.warn("Member without Groups v2 capability.")
             return false
         }
         // NOTE: We do consider users to support groups v2 even if:
@@ -413,8 +408,6 @@ public class GroupManager: NSObject {
     // * We know their UUID.
     // * We know their profile key.
     // * We have a profile key credential for them.
-    // * Their account has the "groups v2" capability
-    //   (e.g. all of their clients support groups v2.
     private static func separateInvitedMembers(in newGroupMembership: GroupMembership,
                                                oldGroupModel: TSGroupModel?,
                                                transaction: SDSAnyReadTransaction) -> GroupMembership {
@@ -826,13 +819,13 @@ public class GroupManager: NSObject {
         }.then(on: .global()) { () -> Promise<Void> in
             return self.ensureLocalProfileHasCommitmentIfNecessary()
         }.then(on: DispatchQueue.global()) { () -> Promise<String?> in
-            guard let avatarData = proposedGroupModel.groupAvatarData else {
-                // No avatar to upload.
-                return Promise.value(nil)
-            }
-            if oldGroupModel.groupAvatarData == avatarData && oldGroupModel.avatarUrlPath != nil {
+            if oldGroupModel.avatarHash == proposedGroupModel.avatarHash && oldGroupModel.avatarUrlPath != nil {
                 // Skip redundant upload; the avatar hasn't changed.
                 return Promise.value(oldGroupModel.avatarUrlPath)
+            }
+            guard let avatarData = proposedGroupModel.avatarData else {
+                // No avatar to upload.
+                return Promise.value(nil)
             }
             return firstly {
                 // Upload avatar.
@@ -969,7 +962,7 @@ public class GroupManager: NSObject {
         }
 
         let hasAvatarUrlPath = proposedGroupModel.avatarUrlPath != nil
-        let hasAvatarData = proposedGroupModel.groupAvatarData != nil
+        let hasAvatarData = proposedGroupModel.avatarData != nil
         guard hasAvatarUrlPath == hasAvatarData else {
             throw OWSAssertionError("hasAvatarUrlPath: \(hasAvatarData) != hasAvatarData.")
         }
@@ -1164,7 +1157,7 @@ public class GroupManager: NSObject {
 
             sendGroupQuitMessage(inThread: groupThread, transaction: transaction)
 
-            let hasMessages = groupThread.numberOfInteractions(with: transaction) > 0
+            let hasMessages = groupThread.numberOfInteractions(transaction: transaction) > 0
             let infoMessagePolicy: InfoMessagePolicy = hasMessages ? .always : .never
 
             var groupMembershipBuilder = oldGroupModel.groupMembership.asBuilder
@@ -1501,8 +1494,6 @@ public class GroupManager: NSObject {
             return Promise.value(())
         }.then(on: .global()) { _ -> Promise<Void> in
             return self.tryToFillInMissingUuids(for: addresses, isBlocking: isBlocking)
-        }.then(on: .global()) { _ -> Promise<Void> in
-            return self.tryToEnableGroupsV2Capability(for: addresses, isBlocking: isBlocking)
         }
     }
 
@@ -1522,52 +1513,6 @@ public class GroupManager: NSObject {
             // This will throttle, de-bounce, etc.
             self.bulkUUIDLookup.lookupUuids(phoneNumbers: phoneNumbersWithoutUuids)
             return Promise.value(())
-        }
-    }
-
-    private static func tryToEnableGroupsV2Capability(for addresses: [SignalServiceAddress],
-                                                      isBlocking: Bool) -> Promise<Void> {
-        return firstly { () -> Promise<[SignalServiceAddress]> in
-            let validAddresses = addresses.filter { $0.isValid }
-            if validAddresses.count < addresses.count {
-                owsFailDebug("Invalid addresses.")
-            }
-            return Promise.value(validAddresses)
-        }.then(on: .global()) { (addresses: [SignalServiceAddress]) -> Promise<Void> in
-            // Try to ensure groups v2 capability.
-            var addressesWithoutCapability = [SignalServiceAddress]()
-            self.databaseStorage.read { transaction in
-                for address in addresses {
-                    if !GroupManager.doesUserHaveGroupsV2Capability(address: address, transaction: transaction) {
-                        addressesWithoutCapability.append(address)
-                    }
-                }
-            }
-            guard !addressesWithoutCapability.isEmpty else {
-                return Promise.value(())
-            }
-            if isBlocking {
-                // Block on the outcome of the profile updates.
-                var promises = [Promise<Void>]()
-                for address in addressesWithoutCapability {
-                    let promise = firstly(on: .global()) {
-                        self.profileManager.fetchProfile(forAddressPromise: address).asVoid()
-                    }.recover(on: .global()) { error -> Promise<Void> in
-                        if case ProfileFetchError.missing = error {
-                            // If a user has no profile, ignore.
-                            return Promise.value(())
-                        }
-                        owsFailDebugUnlessNetworkFailure(error)
-                        throw error
-                    }
-                    promises.append(promise)
-                }
-                return Promise.when(fulfilled: promises)
-            } else {
-                // This will throttle, de-bounce, etc.
-                self.bulkProfileFetch.fetchProfiles(addresses: addressesWithoutCapability)
-                return Promise.value(())
-            }
         }
     }
 
@@ -1611,9 +1556,7 @@ public class GroupManager: NSObject {
             messageBuilder.groupMetaMessage = .update
 
             if thread.isGroupV2Thread {
-                if FeatureFlags.groupsV2embedProtosInGroupUpdates {
-                    messageBuilder.changeActionsProtoData = changeActionsProtoData
-                }
+                messageBuilder.changeActionsProtoData = changeActionsProtoData
                 if singleRecipient == nil {
                     self.addAdditionalRecipients(to: messageBuilder,
                                                  groupThread: thread,
@@ -1633,7 +1576,7 @@ public class GroupManager: NSObject {
             // V1 group updates need to include the group avatar (if any)
             // as an attachment.
             if thread.isGroupV1Thread,
-               let avatarData = groupModel.groupAvatarData,
+               let avatarData = groupModel.avatarData,
                avatarData.count > 0 {
                 let imageFormat = (avatarData as NSData).imageMetadata(withPath: nil, mimeType: nil).imageFormat
                 let fileExtension = (imageFormat == .png) ? "png" : "jpg"
@@ -1698,7 +1641,7 @@ public class GroupManager: NSObject {
             // So, if a new v1 group has an avatar, we need to send a group update
             // message.
             guard thread.groupModel.groupsVersion == .V1,
-                  thread.groupModel.groupAvatarData != nil else {
+                  thread.groupModel.avatarHash != nil else {
                 return Promise.value(())
             }
             return self.sendGroupUpdateMessage(thread: thread)
@@ -1919,7 +1862,7 @@ public class GroupManager: NSObject {
         }
         let inProfileWhitelist = profileManager.isThread(inProfileWhitelist: groupThreadV1,
                                                          transaction: transaction)
-        let isBlocked = blockingManager.isGroupIdBlocked(groupIdV1)
+        let isBlocked = blockingManager.isGroupIdBlocked(groupIdV1, transaction: transaction)
 
         // We re-use the same model.
         let groupThreadV2 = groupThreadV1
@@ -2252,22 +2195,9 @@ public class GroupManager: NSObject {
 
     // MARK: - Capabilities
 
-    private static let groupsV2CapabilityStore = SDSKeyValueStore(collection: "GroupManager.groupsV2Capability")
     private static let groupsV2MigrationCapabilityStore = SDSKeyValueStore(collection: "GroupManager.groupsV2MigrationCapability")
     private static let announcementOnlyGroupsCapabilityStore = SDSKeyValueStore(collection: "GroupManager.announcementOnlyGroupsCapability")
     private static let senderKeyCapabilityStore = SDSKeyValueStore(collection: "GroupManager.senderKeyCapability")
-
-    @objc
-    public static func doesUserHaveGroupsV2Capability(address: SignalServiceAddress,
-                                                      transaction: SDSAnyReadTransaction) -> Bool {
-        if DebugFlags.groupsV2IgnoreCapability {
-            return true
-        }
-        guard let uuid = address.uuid else {
-            return false
-        }
-        return groupsV2CapabilityStore.getBool(uuid.uuidString, defaultValue: false, transaction: transaction)
-    }
 
     @objc
     public static func doesUserHaveGroupsV2MigrationCapability(address: SignalServiceAddress,
@@ -2301,7 +2231,6 @@ public class GroupManager: NSObject {
 
     @objc
     public static func setUserCapabilities(address: SignalServiceAddress,
-                                           hasGroupsV2Capability: Bool,
                                            hasGroupsV2MigrationCapability: Bool,
                                            hasAnnouncementOnlyGroupsCapability: Bool,
                                            hasSenderKeyCapability: Bool,
@@ -2311,10 +2240,6 @@ public class GroupManager: NSObject {
             return
         }
         let key = uuid.uuidString
-        groupsV2CapabilityStore.setBoolIfChanged(hasGroupsV2Capability,
-                                                 defaultValue: false,
-                                                 key: key,
-                                                 transaction: transaction)
         groupsV2MigrationCapabilityStore.setBoolIfChanged(hasGroupsV2MigrationCapability,
                                                           defaultValue: false,
                                                           key: key,

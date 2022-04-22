@@ -25,6 +25,10 @@ lane :release do |options|
   scheme = ENV['SCHEME']
   configuration = 'App Store Release'
 
+  app_store_connect_api_key
+
+  cert
+
   # Signal provisioning
   sigh(
     app_identifier: app_identifier,

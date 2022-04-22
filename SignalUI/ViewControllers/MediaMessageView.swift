@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -48,7 +48,7 @@ public class MediaMessageView: UIView, OWSAudioPlayerDelegate {
 
     @available(*, unavailable, message: "use other constructor instead.")
     required public init?(coder aDecoder: NSCoder) {
-        notImplemented()
+        fatalError("init(coder:) has not been implemented")
     }
 
     // Currently we only use one mode (AttachmentApproval), so we could simplify this class, but it's kind
@@ -353,7 +353,7 @@ public class MediaMessageView: UIView, OWSAudioPlayerDelegate {
             return nil
         }
 
-        return String(format: NSLocalizedString("ATTACHMENT_APPROVAL_FILE_EXTENSION_FORMAT",
+        return String(format: OWSLocalizedString("ATTACHMENT_APPROVAL_FILE_EXTENSION_FORMAT",
                                                comment: "Format string for file extension label in call interstitial view"),
                       fileExtension.uppercased())
     }
@@ -388,7 +388,7 @@ public class MediaMessageView: UIView, OWSAudioPlayerDelegate {
     private func createFileSizeLabel() -> UIView {
         let label = UILabel()
         let fileSize = attachment.dataLength
-        label.text = String(format: NSLocalizedString("ATTACHMENT_APPROVAL_FILE_SIZE_FORMAT",
+        label.text = String(format: OWSLocalizedString("ATTACHMENT_APPROVAL_FILE_SIZE_FORMAT",
                                                      comment: "Format string for file size label in call interstitial view. Embeds: {{file size as 'N mb' or 'N kb'}}."),
                             OWSFormat.formatFileSize(fileSize))
 

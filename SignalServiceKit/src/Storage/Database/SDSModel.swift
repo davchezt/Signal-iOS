@@ -1,11 +1,11 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
 import GRDB
 
-public protocol SDSModel: TSYapDatabaseObject {
+public protocol SDSModel: TSYapDatabaseObject, SDSIndexableModel, SDSIdentifiableModel {
     var sdsTableName: String { get }
 
     func asRecord() throws -> SDSRecord
@@ -49,13 +49,13 @@ public extension SDSModel {
         case .insert:
             anyDidInsert(with: transaction)
 
-            if type(of: self).shouldBeIndexedForFTS {
+            if type(of: self).ftsIndexMode != .never {
                 FullTextSearchFinder().modelWasInserted(model: self, transaction: transaction)
             }
         case .update:
             anyDidUpdate(with: transaction)
 
-            if type(of: self).shouldBeIndexedForFTS {
+            if type(of: self).ftsIndexMode == .always {
                 FullTextSearchFinder().modelWasUpdated(model: self, transaction: transaction)
             }
         }
@@ -83,7 +83,7 @@ public extension SDSModel {
 
         anyDidRemove(with: transaction)
 
-        if type(of: self).shouldBeIndexedForFTS {
+        if type(of: self).ftsIndexMode != .never {
             FullTextSearchFinder().modelWasRemoved(model: self, transaction: transaction)
         }
     }
@@ -133,5 +133,36 @@ public extension SDSModel {
         } catch let error as NSError {
             owsFailDebug("Couldn't fetch uniqueIds: \(error)")
         }
+    }
+}
+
+// MARK: - Cursors
+
+public protocol SDSCursor {
+    associatedtype Model: SDSModel
+    mutating func next() throws -> Model?
+}
+
+public struct SDSMappedCursor<Cursor: SDSCursor, Element> {
+    fileprivate var cursor: Cursor
+    fileprivate let transform: (Cursor.Model) throws -> Element?
+
+    public mutating func next() throws -> Element? {
+        while let next = try cursor.next() {
+            if let transformed = try transform(next) {
+                return transformed
+            }
+        }
+        return nil
+    }
+}
+
+public extension SDSCursor {
+    func map<Element>(transform: @escaping (Model) throws -> Element) -> SDSMappedCursor<Self, Element> {
+        return compactMap(transform: transform)
+    }
+
+    func compactMap<Element>(transform: @escaping (Model) throws -> Element?) -> SDSMappedCursor<Self, Element> {
+        return SDSMappedCursor(cursor: self, transform: transform)
     }
 }

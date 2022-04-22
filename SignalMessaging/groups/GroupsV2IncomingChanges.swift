@@ -1,10 +1,10 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
 import SignalServiceKit
-import SignalClient
+import LibSignalClient
 
 public struct ChangedGroupModel {
     public let oldGroupModel: TSGroupModelV2
@@ -81,7 +81,7 @@ public class GroupsV2IncomingChanges: Dependencies {
 
         var newGroupName: String? = oldGroupModel.groupName
         var newGroupDescription: String? = oldGroupModel.descriptionText
-        var newAvatarData: Data? = oldGroupModel.groupAvatarData
+        var newAvatarData: Data? = oldGroupModel.avatarData
         var newAvatarUrlPath = oldGroupModel.avatarUrlPath
         var newInviteLinkPassword: Data? = oldGroupModel.inviteLinkPassword
         var newIsAnnouncementsOnly: Bool = oldGroupModel.isAnnouncementsOnly
@@ -386,10 +386,6 @@ public class GroupsV2IncomingChanges: Dependencies {
         }
 
         for action in changeActionsProto.addRequestingMembers {
-            if !canAddMembers {
-                owsFailDebug("Cannot add members.")
-            }
-
             guard let requestingMember = action.added else {
                 throw OWSAssertionError("Missing requestingMember.")
             }

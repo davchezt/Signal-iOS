@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 // Any Obj-C used by SSK Swift must be imported.
@@ -34,16 +34,13 @@
 #import <SignalServiceKit/OWSIncomingContactSyncJobRecord.h>
 #import <SignalServiceKit/OWSIncomingGroupSyncJobRecord.h>
 #import <SignalServiceKit/OWSMessageContentJob.h>
-#import <SignalServiceKit/OWSMessageDecryptJob.h>
 #import <SignalServiceKit/OWSMessageManager.h>
-#import <SignalServiceKit/OWSMessageUtils.h>
 #import <SignalServiceKit/OWSMultipart.h>
 #import <SignalServiceKit/OWSOperation.h>
 #import <SignalServiceKit/OWSOutgoingPaymentMessage.h>
 #import <SignalServiceKit/OWSOutgoingReceiptManager.h>
 #import <SignalServiceKit/OWSOutgoingResendRequest.h>
 #import <SignalServiceKit/OWSOutgoingSyncMessage.h>
-#import <SignalServiceKit/OWSReaction.h>
 #import <SignalServiceKit/OWSReceiptCredentialRedemptionJobRecord.h>
 #import <SignalServiceKit/OWSReceiptManager.h>
 #import <SignalServiceKit/OWSRecipientIdentity.h>
@@ -65,7 +62,6 @@
 #import <SignalServiceKit/PhoneNumberUtil.h>
 #import <SignalServiceKit/PreKeyBundle+jsonDict.h>
 #import <SignalServiceKit/RESTNetworkManager.h>
-#import <SignalServiceKit/RemoteAttestation.h>
 #import <SignalServiceKit/SDSDatabaseStorage+Objc.h>
 #import <SignalServiceKit/SSKJobRecord.h>
 #import <SignalServiceKit/SSKMessageDecryptJobRecord.h>
@@ -81,14 +77,12 @@
 #import <SignalServiceKit/TSCall.h>
 #import <SignalServiceKit/TSContactThread.h>
 #import <SignalServiceKit/TSErrorMessage.h>
-#import <SignalServiceKit/TSGroupMember.h>
 #import <SignalServiceKit/TSGroupModel.h>
 #import <SignalServiceKit/TSGroupThread.h>
 #import <SignalServiceKit/TSIncomingMessage.h>
 #import <SignalServiceKit/TSInvalidIdentityKeyErrorMessage.h>
 #import <SignalServiceKit/TSInvalidIdentityKeyReceivingErrorMessage.h>
 #import <SignalServiceKit/TSInvalidIdentityKeySendingErrorMessage.h>
-#import <SignalServiceKit/TSMention.h>
 #import <SignalServiceKit/TSOutgoingMessage.h>
 #import <SignalServiceKit/TSPaymentModel.h>
 #import <SignalServiceKit/TSPaymentModels.h>

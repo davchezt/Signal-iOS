@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import XCTest
@@ -31,7 +31,7 @@ class MessageProcessingIntegrationTest: SSKBaseTestSwift {
         try! databaseStorage.grdbStorage.setupDatabaseChangeObserver()
 
         // ensure local client has necessary "registered" state
-        identityManager.generateNewIdentityKey()
+        identityManager.generateNewIdentityKey(for: .aci)
         tsAccountManager.registerForTests(withLocalNumber: localE164Identifier, uuid: localUUID)
 
         bobClient = FakeSignalClient.generate(e164Identifier: bobE164Identifier)
@@ -61,6 +61,10 @@ class MessageProcessingIntegrationTest: SSKBaseTestSwift {
         }
 
         let expectMessageProcessed = expectation(description: "message processed")
+        // This test fulfills an expectation when a write to the database causes the desired state to be reached.
+        // However, there may still be writes to the database in flight, and the *next* write will also probably
+        // be in the desired state, resulting in the expectation being fulfilled again.
+        expectMessageProcessed.assertForOverFulfill = false
 
         read { transaction in
             XCTAssertEqual(0, TSMessage.anyCount(transaction: transaction))
@@ -107,7 +111,7 @@ class MessageProcessingIntegrationTest: SSKBaseTestSwift {
             switch error {
             case MessageProcessingError.duplicatePendingEnvelope?:
                 XCTFail("duplicatePendingEnvelope")
-            case .some(_):
+            case .some:
                 XCTFail("failure")
             case nil:
                 break
@@ -118,7 +122,6 @@ class MessageProcessingIntegrationTest: SSKBaseTestSwift {
     }
 
     func test_contactMessage_UuidOnlyEnvelope() {
-
         write { transaction in
             try! self.runner.initialize(senderClient: self.bobClient,
                                         recipientClient: self.localClient,
@@ -133,6 +136,10 @@ class MessageProcessingIntegrationTest: SSKBaseTestSwift {
         }
 
         let expectMessageProcessed = expectation(description: "message processed")
+        // This test fulfills an expectation when a write to the database causes the desired state to be reached.
+        // However, there may still be writes to the database in flight, and the *next* write will also probably
+        // be in the desired state, resulting in the expectation being fulfilled again.
+        expectMessageProcessed.assertForOverFulfill = false
 
         read { transaction in
             XCTAssertEqual(0, TSMessage.anyCount(transaction: transaction))
@@ -179,10 +186,45 @@ class MessageProcessingIntegrationTest: SSKBaseTestSwift {
             switch error {
             case MessageProcessingError.duplicatePendingEnvelope?:
                 XCTFail("duplicatePendingEnvelope")
-            case .some(_):
+            case .some:
                 XCTFail("failure")
             case nil:
                 break
+            }
+        }
+        waitForExpectations(timeout: 1.0)
+    }
+
+    func testWrongDestinationUuid() {
+        write { transaction in
+            try! self.runner.initialize(senderClient: self.bobClient,
+                                        recipientClient: self.localClient,
+                                        transaction: transaction)
+        }
+
+        // Wait until message processing has completed, otherwise future
+        // tests may break as we try and drain the processing queue.
+        let expectFlushNotification = expectation(description: "queue flushed")
+        NotificationCenter.default.observe(once: MessageProcessor.messageProcessorDidFlushQueue).done { _ in
+            expectFlushNotification.fulfill()
+        }
+
+        let envelopeBuilder = try! fakeService.envelopeBuilder(fromSenderClient: bobClient, bodyText: "Those who stands for nothing will fall for anything")
+        envelopeBuilder.setSourceUuid(bobClient.uuidIdentifier)
+        envelopeBuilder.setServerTimestamp(NSDate.ows_millisecondTimeStamp())
+        envelopeBuilder.setServerGuid(UUID().uuidString)
+        envelopeBuilder.setDestinationUuid(UUID().uuidString)
+        let envelopeData = try! envelopeBuilder.buildSerializedData()
+        messageProcessor.processEncryptedEnvelopeData(envelopeData,
+                                                      serverDeliveryTimestamp: NSDate.ows_millisecondTimeStamp(),
+                                                      envelopeSource: .tests) { error in
+            switch error {
+            case MessageProcessingError.wrongDestinationUuid?:
+                break
+            case let error?:
+                XCTFail("unexpected error \(error)")
+            case nil:
+                XCTFail("should have failed")
             }
         }
         waitForExpectations(timeout: 1.0)

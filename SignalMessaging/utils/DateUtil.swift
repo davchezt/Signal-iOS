@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -9,7 +9,6 @@ extension DateUtil {
     @objc
     public static let timeFormatter: DateFormatter = {
         let formatter = DateFormatter()
-        formatter.locale = .current
         formatter.timeStyle = .short
         formatter.dateStyle = .none
         return formatter
@@ -60,7 +59,7 @@ extension DateUtil {
     // We might receive a message "from the future" due to a bug or
     // malicious sender or a sender whose device time is misconfigured,
     // etc. Clamp message and date headers dates to the past & present.
-    private static func safeDateForCVC(_ date: Date) -> Date {
+    private static func clampBeforeNow(_ date: Date) -> Date {
         let nowDate = Date()
         return date < nowDate ? date : nowDate
     }
@@ -68,20 +67,20 @@ extension DateUtil {
     @objc
     public static func formatMessageTimestampForCVC(_ timestamp: UInt64,
                                                     shouldUseLongFormat: Bool) -> String {
-        let date = safeDateForCVC(Date(millisecondsSince1970: timestamp))
+        let date = clampBeforeNow(Date(millisecondsSince1970: timestamp))
         let calendar = Calendar.current
         let minutesDiff = calendar.dateComponents([.minute], from: date, to: Date()).minute ?? 0
         if minutesDiff < 1 {
-            return NSLocalizedString("DATE_NOW",
+            return OWSLocalizedString("DATE_NOW",
                                      comment: "The present; the current time.")
         } else if shouldUseLongFormat && minutesDiff == 1 {
             // Long format has a distinction between singular and plural
-            return NSLocalizedString("DATE_ONE_MINUTE_AGO_LONG",
+            return OWSLocalizedString("DATE_ONE_MINUTE_AGO_LONG",
                                      comment: "Full string for a relative time of one minute ago.")
         } else if minutesDiff <= 60 {
-            let shortFormat = NSLocalizedString("DATE_MINUTES_AGO_FORMAT",
+            let shortFormat = OWSLocalizedString("DATE_MINUTES_AGO_FORMAT",
                                                 comment: "Format string for a relative time, expressed as a certain number of minutes in the past. Embeds {{The number of minutes}}.")
-            let longFormat = NSLocalizedString("DATE_MINUTES_AGO_LONG_FORMAT",
+            let longFormat = OWSLocalizedString("DATE_MINUTES_AGO_LONG_FORMAT",
                                                comment: "Full format string for a relative time, expressed as a certain number of minutes in the past. Embeds {{The number of minutes}}.")
             let format = shouldUseLongFormat ? longFormat : shortFormat
             let minutesString = OWSFormat.formatInt(minutesDiff)
@@ -93,7 +92,7 @@ extension DateUtil {
 
     @objc
     public static func formatDateHeaderForCVC(_ date: Date) -> String {
-        let date = safeDateForCVC(date)
+        let date = clampBeforeNow(date)
         let calendar = Calendar.current
         let monthsDiff = calendar.dateComponents([.month], from: date, to: Date()).month ?? 0
         if monthsDiff >= 6 {
@@ -108,9 +107,20 @@ extension DateUtil {
         }
     }
 
+    public static func formatTimestampRelatively(_ timestamp: UInt64) -> String {
+        let date = clampBeforeNow(Date(millisecondsSince1970: timestamp))
+        let calendar = Calendar.current
+        let minutesDiff = calendar.dateComponents([.minute], from: date, to: Date()).minute ?? 0
+        if minutesDiff < 1 {
+            return OWSLocalizedString("DATE_NOW", comment: "The present; the current time.")
+        } else {
+            let secondsDiff = calendar.dateComponents([.second], from: date, to: Date()).second ?? 0
+            return NSString.formatDurationSeconds(UInt32(secondsDiff), useShortFormat: true)
+        }
+    }
+
     private static let dateHeaderRecentDateFormatter: DateFormatter = {
         let formatter = DateFormatter()
-        formatter.locale = .current
         // Tue, Jun 6
         formatter.setLocalizedDateFormatFromTemplate("EE, MMM d")
         return formatter
@@ -118,7 +128,6 @@ extension DateUtil {
 
     private static let dateHeaderOldDateFormatter: DateFormatter = {
         let formatter = DateFormatter()
-        formatter.locale = .current
         formatter.timeStyle = .none
         // Mar 8, 2017
         formatter.dateStyle = .medium
@@ -127,7 +136,6 @@ extension DateUtil {
 
     private static let dateHeaderRelativeDateFormatter: DateFormatter = {
         let formatter = DateFormatter()
-        formatter.locale = .current
         formatter.timeStyle = .none
         formatter.dateStyle = .short
         // Today / Yesterday

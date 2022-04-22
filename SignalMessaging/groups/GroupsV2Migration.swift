@@ -1,9 +1,9 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
-import SignalClient
+import LibSignalClient
 
 @objc
 public class GroupsV2Migration: NSObject {
@@ -125,21 +125,6 @@ public extension GroupsV2Migration {
         return (GroupManager.areAutoMigrationsAggressive
             ? .autoMigrationAggressive
             : .autoMigrationPolite)
-    }
-
-    static func doesUserHaveBothCapabilities(address: SignalServiceAddress,
-                                             transaction: SDSAnyReadTransaction) -> Bool {
-        if !GroupManager.doesUserHaveGroupsV2Capability(address: address,
-                                                        transaction: transaction) {
-            Logger.warn("Member without Groups v2 capability: \(address).")
-            return false
-        }
-        if !GroupManager.doesUserHaveGroupsV2MigrationCapability(address: address,
-                                                                 transaction: transaction) {
-            Logger.warn("Member without migration capability: \(address).")
-            return false
-        }
-        return true
     }
 
     static func tryToAutoMigrateAllGroups(shouldLimitBatchSize: Bool) {
@@ -411,14 +396,21 @@ fileprivate extension GroupsV2Migration {
                 return Promise.value(())
             }
         }.then(on: .global()) { () -> Promise<Void> in
-            var membersToFetchProfiles = Set<SignalServiceAddress>()
-            Self.databaseStorage.read { transaction in
-                for address in membersToMigrate {
-                    if !doesUserHaveBothCapabilities(address: address, transaction: transaction) {
-                        membersToFetchProfiles.insert(address)
-                    } else if !groupsV2.hasProfileKeyCredential(for: address, transaction: transaction) {
-                        membersToFetchProfiles.insert(address)
-                    }
+            let membersToFetchProfiles = Self.databaseStorage.read { transaction in
+                // Both the capability and a profile key are required to migrate
+                // If a user doesn't have both, we need to refetch their profile
+                membersToMigrate.filter { address in
+                    let hasCapability = GroupManager.doesUserHaveGroupsV2MigrationCapability(
+                        address: address,
+                        transaction: transaction)
+                    guard hasCapability else { return true }
+
+                    let hasProfileKey = groupsV2.hasProfileKeyCredential(
+                        for: address,
+                        transaction: transaction)
+                    guard hasProfileKey else { return true }
+
+                    return false
                 }
             }
             guard !membersToFetchProfiles.isEmpty else {
@@ -574,10 +566,11 @@ fileprivate extension GroupsV2Migration {
                 self.groupsV2Impl.tryToEnsureProfileKeyCredentials(for: Array(membersToMigrate),
                                                                    ignoreMissingProfiles: true)
             }.then(on: .global()) { () throws -> Promise<String?> in
-                guard let avatarData = unmigratedState.groupThread.groupModel.groupAvatarData else {
+                guard let avatarData = unmigratedState.groupThread.groupModel.avatarData else {
                     // No avatar to upload.
                     return Promise.value(nil)
                 }
+
                 // Upload avatar.
                 return firstly(on: .global()) { () -> Promise<String> in
                     return self.groupsV2Impl.uploadGroupAvatar(avatarData: avatarData,
@@ -648,12 +641,12 @@ fileprivate extension GroupsV2Migration {
         groupModelBuilder.isPlaceholderModel = false
 
         // We should either have both avatarData and avatarUrlPath or neither.
-        if let avatarData = v1GroupModel.groupAvatarData,
+        if let avatarData = v1GroupModel.avatarData,
             let avatarUrlPath = avatarUrlPath {
             groupModelBuilder.avatarData = avatarData
             groupModelBuilder.avatarUrlPath = avatarUrlPath
         } else {
-            owsAssertDebug(v1GroupModel.groupAvatarData == nil)
+            owsAssertDebug(v1GroupModel.avatarData == nil)
             owsAssertDebug(avatarUrlPath == nil)
             groupModelBuilder.avatarData = nil
             groupModelBuilder.avatarUrlPath = nil
@@ -679,7 +672,7 @@ fileprivate extension GroupsV2Migration {
                 continue
             }
 
-            if !doesUserHaveBothCapabilities(address: address, transaction: transaction) {
+            if !GroupManager.doesUserHaveGroupsV2MigrationCapability(address: address, transaction: transaction) {
                 owsAssertDebug(migrationMode.canSkipMembersWithoutCapabilities)
                 continue
             }
@@ -798,7 +791,7 @@ fileprivate extension GroupsV2Migration {
                 continue
             }
 
-            if !doesUserHaveBothCapabilities(address: address, transaction: transaction) {
+            if !GroupManager.doesUserHaveGroupsV2MigrationCapability(address: address, transaction: transaction) {
                 membersWithoutCapabilities.append(address)
                 continue
             }
@@ -1063,7 +1056,7 @@ fileprivate extension GroupsV2Migration {
         }
         let migrationInfo = "GV2 Migration"
         let masterKey = try migrationInfo.utf8.withContiguousStorageIfAvailable {
-            try hkdf(outputLength: GroupMasterKey.SIZE, version: 3, inputKeyMaterial: v1GroupId, salt: [], info: $0)
+            try hkdf(outputLength: GroupMasterKey.SIZE, inputKeyMaterial: v1GroupId, salt: [], info: $0)
         }!
         return Data(masterKey)
     }

@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -249,13 +249,10 @@ class GifPickerViewController: OWSViewController, UISearchBarDelegate, UICollect
             : Theme.backgroundColor)
         self.view.backgroundColor = backgroundColor
 
-        // Block UIKit from adjust insets of collection view which screws up
-        // min/max scroll positions.
-        self.automaticallyAdjustsScrollViewInsets = false
-
         self.collectionView.delegate = self
         self.collectionView.dataSource = self
         self.collectionView.backgroundColor = backgroundColor
+        self.collectionView.contentInsetAdjustmentBehavior = .never
         self.collectionView.register(GifPickerCell.self, forCellWithReuseIdentifier: kCellReuseIdentifier)
         view.addSubview(self.collectionView)
         self.collectionView.autoPinEdge(toSuperviewSafeArea: .leading)
@@ -415,41 +412,32 @@ class GifPickerViewController: OWSViewController, UISearchBarDelegate, UICollect
 
     // MARK: - UICollectionViewDelegate
 
-    public func collectionView(_ collectionView: UICollectionView, shouldSelectItemAt indexPath: IndexPath) -> Bool {
+    private func selectableCell(at indexPath: IndexPath) -> GifPickerCell? {
         guard let cell = collectionView.cellForItem(at: indexPath) as? GifPickerCell else {
             owsFailDebug("unexpected cell.")
-            return false
+            return nil
         }
 
         guard cell.isDisplayingPreview else {
             // we don't want to let the user blindly select a gray cell
             Logger.debug("ignoring selection of cell with no preview")
-            return false
+            return nil
         }
 
         guard self.hasSelectedCell == false else {
             owsFailDebug("Already selected cell")
-            return false
+            return nil
         }
 
-        return true
+        return cell
+    }
+
+    public func collectionView(_ collectionView: UICollectionView, shouldSelectItemAt indexPath: IndexPath) -> Bool {
+        return self.selectableCell(at: indexPath) != nil
     }
 
     public func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-
-        guard let cell = collectionView.cellForItem(at: indexPath) as? GifPickerCell else {
-            owsFailDebug("unexpected cell.")
-            return
-        }
-
-        guard cell.isDisplayingPreview else {
-            // we don't want to let the user blindly select a gray cell
-            Logger.debug("ignoring selection of cell with no preview")
-            return
-        }
-
-        guard self.hasSelectedCell == false else {
-            owsFailDebug("Already selected cell")
+        guard let cell = self.selectableCell(at: indexPath) else {
             return
         }
         self.hasSelectedCell = true

@@ -1,9 +1,8 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
-import SignalClient
-import SignalMetadataKit
+import LibSignalClient
 
 extension MessageSender {
     private var senderKeyQueue: DispatchQueue { .global(qos: .utility) }
@@ -71,7 +70,7 @@ extension MessageSender {
             case .recipientSKDMFailed(let error):
                 return error.localizedDescription
             default:
-                return NSLocalizedString("ERROR_DESCRIPTION_CLIENT_SENDING_FAILURE",
+                return OWSLocalizedString("ERROR_DESCRIPTION_CLIENT_SENDING_FAILURE",
                                          comment: "Generic notice when message failed to send.")
             }
         }
@@ -420,7 +419,7 @@ extension MessageSender {
                 MessageSender.ensureSessions(forMessageSends: skdmSends, ignoreErrors: true)
             }.then(on: self.senderKeyQueue) { _ -> Guarantee<[Result<OWSMessageSend, Error>]> in
                 // For each SKDM request we kick off a sendMessage promise.
-                // - If it succeeds, great! Propogate along the successful OWSMessageSend
+                // - If it succeeds, great! Propagate along the successful OWSMessageSend
                 // - Otherwise, invoke the sendErrorBlock and rethrow so it gets packaged into the Guarantee
                 // We use when(resolved:) because we want the promise to wait for
                 // all sub-promises to finish, even if some failed.
@@ -662,10 +661,10 @@ extension MessageSender {
 
         let protocolAddresses = recipients.flatMap { $0.protocolAddresses }
         let secretCipher = try SMKSecretSessionCipher(
-            sessionStore: Self.sessionStore,
-            preKeyStore: Self.preKeyStore,
-            signedPreKeyStore: Self.signedPreKeyStore,
-            identityStore: Self.identityKeyStore,
+            sessionStore: Self.signalProtocolStore(for: .aci).sessionStore,
+            preKeyStore: Self.signalProtocolStore(for: .aci).preKeyStore,
+            signedPreKeyStore: Self.signalProtocolStore(for: .aci).signedPreKeyStore,
+            identityStore: Self.identityManager.store(for: .aci, transaction: writeTx),
             senderKeyStore: Self.senderKeyStore)
 
         let distributionId = senderKeyStore.distributionIdForSendingToThread(thread, writeTx: writeTx)
@@ -773,7 +772,7 @@ fileprivate extension SignalServiceAddress {
     // We shouldn't send a SenderKey message to addresses with a session record with
     // an invalid registrationId.
     //
-    // SignalClient expects registrationIds to fit in 15 bits for multiRecipientEncrypt,
+    // LibSignalClient expects registrationIds to fit in 15 bits for multiRecipientEncrypt,
     // but there are some reports of clients having larger registrationIds.
     //
     // For now, let's perform a check to filter out invalid registrationIds. An
@@ -781,9 +780,12 @@ fileprivate extension SignalServiceAddress {
     // Once we've done this, we can remove this entire filter clause.
     func hasValidRegistrationIds(transaction readTx: SDSAnyReadTransaction) -> Bool {
         let candidateDevices = MessageSender.Recipient(address: self, transaction: readTx).devices
+        let sessionStore = signalProtocolStore(for: .aci).sessionStore
         return candidateDevices.allSatisfy { deviceId in
             do {
-                guard let sessionRecord = try sessionStore.loadSession(for: self, deviceId: Int32(deviceId), transaction: readTx),
+                guard let sessionRecord = try sessionStore.loadSession(for: self,
+                                                                       deviceId: Int32(deviceId),
+                                                                       transaction: readTx),
                       sessionRecord.hasCurrentState else {
                     Logger.warn("No session for address: \(self)")
                     return false

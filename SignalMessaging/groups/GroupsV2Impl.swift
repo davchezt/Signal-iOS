@@ -1,11 +1,10 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
 import SignalServiceKit
-import SignalMetadataKit
-import SignalClient
+import LibSignalClient
 
 @objc
 public class GroupsV2Impl: NSObject, GroupsV2Swift {
@@ -571,9 +570,9 @@ public class GroupsV2Impl: NSObject, GroupsV2Swift {
 
     // MARK: - Fetch Group Change Actions
 
-    public func fetchGroupChangeActions(groupSecretParamsData: Data,
-                                        includeCurrentRevision: Bool,
-                                        firstKnownRevision: UInt32?) -> Promise<[GroupV2Change]> {
+    internal func fetchGroupChangeActions(groupSecretParamsData: Data,
+                                          includeCurrentRevision: Bool,
+                                          firstKnownRevision: UInt32?) -> Promise<GroupChangePage> {
 
         guard let localUuid = tsAccountManager.localUuid else {
             return Promise(error: OWSAssertionError("Missing localUuid."))
@@ -582,7 +581,7 @@ public class GroupsV2Impl: NSObject, GroupsV2Swift {
             let groupId = try self.groupId(forGroupSecretParamsData: groupSecretParamsData)
             let groupV2Params = try GroupV2Params(groupSecretParamsData: groupSecretParamsData)
             return (groupId, groupV2Params)
-        }.then(on: .global()) { (groupId: Data, groupV2Params: GroupV2Params) -> Promise<[GroupV2Change]> in
+        }.then(on: .global()) { (groupId: Data, groupV2Params: GroupV2Params) -> Promise<GroupChangePage> in
             return self.fetchGroupChangeActions(groupId: groupId,
                                                 groupV2Params: groupV2Params,
                                                 localUuid: localUuid,
@@ -591,14 +590,44 @@ public class GroupsV2Impl: NSObject, GroupsV2Swift {
         }
     }
 
+    internal struct GroupChangePage {
+        let changes: [GroupV2Change]
+        let earlyEnd: UInt32?
+
+        fileprivate static func parseEarlyEnd(fromGroupRangeHeader header: String?) -> UInt32? {
+            guard let header = header else {
+                OWSLogger.warn("Missing Content-Range for group update request with 206 response")
+                return nil
+            }
+
+            let pattern = try! NSRegularExpression(pattern: #"^versions (\d+)-(\d+)/(\d+)$"#)
+            guard let match = pattern.firstMatch(in: header, range: header.entireRange) else {
+                OWSLogger.warn("Unparsable Content-Range for group update request: \(header)")
+                return nil
+            }
+
+            guard let earlyEndRange = Range(match.range(at: 1), in: header) else {
+                owsFailDebug("Could not translate NSRange to Range<String.Index>")
+                return nil
+            }
+
+            guard let earlyEndValue = UInt32(header[earlyEndRange]) else {
+                OWSLogger.warn("Invalid early-end in Content-Range for group update request: \(header)")
+                return nil
+            }
+
+            return earlyEndValue
+        }
+    }
+
     private func fetchGroupChangeActions(groupId: Data,
                                          groupV2Params: GroupV2Params,
                                          localUuid: UUID,
                                          includeCurrentRevision: Bool,
-                                         firstKnownRevision: UInt32?) -> Promise<[GroupV2Change]> {
+                                         firstKnownRevision: UInt32?) -> Promise<GroupChangePage> {
 
         let requestBuilder: RequestBuilder = { (authCredential) in
-            return firstly(on: .global()) { () -> GroupsV2Request in
+            firstly(on: .global()) { () -> GroupsV2Request in
                 let (fromRevision, requireSnapshotForFirstChange) =
                     try self.databaseStorage.read { (transaction) throws -> (UInt32, Bool) in
                         guard let groupThread = TSGroupThread.fetch(groupId: groupId, transaction: transaction) else {
@@ -634,21 +663,32 @@ public class GroupsV2Impl: NSObject, GroupsV2Swift {
                                        groupId: groupId,
                                        behavior403: .ignore,
                                        behavior404: .fail)
-        }.map(on: .global()) { (response: HTTPResponse) -> GroupsProtoGroupChanges in
+        }.map(on: .global()) { (response: HTTPResponse) -> (GroupsProtoGroupChanges, UInt32?) in
             guard let groupChangesProtoData = response.responseBodyData else {
                 throw OWSAssertionError("Invalid responseObject.")
             }
-            return try GroupsProtoGroupChanges(serializedData: groupChangesProtoData)
-        }.then(on: .global()) { (groupChangesProto: GroupsProtoGroupChanges) -> Promise<[GroupV2Change]> in
+            let earlyEnd: UInt32?
+            if response.responseStatusCode == 206 {
+                let groupRangeHeader = response.responseHeaders.first {
+                    $0.key.caseInsensitiveCompare("content-range") == .orderedSame
+                }?.value
+                earlyEnd = GroupChangePage.parseEarlyEnd(fromGroupRangeHeader: groupRangeHeader)
+            } else {
+                earlyEnd = nil
+            }
+            return (try GroupsProtoGroupChanges(serializedData: groupChangesProtoData), earlyEnd)
+        }.then(on: .global()) { (groupChangesProto: GroupsProtoGroupChanges,
+                                 earlyEnd: UInt32?) -> Promise<GroupChangePage> in
             return firstly {
                 // We can ignoreSignature; these protos came from the service.
                 self.fetchAllAvatarData(groupChangesProto: groupChangesProto,
                                         ignoreSignature: true,
                                         groupV2Params: groupV2Params)
-            }.map(on: .global()) { (downloadedAvatars: GroupV2DownloadedAvatars) -> [GroupV2Change] in
-                try GroupsV2Protos.parseChangesFromService(groupChangesProto: groupChangesProto,
-                                                           downloadedAvatars: downloadedAvatars,
-                                                           groupV2Params: groupV2Params)
+            }.map(on: .global()) { (downloadedAvatars: GroupV2DownloadedAvatars) -> GroupChangePage in
+                let changes = try GroupsV2Protos.parseChangesFromService(groupChangesProto: groupChangesProto,
+                                                                         downloadedAvatars: downloadedAvatars,
+                                                                         groupV2Params: groupV2Params)
+                return GroupChangePage(changes: changes, earlyEnd: earlyEnd)
             }
         }
     }
@@ -724,25 +764,20 @@ public class GroupsV2Impl: NSObject, GroupsV2Swift {
             // avatar with the avatar data.
             var promises = [Promise<(String, Data)>]()
             for avatarUrlPath in undownloadedAvatarUrlPaths {
-                let (downloadPromise, future) = Promise<Data>.pending()
-                firstly { () -> Promise<Data> in
+                let promise = firstly { () -> Promise<Data> in
                     self.fetchAvatarData(avatarUrlPath: avatarUrlPath,
                                          groupV2Params: groupV2Params)
-                }.done(on: .global()) { avatarData in
-                    future.resolve(avatarData)
-                }.catch(on: .global()) { error in
+                }.recover(on: .global()) { error -> Promise<Data> in
                     if let statusCode = error.httpStatusCode,
                        statusCode == 404 {
                         // Fulfill with empty data if service returns 404 status code.
                         // We don't want the group to be left in an unrecoverable state
                         // if the the avatar is missing from the CDN.
-                        future.resolve(Data())
+                        return .value(Data())
                     }
 
-                    future.reject(error)
-                }
-
-                let promise = downloadPromise.map(on: .global()) { (avatarData: Data) -> Data in
+                    throw error
+                }.map(on: .global()) { (avatarData: Data) -> Data in
                     guard avatarData.count > 0 else {
                         owsFailDebug("Empty avatarData.")
                         return avatarData
@@ -836,7 +871,7 @@ public class GroupsV2Impl: NSObject, GroupsV2Swift {
         case removeFromGroup
         case fetchGroupUpdates
         case ignore
-        case expiredGroupInviteLink
+        case reportInvalidOrBlockedGroupLink
         case localUserIsNotARequestingMember
     }
 
@@ -860,127 +895,114 @@ public class GroupsV2Impl: NSObject, GroupsV2Swift {
         }.then(on: .global()) { (authCredential: AuthCredential) -> Promise<GroupsV2Request> in
             try requestBuilder(authCredential)
         }.then(on: .global()) { (request: GroupsV2Request) -> Promise<HTTPResponse> in
-            let (promise, future) = Promise<HTTPResponse>.pending()
-            firstly {
-                self.performServiceRequestAttempt(request: request)
-            }.done(on: .global()) { (response: HTTPResponse) in
-                future.resolve(response)
-            }.catch(on: .global()) { (error: Error) in
-
-                let retryIfPossible = {
-                    if remainingRetries > 0 {
-                        firstly {
-                            self.performServiceRequest(requestBuilder: requestBuilder,
-                                                       groupId: groupId,
-                                                       behavior403: behavior403,
-                                                       behavior404: behavior404,
-                                                       remainingRetries: remainingRetries - 1)
-                        }.done(on: .global()) { (response: HTTPResponse) in
-                            future.resolve(response)
-                        }.catch(on: .global()) { (error: Error) in
-                            future.reject(error)
-                        }
-                    } else {
-                        future.reject(error)
-                    }
-                }
-
-                // Fall through to retry if retry-able,
-                // otherwise reject immediately.
-                if let statusCode = error.httpStatusCode {
-                    switch statusCode {
-                    case 401:
-                        // Retry auth errors after retrieving new temporal credentials.
-                        self.databaseStorage.write { transaction in
-                            self.clearTemporalCredentials(transaction: transaction)
-                        }
-                        retryIfPossible()
-                    case 403:
-                        // 403 indicates that we are no longer in the group for
-                        // many (but not all) group v2 service requests.
-
-                        if let groupId = groupId {
-                            switch behavior403 {
-                            case .fail:
-                                // We should never receive 403 when creating groups.
-                                owsFailDebug("Unexpected 403.")
-                                break
-                            case .ignore:
-                                // We can't remove the local user from the group on 403
-                                // when fetching change actions.
-                                // For example, user might just be joining the group
-                                // using an invite OR have just been re-added after leaving.
-                                break
-                            case .removeFromGroup:
-                                // If we receive 403 when trying to fetch group state,
-                                // we have left the group, been removed from the group
-                                // or had our invite revoked and we should make sure
-                                // group state in the database reflects that.
-                                self.databaseStorage.write { transaction in
-                                    GroupManager.handleNotInGroup(groupId: groupId,
-                                                                  transaction: transaction)
-                                }
-                            case .fetchGroupUpdates:
-                                // Service returns 403 if client tries to perform an
-                                // update for which it is not authorized (e.g. add a
-                                // new member if membership access is admin-only).
-                                // The local client can't assume that 403 means they
-                                // are not in the group. Therefore we "update group
-                                // to latest" to check for and handle that case (see
-                                // previous case).
-                                self.tryToUpdateGroupToLatest(groupId: groupId)
-                            case .expiredGroupInviteLink:
-                                owsFailDebug("groupId should not be set in this code path.")
-                                future.reject(GroupsV2Error.expiredGroupInviteLink)
-                                break
-                            case .localUserIsNotARequestingMember:
-                                owsFailDebug("groupId should not be set in this code path.")
-                                future.reject(GroupsV2Error.localUserIsNotARequestingMember)
-                                break
-                            }
-                        } else {
-                            // We should only receive 403 when groupId is not nil.
-                            if behavior403 == .expiredGroupInviteLink {
-                                future.reject(GroupsV2Error.expiredGroupInviteLink)
-                                return
-                            } else if behavior403 == .localUserIsNotARequestingMember {
-                                future.reject(GroupsV2Error.localUserIsNotARequestingMember)
-                                return
-                            } else {
-                                owsFailDebug("Missing groupId.")
-                            }
-                        }
-
-                        future.reject(GroupsV2Error.localUserNotInGroup)
-                    case 404:
-                        // 404 indicates that the group does not exist on the
-                        // service for some (but not all) group v2 service requests.
-
-                        switch behavior404 {
-                        case .fail:
-                            future.reject(error)
-                            break
-                        case .groupDoesNotExistOnService:
-                            Logger.warn("Error: \(error)")
-                            future.reject(GroupsV2Error.groupDoesNotExistOnService)
-                        }
-                    case 409:
-                        // Group update conflict, retry. When updating group state,
-                        // we can often resolve conflicts using the change set.
-                        retryIfPossible()
-                    default:
-                        // Unexpected status code.
-                        future.reject(error)
-                    }
-                } else if error.isNetworkFailureOrTimeout {
-                    // Retry on network failure.
-                    retryIfPossible()
+            self.performServiceRequestAttempt(request: request)
+        }.recover(on: .global()) { (error: Error) -> Promise<HTTPResponse> in
+            let retryIfPossible = { () throws -> Promise<HTTPResponse> in
+                if remainingRetries > 0 {
+                    return self.performServiceRequest(requestBuilder: requestBuilder,
+                                                      groupId: groupId,
+                                                      behavior403: behavior403,
+                                                      behavior404: behavior404,
+                                                      remainingRetries: remainingRetries - 1)
                 } else {
-                    // Unexpected error.
-                    future.reject(error)
+                    throw error
                 }
             }
-            return promise
+
+            // Fall through to retry if retry-able,
+            // otherwise reject immediately.
+            if let statusCode = error.httpStatusCode {
+                switch statusCode {
+                case 401:
+                    // Retry auth errors after retrieving new temporal credentials.
+                    self.databaseStorage.write { transaction in
+                        self.clearTemporalCredentials(transaction: transaction)
+                    }
+                    return try retryIfPossible()
+                case 403:
+                    // 403 indicates that we are no longer in the group for
+                    // many (but not all) group v2 service requests.
+                    switch behavior403 {
+                    case .fail:
+                        // We should never receive 403 when creating groups.
+                        owsFailDebug("Unexpected 403.")
+                        break
+                    case .ignore:
+                        // We can't remove the local user from the group on 403
+                        // when fetching change actions.
+                        // For example, user might just be joining the group
+                        // using an invite OR have just been re-added after leaving.
+                        owsAssertDebug(groupId != nil, "Expecting a groupId for this path")
+                        break
+                    case .removeFromGroup:
+                        guard let groupId = groupId else {
+                            owsFailDebug("GroupId must be set to remove from group")
+                            break
+                        }
+                        // If we receive 403 when trying to fetch group state,
+                        // we have left the group, been removed from the group
+                        // or had our invite revoked and we should make sure
+                        // group state in the database reflects that.
+                        self.databaseStorage.write { transaction in
+                            GroupManager.handleNotInGroup(groupId: groupId, transaction: transaction)
+                        }
+
+                    case .fetchGroupUpdates:
+                        guard let groupId = groupId else {
+                            owsFailDebug("GroupId must be set to fetch group updates")
+                            break
+                        }
+                        // Service returns 403 if client tries to perform an
+                        // update for which it is not authorized (e.g. add a
+                        // new member if membership access is admin-only).
+                        // The local client can't assume that 403 means they
+                        // are not in the group. Therefore we "update group
+                        // to latest" to check for and handle that case (see
+                        // previous case).
+                        self.tryToUpdateGroupToLatest(groupId: groupId)
+
+                    case .reportInvalidOrBlockedGroupLink:
+                        owsAssertDebug(groupId == nil, "groupId should not be set in this code path.")
+
+                        if FeatureFlags.groupAbuse, let responseHeaders = error.httpResponseHeaders,
+                           responseHeaders.value(forHeader: "X-Signal-Forbidden-Reason") == "banned" {
+                            throw GroupsV2Error.localUserBlockedFromJoining
+                        } else {
+                            throw GroupsV2Error.expiredGroupInviteLink
+                        }
+
+                    case .localUserIsNotARequestingMember:
+                        owsAssertDebug(groupId == nil, "groupId should not be set in this code path.")
+                        throw GroupsV2Error.localUserIsNotARequestingMember
+                    }
+
+                    throw GroupsV2Error.localUserNotInGroup
+                case 404:
+                    // 404 indicates that the group does not exist on the
+                    // service for some (but not all) group v2 service requests.
+
+                    switch behavior404 {
+                    case .fail:
+                        throw error
+                    case .groupDoesNotExistOnService:
+                        Logger.warn("Error: \(error)")
+                        throw GroupsV2Error.groupDoesNotExistOnService
+                    }
+                case 409:
+                    // Group update conflict, retry. When updating group state,
+                    // we can often resolve conflicts using the change set.
+                    return try retryIfPossible()
+                default:
+                    // Unexpected status code.
+                    throw error
+                }
+            } else if error.isNetworkFailureOrTimeout {
+                // Retry on network failure.
+                return try retryIfPossible()
+            } else {
+                // Unexpected error.
+                throw error
+            }
         }
     }
 
@@ -1524,7 +1546,7 @@ public class GroupsV2Impl: NSObject, GroupsV2Swift {
 
         return firstly(on: .global()) { () -> Promise<HTTPResponse> in
             let behavior403: Behavior403 = (inviteLinkPassword != nil
-                                                ? .expiredGroupInviteLink
+                                                ? .reportInvalidOrBlockedGroupLink
                                                 : .localUserIsNotARequestingMember)
             return self.performServiceRequest(requestBuilder: requestBuilder,
                                               groupId: nil,
@@ -1689,7 +1711,7 @@ public class GroupsV2Impl: NSObject, GroupsV2Swift {
 
             return self.performServiceRequest(requestBuilder: requestBuilder,
                                               groupId: groupId,
-                                              behavior403: .expiredGroupInviteLink,
+                                              behavior403: .reportInvalidOrBlockedGroupLink,
                                               behavior404: .fail)
         }.then(on: .global()) { (response: HTTPResponse) -> Promise<TSGroupThread> in
             guard let changeActionsProtoData = response.responseBodyData else {
@@ -1697,7 +1719,7 @@ public class GroupsV2Impl: NSObject, GroupsV2Swift {
             }
             // The PATCH request that adds us to the group (as a full or requesting member)
             // only return the "change actions" proto data, but not a full snapshot
-            // so we need to seperately GET the latest group state and update the database.
+            // so we need to separately GET the latest group state and update the database.
             //
             // Download and update database with the group state.
             return firstly {
@@ -1944,7 +1966,10 @@ public class GroupsV2Impl: NSObject, GroupsV2Swift {
         }
 
         return firstly(on: .global()) { () -> Promise<UInt32> in
-            self.cancelMemberRequestsUsingPatch(groupId: groupModel.groupId, groupV2Params: groupV2Params)
+            self.cancelMemberRequestsUsingPatch(
+                groupId: groupModel.groupId,
+                groupV2Params: groupV2Params,
+                inviteLinkPassword: groupModel.inviteLinkPassword)
         }.map(on: .global()) { (newRevision: UInt32) -> TSGroupThread in
             try self.updateGroupRemovingMemberRequest(groupId: groupModel.groupId, newRevision: newRevision)
         }.recover(on: .global()) { (error: Error) -> Promise<TSGroupThread> in
@@ -2014,7 +2039,11 @@ public class GroupsV2Impl: NSObject, GroupsV2Swift {
         }
     }
 
-    private func cancelMemberRequestsUsingPatch(groupId: Data, groupV2Params: GroupV2Params) -> Promise<UInt32> {
+    private func cancelMemberRequestsUsingPatch(
+        groupId: Data,
+        groupV2Params: GroupV2Params,
+        inviteLinkPassword: Data?
+    ) -> Promise<UInt32> {
 
         let revisionForPlaceholderModel = AtomicOptional<UInt32>(nil)
 
@@ -2024,7 +2053,7 @@ public class GroupsV2Impl: NSObject, GroupsV2Swift {
         // * addFromInviteLinkAccess
         // * local user's request status.
         return firstly {
-            self.fetchGroupInviteLinkPreview(inviteLinkPassword: nil,
+            self.fetchGroupInviteLinkPreview(inviteLinkPassword: inviteLinkPassword,
                                              groupSecretParamsData: groupV2Params.groupSecretParamsData,
                                              allowCached: false)
         }.then(on: .global()) { (groupInviteLinkPreview: GroupInviteLinkPreview) -> Promise<HTTPResponse> in
@@ -2037,7 +2066,7 @@ public class GroupsV2Impl: NSObject, GroupsV2Swift {
                     try StorageService.buildUpdateGroupRequest(groupChangeProto: groupChangeProto,
                                                                groupV2Params: groupV2Params,
                                                                authCredential: authCredential,
-                                                               groupInviteLinkPassword: nil)
+                                                               groupInviteLinkPassword: inviteLinkPassword)
                 }
             }
 
@@ -2085,7 +2114,7 @@ public class GroupsV2Impl: NSObject, GroupsV2Swift {
 
         firstly { () -> Promise<GroupInviteLinkPreview> in
             let groupV2Params = try groupModel.groupV2Params()
-            return self.fetchGroupInviteLinkPreview(inviteLinkPassword: nil,
+            return self.fetchGroupInviteLinkPreview(inviteLinkPassword: groupModel.inviteLinkPassword,
                                                     groupSecretParamsData: groupV2Params.groupSecretParamsData,
                                                     allowCached: false)
         }.catch { (error: Error) -> Void in

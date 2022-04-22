@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -53,7 +53,8 @@ extension DeviceTransferService {
 
         // Attachments, Avatars, and Stickers
 
-        let foldersToTransfer = ["Attachments/", "ProfileAvatars/", "StickerManager/", "Wallpapers/", "Library/Sounds/", "AvatarHistory/"]
+        // TODO: Ideally, these paths would reference constants...
+        let foldersToTransfer = ["Attachments/", "ProfileAvatars/", "GroupAvatars/", "StickerManager/", "Wallpapers/", "Library/Sounds/", "AvatarHistory/"]
         let filesToTransfer = try foldersToTransfer.flatMap { folder -> [String] in
             let url = URL(fileURLWithPath: folder, relativeTo: DeviceTransferService.appSharedDataDirectory)
             return try OWSFileSystem.recursiveFilesInDirectory(url.path)
@@ -88,9 +89,11 @@ extension DeviceTransferService {
                 // Filter out any keys we think are managed by Apple, we don't need to transfer them.
                 guard !isAppleKey(key) else { continue }
 
+                guard let encodedValue = try? NSKeyedArchiver.archivedData(withRootObject: value, requiringSecureCoding: true) else { continue }
+
                 let defaultBuilder = DeviceTransferProtoDefault.builder(
                     key: key,
-                    encodedValue: NSKeyedArchiver.archivedData(withRootObject: value)
+                    encodedValue: encodedValue
                 )
                 manifestBuilder.addStandardDefaults(try defaultBuilder.build())
             }
@@ -103,9 +106,11 @@ extension DeviceTransferService {
                 // Filter out any keys we think are managed by Apple, we don't need to transfer them.
                 guard !isAppleKey(key) else { continue }
 
+                guard let encodedValue = try? NSKeyedArchiver.archivedData(withRootObject: value, requiringSecureCoding: true) else { continue }
+
                 let defaultBuilder = DeviceTransferProtoDefault.builder(
                     key: key,
-                    encodedValue: NSKeyedArchiver.archivedData(withRootObject: value)
+                    encodedValue: encodedValue
                 )
                 manifestBuilder.addAppDefaults(try defaultBuilder.build())
             }

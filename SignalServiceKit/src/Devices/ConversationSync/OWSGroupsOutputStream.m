@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 #import "OWSGroupsOutputStream.h"
@@ -61,7 +61,7 @@ NS_ASSUME_NONNULL_BEGIN
     [groupBuilder setMembersE164:membersE164];
     [groupBuilder setMembers:members];
 
-    if ([BlockingManager.shared isGroupIdBlocked:group.groupId]) {
+    if ([BlockingManager.shared isGroupIdBlocked:group.groupId transaction:transaction]) {
         [groupBuilder setBlocked:YES];
     }
 
@@ -73,17 +73,17 @@ NS_ASSUME_NONNULL_BEGIN
 
     // TODO setActive based on soft delete?
 
-    NSData *_Nullable groupAvatarData = nil;
-    if (group.groupAvatarData.length > 0) {
+    NSData *_Nullable avatarData = nil;
+    if (group.avatarData.length > 0) {
         SSKProtoGroupDetailsAvatarBuilder *avatarBuilder = [SSKProtoGroupDetailsAvatar builder];
 
-        OWSAssertDebug([TSGroupModel isValidGroupAvatarData:group.groupAvatarData]);
-        ImageFormat format = [group.groupAvatarData imageMetadataWithPath:nil mimeType:nil].imageFormat;
+        OWSAssertDebug([TSGroupModel isValidGroupAvatarData:group.avatarData]);
+        ImageFormat format = [group.avatarData imageMetadataWithPath:nil mimeType:nil].imageFormat;
         NSString *mimeType = (format == ImageFormat_Png) ? OWSMimeTypeImagePng : OWSMimeTypeImageJpeg;
 
         [avatarBuilder setContentType:mimeType];
-        groupAvatarData = group.groupAvatarData;
-        [avatarBuilder setLength:(uint32_t)groupAvatarData.length];
+        avatarData = group.avatarData;
+        [avatarBuilder setLength:(uint32_t)avatarData.length];
 
         NSError *error;
         SSKProtoGroupDetailsAvatar *_Nullable avatarProto = [avatarBuilder buildAndReturnError:&error];
@@ -100,7 +100,7 @@ NS_ASSUME_NONNULL_BEGIN
     if (disappearingMessagesConfiguration && disappearingMessagesConfiguration.isEnabled) {
         [groupBuilder setExpireTimer:disappearingMessagesConfiguration.durationSeconds];
     } else {
-        // Rather than *not* set the field, we expicitly set it to 0 so desktop
+        // Rather than *not* set the field, we explicitly set it to 0 so desktop
         // can easily distinguish between a modern client declaring "off" vs a
         // legacy client "not specifying".
         [groupBuilder setExpireTimer:0];
@@ -118,8 +118,8 @@ NS_ASSUME_NONNULL_BEGIN
     [self writeVariableLengthUInt32:groupDataLength];
     [self writeData:groupData];
 
-    if (groupAvatarData) {
-        [self writeData:groupAvatarData];
+    if (avatarData) {
+        [self writeData:avatarData];
     }
 }
 

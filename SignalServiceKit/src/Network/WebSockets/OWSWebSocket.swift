@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -260,10 +260,6 @@ public class OWSWebSocket: NSObject {
         NotificationCenter.default.addObserver(self,
                                                selector: #selector(deviceListUpdateModifiedDeviceList),
                                                name: OWSDevicesService.deviceListUpdateModifiedDeviceList,
-                                               object: nil)
-        NotificationCenter.default.addObserver(self,
-                                               selector: #selector(environmentDidChange),
-                                               name: TSConstants.EnvironmentDidChange,
                                                object: nil)
         NotificationCenter.default.addObserver(self,
                                                selector: #selector(appExpiryDidChange),
@@ -1100,17 +1096,6 @@ public class OWSWebSocket: NSObject {
     }
 
     @objc
-    private func environmentDidChange(_ notification: NSNotification) {
-        AssertIsOnMainThread()
-
-        if Self.verboseLogging {
-            Logger.info("\(self.logPrefix)")
-        }
-
-        cycleSocket()
-    }
-
-    @objc
     private func appExpiryDidChange(_ notification: NSNotification) {
         AssertIsOnMainThread()
 
@@ -1169,31 +1154,28 @@ extension OWSWebSocket {
         let webSocketType = self.webSocketType
         let canUseAuth = webSocketType == .identified && !request.isUDRequest
 
-        self.makeRequestInternal(request,
-                                 unsubmittedRequestToken: unsubmittedRequestToken,
-                                 success: { (response: HTTPResponse, requestInfo: SocketRequestInfo) in
-                                    let label = Self.label(forRequest: request,
-                                                           webSocketType: webSocketType,
-                                                           requestInfo: requestInfo)
+        self.makeRequestInternal(
+            request,
+            unsubmittedRequestToken: unsubmittedRequestToken,
+            success: { (response: HTTPResponse, requestInfo: SocketRequestInfo) in
+                let label = Self.label(forRequest: request, webSocketType: webSocketType, requestInfo: requestInfo)
+                Logger.info("\(label): Request Succeeded (\(response.responseStatusCode))")
 
-                                    Logger.info("\(label): Request Succeeded")
+                if canUseAuth, request.shouldHaveAuthorizationHeaders {
+                    Self.tsAccountManager.setIsDeregistered(false)
+                }
 
-                                    if canUseAuth,
-                                       request.shouldHaveAuthorizationHeaders {
-                                        Self.tsAccountManager.setIsDeregistered(false)
-                                    }
+                successParam(response)
 
-                                    successParam(response)
+                Self.outageDetection.reportConnectionSuccess()
+            },
+            failure: { (failure: OWSHTTPErrorWrapper) in
+                if failure.error.responseStatusCode == AppExpiry.appExpiredStatusCode {
+                    Self.appExpiry.setHasAppExpiredAtCurrentVersion()
+                }
 
-                                    Self.outageDetection.reportConnectionSuccess()
-                                 },
-                                 failure: { (failure: OWSHTTPErrorWrapper) in
-                                    if failure.error.responseStatusCode == AppExpiry.appExpiredStatusCode {
-                                        Self.appExpiry.setHasAppExpiredAtCurrentVersion()
-                                    }
-
-                                    failureParam(failure)
-                                 })
+                failureParam(failure)
+            })
     }
 }
 
@@ -1382,8 +1364,15 @@ extension OWSWebSocket: SSKWebSocketDelegate {
         outageDetection.reportConnectionFailure()
     }
 
-    public func websocket(_ eventSocket: SSKWebSocket, didReceiveMessage message: WebSocketProtoWebSocketMessage) {
+    public func websocket(_ eventSocket: SSKWebSocket, didReceiveData data: Data) {
         assertOnQueue(Self.serialQueue)
+        let message: WebSocketProtoWebSocketMessage
+        do {
+            message = try WebSocketProtoWebSocketMessage(serializedData: data)
+        } catch {
+            owsFailDebug("Failed to deserialize message: \(error)")
+            return
+        }
 
         guard let currentWebSocket = self.currentWebSocket,
               currentWebSocket.id == eventSocket.id else {
@@ -1395,7 +1384,7 @@ extension OWSWebSocket: SSKWebSocketDelegate {
         tsAccountManager.setIsDeregistered(false)
 
         if !message.hasType {
-            owsFailDebug("webSocket:didReceiveMessage: missing type.")
+            owsFailDebug("webSocket:didReceiveResponse: missing type.")
         } else if message.unwrappedType == .request {
             if let request = message.request {
                 processWebSocketRequestMessage(request, currentWebSocket: currentWebSocket)
@@ -1409,7 +1398,7 @@ extension OWSWebSocket: SSKWebSocketDelegate {
                 owsFailDebug("Missing response.")
             }
         } else {
-            owsFailDebug("webSocket:didReceiveMessage: unknown.")
+            owsFailDebug("webSocket:didReceiveResponse: unknown.")
         }
     }
 }

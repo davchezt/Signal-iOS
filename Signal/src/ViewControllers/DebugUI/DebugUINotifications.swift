@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -68,7 +68,7 @@ class DebugUINotifications: DebugUIPage {
 
     // MARK: Helpers
 
-    // After enqueing the notification you may want to background the app or lock the screen before it triggers, so
+    // After enqueuing the notification you may want to background the app or lock the screen before it triggers, so
     // we give a little delay.
     let kNotificationDelay: TimeInterval = 5
 
@@ -93,7 +93,7 @@ class DebugUINotifications: DebugUIPage {
     func delayedNotificationDispatchWithFakeCall(thread: TSContactThread, callBlock: @escaping (IndividualCall) -> Void) -> Guarantee<Void> {
         let call = SignalCall.incomingIndividualCall(
             localId: UUID(),
-            remoteAddress: thread.contactAddress,
+            thread: thread,
             sentAtTimestamp: Date.ows_millisecondTimestamp(),
             offerMediaType: .audio
         )

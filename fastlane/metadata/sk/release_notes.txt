@@ -1,6 +1,2 @@
-• Nová funkcia viacnásobného výberu vám umožňuje vybrať viacero správ naraz zo zoznamu konverzácie a označiť ich ako prečítané, archivovať ich, alebo odstrániť. Vyskúšate to ťuknutím na svoju profilovú fotku vľavo hore.
-• Prístup k archivovaným konverzáciam je teraz rýchlejší. Jednoducho sa k nim dostanete ťuknutím na svoju profilovú fotku vľavo hore.
-• Toľko reakcií na výber, tak málo času. Teraz môžete ľahko vyhľadať svoju obľúbenú reakciu.
-• Prispôsobte si predvolené reakcie, aby ste svoje obľúbené emócie mohli mať po ruke.
-• Unavený z upozornení? Stačí potiahnuť prstom doľava na správe zo zoznamu konverzácií a rýchlo ho stlmiť alebo zapnúť.
-• Bola opravená chyba, ktorá spôsobovala, že časti dlhých textových správ sa vo vstupnom nezobrazovali.
+• Trochu sme veci zoštíhlili, a dosiahli sme že veľkosť aplikácie Signal je o 25 % menšia.
+• Ďalšie vylepšenia, vďaka ktorým bude otváranie skupinových rozhovorov mimoriadne rýchle.

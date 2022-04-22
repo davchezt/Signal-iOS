@@ -113,14 +113,14 @@ import SignalMessaging
     @objc
     public class func showPendingChangesActionSheet(discardAction: @escaping () -> Void) {
         let actionSheet = ActionSheetController(
-            title: NSLocalizedString("NEW_GROUP_VIEW_UNSAVED_CHANGES_TITLE",
+            title: OWSLocalizedString("NEW_GROUP_VIEW_UNSAVED_CHANGES_TITLE",
                                      comment: "The alert title if user tries to exit the new group view without saving changes."),
-            message: NSLocalizedString("NEW_GROUP_VIEW_UNSAVED_CHANGES_MESSAGE",
+            message: OWSLocalizedString("NEW_GROUP_VIEW_UNSAVED_CHANGES_MESSAGE",
                                        comment: "The alert message if user tries to exit the new group view without saving changes.")
         )
 
         let discardAction = ActionSheetAction(
-            title: NSLocalizedString("ALERT_DISCARD_BUTTON",
+            title: OWSLocalizedString("ALERT_DISCARD_BUTTON",
                                      comment: "The label for the 'discard' button in alerts and action sheets."),
             accessibilityIdentifier: "OWSActionSheets.discard",
             style: .destructive
@@ -129,32 +129,5 @@ import SignalMessaging
         actionSheet.addAction(OWSActionSheets.cancelAction)
 
         OWSActionSheets.showActionSheet(actionSheet)
-    }
-
-    @objc
-    public class func showIOSUpgradeNagIfNecessary() {
-        // We want to nag iOS 10 users now that we're bumping up
-        // our min SDK to iOS 11.
-        if #available(iOS 11.0, *) { return }
-
-        // Don't show the nag to users who have just launched
-        // the app for the first time.
-        guard AppVersion.shared().lastAppVersion != nil else {
-            return
-        }
-
-        if let iOSUpgradeNagDate = Self.preferences.iOSUpgradeNagDate() {
-            let kNagFrequencySeconds = 3 * kDayInterval
-            guard fabs(iOSUpgradeNagDate.timeIntervalSinceNow) > kNagFrequencySeconds else {
-                return
-            }
-        }
-
-        Self.preferences.setIOSUpgradeNagDate(Date())
-
-        OWSActionSheets.showActionSheet(title: NSLocalizedString("UPGRADE_IOS_ALERT_TITLE",
-                                                        comment: "Title for the alert indicating that user should upgrade iOS."),
-                            message: NSLocalizedString("UPGRADE_IOS_ALERT_MESSAGE",
-                                                      comment: "Message for the alert indicating that user should upgrade iOS."))
     }
 }

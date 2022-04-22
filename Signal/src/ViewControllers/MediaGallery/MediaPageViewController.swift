@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import UIKit
@@ -108,7 +108,7 @@ class MediaPageViewController: UIPageViewController, UIPageViewControllerDataSou
 
     @available(*, unavailable, message: "Unimplemented")
     required init?(coder: NSCoder) {
-        notImplemented()
+        fatalError("init(coder:) has not been implemented")
     }
 
     deinit {
@@ -150,11 +150,10 @@ class MediaPageViewController: UIPageViewController, UIPageViewControllerDataSou
         mediaInteractiveDismiss = MediaInteractiveDismiss(targetViewController: self)
         mediaInteractiveDismiss.addGestureRecognizer(to: view)
 
-        // Even though bars are opaque, we want content to be layed out behind them.
+        // Even though bars are opaque, we want content to be laid out behind them.
         // The bars might obscure part of the content, but they can easily be hidden by tapping
         // The alternative would be that content would shift when the navbars hide.
         self.extendedLayoutIncludesOpaqueBars = true
-        self.automaticallyAdjustsScrollViewInsets = false
 
         // Get reference to paged content which lives in a scrollView created by the superclass
         // We show/hide this content during presentation
@@ -653,7 +652,6 @@ class MediaPageViewController: UIPageViewController, UIPageViewControllerDataSou
         currentViewController.zoomOut(animated: true)
 
         currentViewController.stopAnyVideo()
-        UIApplication.shared.setStatusBarHidden(false, with: .none)
         self.navigationController?.setNavigationBarHidden(false, animated: false)
 
         dismiss(animated: isAnimated, completion: completion)

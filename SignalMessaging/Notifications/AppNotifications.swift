@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -264,9 +264,8 @@ public class NotificationPresenter: NSObject, NotificationsProtocol {
 
         var interaction: INInteraction?
         if #available(iOS 15, *),
-           FeatureFlags.communicationStyleNotifications,
             previewType != .noNameNoPreview,
-            let intent = thread.generateStartCallIntent() {
+            let intent = thread.generateStartCallIntent(callerAddress: remoteAddress) {
             let wrapper = INInteraction(intent: intent, response: nil)
             wrapper.direction = .incoming
             interaction = wrapper
@@ -282,6 +281,34 @@ public class NotificationPresenter: NSObject, NotificationsProtocol {
                                 sound: nil,
                                 replacingIdentifier: call.localId.uuidString,
                                 completion: completion)
+        }
+    }
+
+    /// Classifies a timestamp based on how it should be included in a notification.
+    ///
+    /// In particular, a notification already comes with its own timestamp, so any information we put in has to be
+    /// relevant (different enough from the notification's own timestamp to be useful) and absolute (because if a
+    /// thirty-minute-old notification says "five minutes ago", that's not great).
+    private enum TimestampClassification {
+        case lastFewMinutes
+        case last24Hours
+        case lastWeek
+        case other
+
+        init(_ timestamp: Date) {
+            switch -timestamp.timeIntervalSinceNow {
+            case ..<0:
+                owsFailDebug("Formatting a notification for an event in the future")
+                self = .other
+            case ...(5 * kMinuteInterval):
+                self = .lastFewMinutes
+            case ...kDayInterval:
+                self = .last24Hours
+            case ...kWeekInterval:
+                self = .lastWeek
+            default:
+                self = .other
+            }
         }
     }
 
@@ -301,11 +328,59 @@ public class NotificationPresenter: NSObject, NotificationsProtocol {
             threadIdentifier = thread.uniqueId
         }
 
-        let notificationBody: String
-        switch call.offerMediaType {
-        case .audio: notificationBody = NotificationStrings.missedAudioCallBody
-        case .video: notificationBody = NotificationStrings.missedVideoCallBody
+        let timestamp = Date(millisecondsSince1970: call.sentAtTimestamp)
+        let timestampClassification = TimestampClassification(timestamp)
+        let timestampArgument: String
+        switch timestampClassification {
+        case .lastFewMinutes:
+            // will be ignored
+            timestampArgument = ""
+        case .last24Hours:
+            timestampArgument = DateUtil.formatDateAsTime(timestamp)
+        case .lastWeek:
+            timestampArgument = DateUtil.weekdayFormatter().string(from: timestamp)
+        case .other:
+            timestampArgument = DateUtil.monthAndDayFormatter().string(from: timestamp)
         }
+
+        // We could build these localized string keys by interpolating the two pieces,
+        // but then genstrings wouldn't pick them up.
+        let notificationBodyFormat: String
+        switch (call.offerMediaType, timestampClassification) {
+        case (.audio, .lastFewMinutes):
+            notificationBodyFormat = OWSLocalizedString(
+                "CALL_AUDIO_MISSED_NOTIFICATION_BODY",
+                comment: "notification body for a call that was just missed")
+        case (.audio, .last24Hours):
+            notificationBodyFormat = OWSLocalizedString(
+                "CALL_AUDIO_MISSED_24_HOURS_NOTIFICATION_BODY_FORMAT",
+                comment: "notification body for a missed call in the last 24 hours. Embeds {{time}}, e.g. '3:30 PM'.")
+        case (.audio, .lastWeek):
+            notificationBodyFormat = OWSLocalizedString(
+                "CALL_AUDIO_MISSED_WEEK_NOTIFICATION_BODY_FORMAT",
+                comment: "notification body for a missed call from the last week. Embeds {{weekday}}, e.g. 'Monday'.")
+        case (.audio, .other):
+            notificationBodyFormat = OWSLocalizedString(
+                "CALL_AUDIO_MISSED_PAST_NOTIFICATION_BODY_FORMAT",
+                comment: "notification body for a missed call from more than a week ago. Embeds {{short date}}, e.g. '6/28'.")
+        case (.video, .lastFewMinutes):
+            notificationBodyFormat = OWSLocalizedString(
+                "CALL_VIDEO_MISSED_NOTIFICATION_BODY",
+                comment: "notification body for a call that was just missed")
+        case (.video, .last24Hours):
+            notificationBodyFormat = OWSLocalizedString(
+                "CALL_VIDEO_MISSED_24_HOURS_NOTIFICATION_BODY_FORMAT",
+                comment: "notification body for a missed call in the last 24 hours. Embeds {{time}}, e.g. '3:30 PM'.")
+        case (.video, .lastWeek):
+            notificationBodyFormat = OWSLocalizedString(
+                "CALL_VIDEO_MISSED_WEEK_NOTIFICATION_BODY_FORMAT",
+                comment: "notification body for a missed call from the last week. Embeds {{weekday}}, e.g. 'Monday'.")
+        case (.video, .other):
+            notificationBodyFormat = OWSLocalizedString(
+                "CALL_VIDEO_MISSED_PAST_NOTIFICATION_BODY_FORMAT",
+                comment: "notification body for a missed call from more than a week ago. Embeds {{short date}}, e.g. '6/28'.")
+        }
+        let notificationBody = String(format: notificationBodyFormat, timestampArgument)
 
         let userInfo = userInfoForMissedCall(thread: thread, remoteAddress: remoteAddress)
 
@@ -315,9 +390,8 @@ public class NotificationPresenter: NSObject, NotificationsProtocol {
 
         var interaction: INInteraction?
         if #available(iOS 15, *),
-            FeatureFlags.communicationStyleNotifications,
             previewType != .noNameNoPreview,
-            let intent = thread.generateStartCallIntent() {
+            let intent = thread.generateStartCallIntent(callerAddress: remoteAddress) {
             let wrapper = INInteraction(intent: intent, response: nil)
             wrapper.direction = .incoming
             interaction = wrapper
@@ -428,9 +502,13 @@ public class NotificationPresenter: NSObject, NotificationsProtocol {
     public func canNotify(for incomingMessage: TSIncomingMessage,
                           thread: TSThread,
                           transaction: SDSAnyReadTransaction) -> Bool {
+        guard !incomingMessage.isGroupStoryReply else { return false }
+
         guard isThreadMuted(thread, transaction: transaction) else {
             return true
         }
+
+        guard thread.isGroupThread else { return false }
 
         guard let localAddress = TSAccountManager.localAddress else {
             owsFailDebug("Missing local address")
@@ -438,7 +516,8 @@ public class NotificationPresenter: NSObject, NotificationsProtocol {
         }
 
         let mentionedAddresses = MentionFinder.mentionedAddresses(for: incomingMessage, transaction: transaction.unwrapGrdbRead)
-        guard mentionedAddresses.contains(localAddress) else {
+        let localUserIsQuoted = incomingMessage.quotedMessage?.authorAddress.isEqualToAddress(localAddress) ?? false
+        guard mentionedAddresses.contains(localAddress) || localUserIsQuoted else {
             if DebugFlags.internalLogging {
                 Logger.info("Not notifying; no mention.")
             }
@@ -467,7 +546,7 @@ public class NotificationPresenter: NSObject, NotificationsProtocol {
             return
         }
 
-        // While batch processing, some of the necessary changes have not been commited.
+        // While batch processing, some of the necessary changes have not been committed.
         let rawMessageText = incomingMessage.previewText(transaction: transaction)
 
         let messageText = rawMessageText.filterStringForDisplay()
@@ -532,9 +611,8 @@ public class NotificationPresenter: NSObject, NotificationsProtocol {
         ]
 
         var interaction: INInteraction?
-        if FeatureFlags.communicationStyleNotifications,
-            previewType != .noNameNoPreview,
-            let intent = thread.generateSendMessageIntent(transaction: transaction, sender: incomingMessage.authorAddress) {
+        if previewType != .noNameNoPreview,
+           let intent = thread.generateSendMessageIntent(context: .incomingMessage(incomingMessage), transaction: transaction) {
             let wrapper = INInteraction(intent: intent, response: nil)
             wrapper.direction = .incoming
             interaction = wrapper
@@ -686,9 +764,8 @@ public class NotificationPresenter: NSObject, NotificationsProtocol {
         ]
 
         var interaction: INInteraction?
-        if FeatureFlags.communicationStyleNotifications,
-            previewType != .noNameNoPreview,
-            let intent = thread.generateSendMessageIntent(transaction: transaction, sender: reaction.reactor) {
+        if previewType != .noNameNoPreview,
+           let intent = thread.generateSendMessageIntent(context: .senderAddress(reaction.reactor), transaction: transaction) {
             let wrapper = INInteraction(intent: intent, response: nil)
             wrapper.direction = .incoming
             interaction = wrapper
@@ -742,9 +819,9 @@ public class NotificationPresenter: NSObject, NotificationsProtocol {
         owsFailDebug("Fatal error occurred: \(errorString).")
         guard DebugFlags.testPopulationErrorAlerts else { return }
 
-        let title = NSLocalizedString("ERROR_NOTIFICATION_TITLE",
+        let title = OWSLocalizedString("ERROR_NOTIFICATION_TITLE",
                                       comment: "Format string for an error alert notification title.")
-        let messageFormat = NSLocalizedString("ERROR_NOTIFICATION_MESSAGE_FORMAT",
+        let messageFormat = OWSLocalizedString("ERROR_NOTIFICATION_MESSAGE_FORMAT",
                                               comment: "Format string for an error alert notification message. Embes {{ error string }}")
         let message = String(format: messageFormat, errorString)
 
@@ -852,13 +929,39 @@ public class NotificationPresenter: NSObject, NotificationsProtocol {
             AppNotificationUserInfoKey.messageId: previewableInteraction.uniqueId,
             AppNotificationUserInfoKey.defaultAction: preferredDefaultAction.rawValue
         ]
+
+        // Some types of generic messages (locally generated notifications) have a defacto
+        // "sender". If so, generate an interaction so the notification renders as if it
+        // is from that user.
         var interaction: INInteraction?
-        if FeatureFlags.communicationStyleNotifications,
-            previewType != .noNameNoPreview,
-            let intent = thread.generateSendMessageIntent(transaction: transaction, sender: nil) {
-            let wrapper = INInteraction(intent: intent, response: nil)
-            wrapper.direction = .incoming
-            interaction = wrapper
+        if previewType != .noNameNoPreview {
+            func wrapIntent(_ intent: INIntent) {
+                let wrapper = INInteraction(intent: intent, response: nil)
+                wrapper.direction = .incoming
+                interaction = wrapper
+            }
+
+            if let infoMessage = previewableInteraction as? TSInfoMessage {
+                switch infoMessage.messageType {
+                case .typeGroupUpdate:
+                    if let groupUpdateAuthor = infoMessage.infoMessageUserInfo?[.groupUpdateSourceAddress] as? SignalServiceAddress,
+                       let intent = thread.generateSendMessageIntent(context: .senderAddress(groupUpdateAuthor), transaction: transaction) {
+                        wrapIntent(intent)
+                    }
+                case .userJoinedSignal:
+                    if let thread = thread as? TSContactThread,
+                       let intent = thread.generateSendMessageIntent(context: .senderAddress(thread.contactAddress), transaction: transaction) {
+                        wrapIntent(intent)
+                    }
+                default:
+                    break
+                }
+            } else if #available(iOS 15, *),
+                      let callMessage = previewableInteraction as? OWSGroupCallMessage,
+                      let callCreator = callMessage.creatorAddress,
+                      let intent = thread.generateSendMessageIntent(context: .senderAddress(callCreator), transaction: transaction) {
+                wrapIntent(intent)
+            }
         }
 
         notifyInAsyncCompletion(transaction: transaction) { completion in
@@ -997,4 +1100,5 @@ public protocol IndividualCallNotificationInfo {
     var remoteAddress: SignalServiceAddress { get }
     var localId: UUID { get }
     var offerMediaType: TSRecentCallOfferType { get }
+    var sentAtTimestamp: UInt64 { get }
 }

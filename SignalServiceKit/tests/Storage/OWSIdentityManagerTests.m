@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 #import "MockSSKEnvironment.h"
@@ -7,6 +7,7 @@
 #import "OWSRecipientIdentity.h"
 #import "SSKBaseTestObjC.h"
 #import "SSKEnvironment.h"
+#import "TSAccountManager.h"
 #import <Curve25519Kit/Curve25519.h>
 #import <SignalCoreKit/Randomness.h>
 #import <SignalServiceKit/SignalServiceKit-Swift.h>
@@ -20,6 +21,7 @@
 - (void)setUp
 {
     [super setUp];
+    [self.tsAccountManager registerForTestsWithLocalNumber:@"+13235551234" uuid:[NSUUID UUID]];
 }
 
 - (void)tearDown
@@ -104,9 +106,18 @@
 
 - (void)testIdentityKey
 {
-    [self.identityManager generateNewIdentityKey];
+    ECKeyPair *newKey = [self.identityManager generateNewIdentityKeyForIdentity:OWSIdentityACI];
+    XCTAssertEqual(newKey.publicKey.length, 32);
 
-    XCTAssert([[self.identityManager identityKeyPair].publicKey length] == 32);
+    ECKeyPair *pniKey = [self.identityManager generateNewIdentityKeyForIdentity:OWSIdentityPNI];
+    XCTAssertEqual(pniKey.publicKey.length, 32);
+    XCTAssertNotEqualObjects(pniKey.privateKey, newKey.privateKey);
+
+    ECKeyPair *fetchedKey = [self.identityManager identityKeyPairForIdentity:OWSIdentityACI];
+    XCTAssertEqualObjects(newKey.privateKey, fetchedKey.privateKey);
+
+    ECKeyPair *fetchedPniKey = [self.identityManager identityKeyPairForIdentity:OWSIdentityPNI];
+    XCTAssertEqualObjects(pniKey.privateKey, fetchedPniKey.privateKey);
 }
 
 @end

@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
@@ -10,7 +10,11 @@ NS_ASSUME_NONNULL_BEGIN
 @class SDSAnyWriteTransaction;
 @class SignedPreKeyRecord;
 
+typedef NS_ENUM(uint8_t, OWSIdentity);
+
 @interface SSKSignedPreKeyStore : NSObject
+
+- (instancetype)initForIdentity:(OWSIdentity)identity;
 
 #pragma mark - SignedPreKeyStore transactions
 
@@ -26,24 +30,28 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)removeSignedPreKey:(int)signedPreKeyId transaction:(SDSAnyWriteTransaction *)transaction;
 
+- (void)cullSignedPreKeyRecordsWithTransaction:(SDSAnyWriteTransaction *)transaction
+    NS_SWIFT_NAME(cullSignedPreKeyRecords(transaction:));
+
 #pragma mark -
 
 - (SignedPreKeyRecord *)generateRandomSignedRecord;
 
 // Returns nil if no current signed prekey id is found.
 - (nullable NSNumber *)currentSignedPrekeyId;
-- (void)setCurrentSignedPrekeyId:(int)value;
 - (nullable SignedPreKeyRecord *)currentSignedPreKey;
+- (void)setCurrentSignedPrekeyId:(int)value transaction:(SDSAnyWriteTransaction *)transaction;
 
 #pragma mark - Prekey update failures
 
-- (int)prekeyUpdateFailureCount;
-- (void)clearPrekeyUpdateFailureCount;
-- (NSInteger)incrementPrekeyUpdateFailureCount;
-
-- (nullable NSDate *)firstPrekeyUpdateFailureDate;
-- (void)setFirstPrekeyUpdateFailureDate:(nonnull NSDate *)value;
-- (void)clearFirstPrekeyUpdateFailureDate;
+- (int)prekeyUpdateFailureCountWithTransaction:(SDSAnyReadTransaction *)transaction
+    NS_SWIFT_NAME(prekeyUpdateFailureCount(transaction:));
+- (nullable NSDate *)firstPrekeyUpdateFailureDateWithTransaction:(SDSAnyReadTransaction *)transaction
+    NS_SWIFT_NAME(firstPrekeyUpdateFailureDate(transaction:));
+- (NSInteger)incrementPrekeyUpdateFailureCountWithTransaction:(SDSAnyWriteTransaction *)transaction
+    NS_SWIFT_NAME(incrementPrekeyUpdateFailureCount(transaction:));
+- (void)clearPrekeyUpdateFailureCountWithTransaction:(SDSAnyWriteTransaction *)transaction
+    NS_SWIFT_NAME(clearPrekeyUpdateFailureCount(transaction:));
 
 #pragma mark - Debugging
 
@@ -51,6 +59,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 #if TESTABLE_BUILD
 - (void)removeAll:(SDSAnyWriteTransaction *)transaction;
+- (void)setPrekeyUpdateFailureCount:(NSInteger)count
+                   firstFailureDate:(NSDate *)firstFailureDate
+                        transaction:(SDSAnyWriteTransaction *)transaction;
 #endif
 
 @end

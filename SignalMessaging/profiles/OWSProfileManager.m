@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 #import "OWSProfileManager.h"
@@ -8,7 +8,6 @@
 #import <SignalCoreKit/NSData+OWS.h>
 #import <SignalCoreKit/NSDate+OWS.h>
 #import <SignalCoreKit/NSString+OWS.h>
-#import <SignalCoreKit/SignalCoreKit-Swift.h>
 #import <SignalMessaging/SignalMessaging-Swift.h>
 #import <SignalServiceKit/AppContext.h>
 #import <SignalServiceKit/AppReadiness.h>
@@ -31,7 +30,8 @@
 NS_ASSUME_NONNULL_BEGIN
 
 const NSUInteger kOWSProfileManager_MaxAvatarDiameterPixels = 1024;
-const NSString *kNSNotificationKey_UserProfileWriter = @"kNSNotificationKey_UserProfileWriter";
+NSString *const kNSNotificationKey_UserProfileWriter = @"kNSNotificationKey_UserProfileWriter";
+static NSString *const kLastGroupProfileKeyCheckTimestampKey = @"lastGroupProfileKeyCheckTimestamp";
 
 @interface OWSProfileManager ()
 
@@ -40,6 +40,8 @@ const NSString *kNSNotificationKey_UserProfileWriter = @"kNSNotificationKey_User
 
 @property (nonatomic, readonly) AtomicUInt *profileAvatarDataLoadCounter;
 @property (nonatomic, readonly) AtomicUInt *profileAvatarImageLoadCounter;
+
+@property (nonatomic, readonly) SDSKeyValueStore *metadataStore;
 
 @end
 
@@ -104,6 +106,7 @@ const NSString *kNSNotificationKey_UserProfileWriter = @"kNSNotificationKey_User
         [[SDSKeyValueStore alloc] initWithCollection:@"kOWSProfileManager_UserUUIDWhitelistCollection"];
     _whitelistedGroupsStore =
         [[SDSKeyValueStore alloc] initWithCollection:@"kOWSProfileManager_GroupWhitelistCollection"];
+    _metadataStore = [[SDSKeyValueStore alloc] initWithCollection:@"kOWSProfileManager_Metadata"];
     _badgeStore = [[BadgeStore alloc] init];
 
     OWSSingletonAssert();
@@ -165,7 +168,7 @@ const NSString *kNSNotificationKey_UserProfileWriter = @"kNSNotificationKey_User
         [self.databaseStorage readWithBlock:^(SDSAnyReadTransaction *transaction) {
             localUserProfile = [OWSUserProfile getUserProfileForAddress:OWSUserProfile.localProfileAddress
                                                             transaction:transaction];
-        }];
+        } file:__FILE__ function:__FUNCTION__ line:__LINE__];
         [self logLocalAvatarStatus:localUserProfile label:@"database copy"];
     });
 }
@@ -245,7 +248,7 @@ const NSString *kNSNotificationKey_UserProfileWriter = @"kNSNotificationKey_User
     __block OWSUserProfile *_Nullable localUserProfile;
     [self.databaseStorage readWithBlock:^(SDSAnyReadTransaction *transaction) {
         localUserProfile = [self getLocalUserProfileWithTransaction:transaction];
-    }];
+    } file:__FILE__ function:__FUNCTION__ line:__LINE__];
     if (localUserProfile != nil) {
         return [localUserProfile shallowCopy];
     }
@@ -389,7 +392,7 @@ const NSString *kNSNotificationKey_UserProfileWriter = @"kNSNotificationKey_User
     OWSAssertDebug(self.localUserProfile);
 
     [userProfile updateWithUsername:username
-                      isUuidCapable:YES
+                   isStoriesCapable:YES
                   userProfileWriter:userProfileWriter
                         transaction:transaction];
 }
@@ -515,18 +518,6 @@ const NSString *kNSNotificationKey_UserProfileWriter = @"kNSNotificationKey_User
     return [groupId hexadecimalString];
 }
 
-- (nullable NSData *)groupIdForGroupKey:(NSString *)groupKey {
-    NSData *_Nullable groupId = [NSData dataFromHexString:groupKey];
-    // Make sure that the group id is a valid v1 or v2 group id.
-    if (![GroupManager isValidGroupIdOfAnyKind:groupId]) {
-        OWSFailDebug(@"Parsed group id has unexpected length: %@ (%lu)",
-            groupId.hexadecimalString,
-            (unsigned long)groupId.length);
-        return nil;
-    }
-    return [groupId copy];
-}
-
 - (void)rotateLocalProfileKeyIfNecessary {
     if (CurrentAppContext().isNSE) {
         return;
@@ -545,91 +536,53 @@ const NSString *kNSNotificationKey_UserProfileWriter = @"kNSNotificationKey_User
     OWSAssertDebug(AppReadiness.isAppReady);
 
     if (!self.tsAccountManager.isRegistered) {
-        OWSFailDebug(@"tsAccountManager.isRegistered was unexpectely false");
+        OWSFailDebug(@"tsAccountManager.isRegistered was unexpectedly false");
         success();
         return;
     }
 
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        NSMutableSet<NSString *> *whitelistedPhoneNumbers = [NSMutableSet new];
-        NSMutableSet<NSString *> *whitelistedUUIDS = [NSMutableSet new];
-        NSMutableSet<NSData *> *whitelistedGroupIds = [NSMutableSet new];
-        [self.databaseStorage readWithBlock:^(SDSAnyReadTransaction *transaction) {
-            [whitelistedPhoneNumbers
-                addObjectsFromArray:[self.whitelistedPhoneNumbersStore allKeysWithTransaction:transaction]];
-            [whitelistedUUIDS addObjectsFromArray:[self.whitelistedUUIDsStore allKeysWithTransaction:transaction]];
-            NSArray<NSString *> *whitelistedGroupKeys =
-                [self.whitelistedGroupsStore allKeysWithTransaction:transaction];
-
-            for (NSString *groupKey in whitelistedGroupKeys) {
-                NSData *_Nullable groupId = [self groupIdForGroupKey:groupKey];
-                if (!groupId) {
-                    OWSFailDebug(@"Couldn't parse group key: %@.", groupKey);
-                    continue;
-                }
-
-                [whitelistedGroupIds addObject:groupId];
-
-                // Note: We don't add the group member's ids to whitelistedUUIDS
-                // and whitelistedPhoneNumbers.
-                //
-                // Whenever we message a contact, be it in a 1:1 thread or in a group thread,
-                // we add them to the contact whitelist, so there's no reason to redundantly
-                // add them here.
-                //
-                // Furthermore, doing so would cause the following problem:
-                //
-                // - Alice is in group Book Club
-                // - Add Book Club to your profile white list
-                // - Message Book Club, which also adds Alice to your profile whitelist.
-                // - Block Alice, but not Book Club
-                //
-                // Now, at this point we'd want to rotate our profile key once, since Alice has
-                // it via BookClub.
-                //
-                // The next time we checked whether we should rotate our profile key, adding all
-                // group members to whitelistedUUIDS and whitelistedPhoneNumbers would
-                // include Alice, and we'd rotate our profile key every time this method is called.
+        __block NSArray<NSString *> *victimPhoneNumbers = @[];
+        __block NSArray<NSString *> *victimUUIDs = @[];
+        __block NSArray<NSData *> *victimGroupIds = @[];
+        __block NSDate *lastGroupProfileKeyCheckTimestamp = nil;
+        [self.databaseStorage
+            readWithBlock:^(SDSAnyReadTransaction *transaction) {
+                victimPhoneNumbers = [self blockedPhoneNumbersInWhitelistWithTransaction:transaction];
+                victimUUIDs = [self blockedUUIDsInWhitelistWithTransaction:transaction];
+                victimGroupIds = [self blockedGroupIDsInWhitelistWithTransaction:transaction];
+                lastGroupProfileKeyCheckTimestamp = [self.metadataStore getDate:kLastGroupProfileKeyCheckTimestampKey
+                                                                    transaction:transaction];
             }
-        }];
+                     file:__FILE__
+                 function:__FUNCTION__
+                     line:__LINE__];
 
-        SignalServiceAddress *_Nullable localAddress = [self.tsAccountManager localAddress];
-        NSString *_Nullable localNumber = localAddress.phoneNumber;
-        if (localNumber) {
-            [whitelistedPhoneNumbers removeObject:localNumber];
-        } else {
-            OWSFailDebug(@"Missing localNumber");
-        }
-
-        NSString *_Nullable localUUID = localAddress.uuidString;
-        if (localUUID) {
-            [whitelistedUUIDS removeObject:localUUID];
-        } else {
-            OWSFailDebug(@"Missing localUUID");
-        }
-
-        NSSet<NSString *> *blockedPhoneNumbers = self.blockingManager.blockedPhoneNumbers;
-        NSSet<NSString *> *blockedUUIDs = self.blockingManager.blockedUUIDStrings;
-        NSSet<NSData *> *blockedGroupIds = self.blockingManager.blockedGroupIds;
-
-        // Find the users and groups which are both a) blocked b) may have our current profile key.
-        NSMutableSet<NSString *> *intersectingPhoneNumbers = [blockedPhoneNumbers mutableCopy];
-        [intersectingPhoneNumbers intersectSet:whitelistedPhoneNumbers];
-        NSMutableSet<NSString *> *intersectingUUIDS = [blockedUUIDs mutableCopy];
-        [intersectingUUIDS intersectSet:whitelistedUUIDS];
-        NSMutableSet<NSData *> *intersectingGroupIds = [blockedGroupIds mutableCopy];
-        [intersectingGroupIds intersectSet:whitelistedGroupIds];
-
-        BOOL isProfileKeySharedWithBlocked
-            = (intersectingPhoneNumbers.count > 0 || intersectingUUIDS.count > 0 || intersectingGroupIds.count > 0);
-        if (!isProfileKeySharedWithBlocked) {
+        NSUInteger victimCount = 0;
+        victimCount += victimPhoneNumbers.count;
+        victimCount += victimUUIDs.count;
+        victimCount += victimGroupIds.count;
+        if (victimCount == 0) {
             // No need to rotate the profile key.
+            if (self.tsAccountManager.isPrimaryDevice) {
+                // But if it's been more than a week since we checked that our groups are up to date, schedule that.
+                if (lastGroupProfileKeyCheckTimestamp == nil
+                    || -lastGroupProfileKeyCheckTimestamp.timeIntervalSinceNow > kWeekInterval) {
+                    DatabaseStorageWrite(self.databaseStorage, ^(SDSAnyWriteTransaction *transaction) {
+                        [self.groupsV2 scheduleAllGroupsV2ForProfileKeyUpdateWithTransaction:transaction];
+                        [self.metadataStore setDate:[NSDate date]
+                                                key:kLastGroupProfileKeyCheckTimestampKey
+                                        transaction:transaction];
+                    });
+                    [self.groupsV2 processProfileKeyUpdates];
+                }
+            }
             return success();
         }
 
-        [self rotateProfileKeyWithIntersectingPhoneNumbers:intersectingPhoneNumbers
-                                         intersectingUUIDs:intersectingUUIDS
-                                      intersectingGroupIds:intersectingGroupIds]
+        [self rotateProfileKeyWithIntersectingPhoneNumbers:victimPhoneNumbers
+                                         intersectingUUIDs:victimUUIDs
+                                      intersectingGroupIds:victimGroupIds]
             .done(^(id value) { success(); })
             .catch(^(NSError *error) { failure(error); });
     });
@@ -857,7 +810,7 @@ const NSString *kNSNotificationKey_UserProfileWriter = @"kNSNotificationKey_User
     for (SignalServiceAddress *address in addresses) {
 
         // If the address is blocked, we don't want to include it
-        if ([self.blockingManager isAddressBlocked:address]) {
+        if ([self.blockingManager isAddressBlocked:address transaction:transaction]) {
             continue;
         }
 
@@ -1015,11 +968,7 @@ const NSString *kNSNotificationKey_UserProfileWriter = @"kNSNotificationKey_User
 {
     OWSAssertDebug(address.isValid);
 
-    // isAddressBlocked can open a sneaky transaction in
-    // BlockingManager.ensureLazyInitialization(), but we avoid this
-    // by ensuring that BlockingManager.warmCaches() is always
-    // called first, immediately after registering the database views.
-    if ([self.blockingManager isAddressBlocked:address]) {
+    if ([self.blockingManager isAddressBlocked:address transaction:transaction]) {
         return NO;
     }
 
@@ -1223,7 +1172,7 @@ const NSString *kNSNotificationKey_UserProfileWriter = @"kNSNotificationKey_User
     // by ensuring that BlockingManager.warmCaches() is always
     // called first.  I've added asserts within BlockingManager around
     // this.
-    if ([self.blockingManager isGroupIdBlocked:groupId]) {
+    if ([self.blockingManager isGroupIdBlocked:groupId transaction:transaction]) {
         return NO;
     }
 
@@ -1414,14 +1363,14 @@ const NSString *kNSNotificationKey_UserProfileWriter = @"kNSNotificationKey_User
     return [self profileKeyForAddress:address transaction:transaction].keyData;
 }
 
-- (BOOL)recipientAddressIsUuidCapable:(nonnull SignalServiceAddress *)address
-                          transaction:(nonnull SDSAnyReadTransaction *)transaction
+- (BOOL)recipientAddressIsStoriesCapable:(nonnull SignalServiceAddress *)address
+                             transaction:(nonnull SDSAnyReadTransaction *)transaction
 {
     OWSUserProfile *_Nullable userProfile = [OWSUserProfile getUserProfileForAddress:address transaction:transaction];
     if (userProfile == nil) {
         return NO;
     } else {
-        return userProfile.isUuidCapable;
+        return userProfile.isStoriesCapable;
     }
 }
 
@@ -1496,6 +1445,12 @@ const NSString *kNSNotificationKey_UserProfileWriter = @"kNSNotificationKey_User
     return userProfile.fullName;
 }
 
+- (NSArray<id<SSKMaybeString>> *)fullNamesForAddresses:(NSArray<SignalServiceAddress *> *)addresses
+                                           transaction:(SDSAnyReadTransaction *)transaction
+{
+    return [self objc_fullNamesForAddresses:addresses transaction:transaction];
+}
+
 - (nullable UIImage *)profileAvatarForAddress:(SignalServiceAddress *)address
                                   transaction:(SDSAnyReadTransaction *)transaction
 {
@@ -1536,7 +1491,10 @@ const NSString *kNSNotificationKey_UserProfileWriter = @"kNSNotificationKey_User
     if (userProfile.avatarFileName.length > 0) {
         return [self loadProfileAvatarDataWithFilename:userProfile.avatarFileName];
     } else {
-        OWSLogWarn(@"Failed to get user profile to generate avatar data");
+        OWSLogWarn(@"Failed to get user profile to generate avatar data for %@. Has profile? %i. Has filename? %i",
+            address,
+            userProfile != nil,
+            userProfile.avatarFileName != nil);
     }
 
     return nil;
@@ -1560,13 +1518,21 @@ const NSString *kNSNotificationKey_UserProfileWriter = @"kNSNotificationKey_User
 - (nullable NSString *)usernameForAddress:(SignalServiceAddress *)address
                               transaction:(SDSAnyReadTransaction *)transaction
 {
-    OWSUserProfile *_Nullable userProfile = [self getUserProfileForAddress:address transaction:transaction];
+    NSArray<id<SSKMaybeString>> *array = [self usernamesForAddresses:@[ address ] transaction:transaction];
+    return [array[0] stringOrNil];
+}
 
-    if (userProfile.username.length > 0) {
-        return userProfile.username;
-    }
-
-    return nil;
+- (NSArray<id<SSKMaybeString>> *)usernamesForAddresses:(NSArray<SignalServiceAddress *> *)addresses
+                                           transaction:(SDSAnyReadTransaction *)transaction
+{
+    NSArray<id<OWSMaybeUserProfile>> *profiles = [self userProfilesForAddresses:addresses transaction:transaction];
+    return [profiles map:^id<SSKMaybeString> _Nonnull(id<OWSMaybeUserProfile> _Nonnull item) {
+        NSString *username = [[item userProfileOrNil] username];
+        if (username.length == 0) {
+            return [NSNull null];
+        }
+        return username;
+    }];
 }
 
 - (nullable NSString *)profileBioForDisplayForAddress:(SignalServiceAddress *)address
@@ -1591,6 +1557,13 @@ const NSString *kNSNotificationKey_UserProfileWriter = @"kNSNotificationKey_User
     }
 
     return [self.modelReadCaches.userProfileReadCache getUserProfileWithAddress:address transaction:transaction];
+}
+
+- (NSDictionary<SignalServiceAddress *, OWSUserProfile *> *)
+    getUserProfilesForAddresses:(NSArray<SignalServiceAddress *> *)addresses
+                    transaction:(SDSAnyReadTransaction *)transaction
+{
+    return [self objc_getUserProfilesForAddresses:addresses transaction:transaction];
 }
 
 - (nullable NSURL *)writeAvatarDataToFile:(NSData *)avatarData
@@ -1736,7 +1709,7 @@ const NSString *kNSNotificationKey_UserProfileWriter = @"kNSNotificationKey_User
                             bio:(nullable NSString *)bio
                        bioEmoji:(nullable NSString *)bioEmoji
                        username:(nullable NSString *)username
-                  isUuidCapable:(BOOL)isUuidCapable
+               isStoriesCapable:(BOOL)isStoriesCapable
                   avatarUrlPath:(nullable NSString *)avatarUrlPath
           optionalAvatarFileUrl:(nullable NSURL *)optionalAvatarFileUrl
                   profileBadges:(nullable NSArray<OWSUserProfileBadgeInfo *> *)profileBadges
@@ -1763,7 +1736,7 @@ const NSString *kNSNotificationKey_UserProfileWriter = @"kNSNotificationKey_User
     OWSUserProfile *userProfile = [OWSUserProfile getOrBuildUserProfileForAddress:address transaction:writeTx];
     if (!userProfile.profileKey) {
         [userProfile updateWithUsername:username
-                          isUuidCapable:isUuidCapable
+                       isStoriesCapable:isStoriesCapable
                           lastFetchDate:lastFetchDate
                       userProfileWriter:userProfileWriter
                             transaction:writeTx];
@@ -1773,7 +1746,7 @@ const NSString *kNSNotificationKey_UserProfileWriter = @"kNSNotificationKey_User
                                      bio:bio
                                 bioEmoji:bioEmoji
                                 username:username
-                           isUuidCapable:isUuidCapable
+                        isStoriesCapable:isStoriesCapable
                                   badges:profileBadges
                            avatarUrlPath:avatarUrlPath
                           avatarFileName:optionalAvatarFileUrl.lastPathComponent
@@ -1787,7 +1760,7 @@ const NSString *kNSNotificationKey_UserProfileWriter = @"kNSNotificationKey_User
                                      bio:bio
                                 bioEmoji:bioEmoji
                                 username:username
-                           isUuidCapable:isUuidCapable
+                        isStoriesCapable:isStoriesCapable
                                   badges:profileBadges
                            avatarUrlPath:avatarUrlPath
                            lastFetchDate:lastFetchDate
@@ -1904,6 +1877,10 @@ const NSString *kNSNotificationKey_UserProfileWriter = @"kNSNotificationKey_User
     return [OWSProfileManager avatarDownloadAndDecryptPromiseObjcWithProfileAddress:profileAddress
                                                                       avatarUrlPath:avatarUrlPath
                                                                          profileKey:profileKey];
+}
+
+- (nullable ModelReadCacheSizeLease *)leaseCacheSize:(NSInteger)size {
+    return [self.modelReadCaches.userProfileReadCache leaseCacheSize:size];
 }
 
 #pragma mark - Messaging History

@@ -169,10 +169,10 @@ class AttachmentCaptionViewController: OWSViewController {
 
         // Length Limit Label shown when the user inputs too long of a message
         lengthLimitLabel.textColor = UIColor.ows_accentRed
-        lengthLimitLabel.text = NSLocalizedString("ATTACHMENT_APPROVAL_CAPTION_LENGTH_LIMIT_REACHED", comment: "One-line label indicating the user can add no more text to the attachment caption.")
+        lengthLimitLabel.text = OWSLocalizedString("ATTACHMENT_APPROVAL_CAPTION_LENGTH_LIMIT_REACHED", comment: "One-line label indicating the user can add no more text to the attachment caption.")
         lengthLimitLabel.textAlignment = .center
 
-        // Add shadow in case overlayed on white content
+        // Add shadow in case overlaid on white content
         lengthLimitLabel.layer.shadowColor = UIColor.black.cgColor
         lengthLimitLabel.layer.shadowOffset = .zero
         lengthLimitLabel.layer.shadowOpacity = 0.8
@@ -206,7 +206,7 @@ class AttachmentCaptionViewController: OWSViewController {
 
     private lazy var placeholderTextView: UIView = {
         let placeholderTextView = UITextView()
-        placeholderTextView.text = NSLocalizedString("ATTACHMENT_APPROVAL_CAPTION_PLACEHOLDER", comment: "placeholder text for an empty captioning field")
+        placeholderTextView.text = OWSLocalizedString("ATTACHMENT_APPROVAL_CAPTION_PLACEHOLDER", comment: "placeholder text for an empty captioning field")
         placeholderTextView.isEditable = false
 
         placeholderTextView.backgroundColor = .clear

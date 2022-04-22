@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 @objc
@@ -218,7 +218,7 @@ public class BulkProfileFetch: NSObject {
                     self.lastRateLimitErrorDate = Date()
                 case SignalServiceProfile.ValidationError.invalidIdentityKey:
                     // There will be invalid identity keys on staging that can be safely ignored.
-                    if FeatureFlags.isUsingProductionService {
+                    if TSConstants.isUsingProductionService {
                         owsFailDebug("Error: \(error)")
                     } else {
                         Logger.warn("Error: \(error)")
@@ -228,7 +228,7 @@ public class BulkProfileFetch: NSObject {
                     if error.isNetworkConnectivityFailure {
                         Logger.warn("Error: \(error)")
                         self.lastOutcomeMap[uuid] = UpdateOutcome(.networkFailure)
-                    } else if error.httpStatusCode == 413 {
+                    } else if error.httpStatusCode == 413 || error.httpStatusCode == 429 {
                         Logger.error("Error: \(error)")
                         self.lastOutcomeMap[uuid] = UpdateOutcome(.retryLimit)
                         self.lastRateLimitErrorDate = Date()

@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -332,7 +332,7 @@ public extension TestModel {
     //
     // We should generally use `anyUpdate` to ensure we're not unintentionally
     // clobbering other columns in the database when another concurrent update
-    // has occured.
+    // has occurred.
     //
     // There are cases when this doesn't make sense, e.g. when  we know we've
     // just loaded the model in the same transaction. In those cases it is
@@ -364,7 +364,7 @@ public extension TestModel {
 // MARK: - TestModelCursor
 
 @objc
-public class TestModelCursor: NSObject {
+public class TestModelCursor: NSObject, SDSCursor {
     private let transaction: GRDBReadTransaction
     private let cursor: RecordCursor<TestModelRecord>?
 
@@ -543,7 +543,7 @@ public extension TestModel {
             }
         }
 
-        if shouldBeIndexedForFTS {
+        if ftsIndexMode != .never {
             FullTextSearchFinder.allModelsWereRemoved(collection: collection(), transaction: transaction)
         }
     }
@@ -569,7 +569,7 @@ public extension TestModel {
             instance.anyRemove(transaction: transaction)
         })
 
-        if shouldBeIndexedForFTS {
+        if ftsIndexMode != .never {
             FullTextSearchFinder.allModelsWereRemoved(collection: collection(), transaction: transaction)
         }
     }

@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -159,6 +159,22 @@ class MentionPicker: UIView {
         if style == .composingAttachment {
             tableView.backgroundColor = UIColor.ows_gray95
             hairlineView.backgroundColor = .ows_gray65
+        } else if style == .groupReply {
+            blurView?.removeFromSuperview()
+            blurView = nil
+
+            if UIAccessibility.isReduceTransparencyEnabled {
+                tableView.backgroundColor = Theme.darkThemeBackgroundColor
+            } else {
+                tableView.backgroundColor = .clear
+
+                let blurView = UIVisualEffectView(effect: Theme.darkThemeBarBlurEffect)
+                self.blurView = blurView
+                insertSubview(blurView, belowSubview: tableView)
+                blurView.autoPinEdgesToSuperviewEdges()
+            }
+
+            hairlineView.backgroundColor = .ows_gray75
         } else {
             blurView?.removeFromSuperview()
             blurView = nil
@@ -282,7 +298,7 @@ private class MentionableUserCell: UITableViewCell {
         let cell = MentionableUserCell()
         cell.displayNameLabel.text = LocalizationNotNeeded("size")
         cell.displayNameLabel.sizeToFit()
-        return max(CGFloat(avatarSizeClass.avatarSize.height), ceil(cell.displayNameLabel.height)) + vSpacing * 2
+        return max(CGFloat(avatarSizeClass.size.height), ceil(cell.displayNameLabel.height)) + vSpacing * 2
     }
 
     let displayNameLabel = UILabel()
@@ -330,7 +346,7 @@ private class MentionableUserCell: UITableViewCell {
     }
 
     func configure(with mentionableUser: MentionPicker.MentionableUser, style: Mention.Style) {
-        if style == .composingAttachment {
+        if [.composingAttachment, .groupReply].contains(style) {
             displayNameLabel.textColor = Theme.darkThemePrimaryColor
             usernameLabel.textColor = Theme.darkThemeSecondaryTextAndIconColor
             selectedBackgroundView?.backgroundColor = UIColor.white.withAlphaComponent(0.2)

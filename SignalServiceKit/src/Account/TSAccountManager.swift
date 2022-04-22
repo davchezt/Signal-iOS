@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -82,6 +82,7 @@ public extension TSAccountManager {
     // then returns a promise for the current attempt.
     @objc
     @available(swift, obsoleted: 1.0)
+    @discardableResult
     func updateAccountAttributes() -> AnyPromise {
         return AnyPromise(updateAccountAttributes())
     }
@@ -280,7 +281,7 @@ extension TSAccountManager {
 
     @objc
     open func verifyChangePhoneNumber(request: TSRequest,
-                                      success: @escaping () -> Void,
+                                      success: @escaping (Any?) -> Void,
                                       failure: @escaping (Error) -> Void) {
         firstly {
             networkManager.makePromise(request: request)
@@ -289,8 +290,11 @@ extension TSAccountManager {
 
             switch statusCode {
             case 200, 204:
+                guard let json = response.responseBodyJson else {
+                    throw OWSAssertionError("Missing or invalid JSON")
+                }
                 Logger.info("Verification code accepted.")
-                success()
+                success(json)
             default:
                 Logger.warn("Unexpected status while verifying code: \(statusCode)")
                 failure(OWSGenericError("Unexpected status while verifying code: \(statusCode)"))
@@ -307,21 +311,21 @@ extension TSAccountManager {
 
         switch statusCode {
         case 403:
-            let message = NSLocalizedString("REGISTRATION_VERIFICATION_FAILED_WRONG_CODE_DESCRIPTION",
+            let message = OWSLocalizedString("REGISTRATION_VERIFICATION_FAILED_WRONG_CODE_DESCRIPTION",
                                             comment: "Error message indicating that registration failed due to a missing or incorrect verification code.")
             return OWSError(error: .userError,
                             description: message,
                             isRetryable: false)
         case 409:
-            let message = NSLocalizedString("REGISTRATION_TRANSFER_AVAILABLE_DESCRIPTION",
+            let message = OWSLocalizedString("REGISTRATION_TRANSFER_AVAILABLE_DESCRIPTION",
                                             comment: "Error message indicating that device transfer from another device might be possible.")
             return OWSError(error: .registrationTransferAvailable,
                             description: message,
                             isRetryable: false)
-        case 413:
+        case 413, 429:
             // In the case of the "rate limiting" error, we want to show the
             // "recovery suggestion", not the error's "description."
-            let recoverySuggestion = NSLocalizedString("REGISTER_RATE_LIMITING_BODY", comment: "")
+            let recoverySuggestion = OWSLocalizedString("REGISTER_RATE_LIMITING_BODY", comment: "")
             return OWSError(error: .userError,
                             description: recoverySuggestion,
                             isRetryable: false)
@@ -341,12 +345,14 @@ extension TSAccountManager {
             guard let backupCredentials = json["backupCredentials"] as? [String: Any] else {
                 return OWSAssertionError("Invalid response.")
             }
-            guard let auth = RemoteAttestation.parseAuthParams(backupCredentials) else {
+
+            do {
+                let auth = try RemoteAttestation.Auth(authParams: backupCredentials)
+                return RegistrationMissing2FAPinError(remoteAttestationAuth: auth)
+            } catch {
                 owsFailDebug("Remote attestation auth could not be parsed: \(json).")
                 return OWSAssertionError("Invalid response.")
             }
-
-            return RegistrationMissing2FAPinError(remoteAttestationAuth: auth)
         default:
             owsFailDebugUnlessNetworkFailure(error)
             return error
@@ -394,10 +400,9 @@ public extension TSAccountManager {
 @objc
 public class RegistrationMissing2FAPinError: NSObject, Error, IsRetryableProvider, UserErrorDescriptionProvider {
 
-    @objc
-    public let remoteAttestationAuth: RemoteAttestationAuth
+    public let remoteAttestationAuth: RemoteAttestation.Auth
 
-    required init(remoteAttestationAuth: RemoteAttestationAuth) {
+    required init(remoteAttestationAuth: RemoteAttestation.Auth) {
         self.remoteAttestationAuth = remoteAttestationAuth
     }
 
@@ -409,7 +414,7 @@ public class RegistrationMissing2FAPinError: NSObject, Error, IsRetryableProvide
     }
 
     public var localizedDescription: String {
-        NSLocalizedString("REGISTRATION_VERIFICATION_FAILED_WRONG_PIN",
+        OWSLocalizedString("REGISTRATION_VERIFICATION_FAILED_WRONG_PIN",
                                                      comment: "Error message indicating that registration failed due to a missing or incorrect 2FA PIN.")
     }
 

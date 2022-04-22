@@ -1,41 +1,45 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
-import Foundation
+import AVFoundation
 import CoreServices
+import Foundation
+import SignalCoreKit
+import UIKit
 
 protocol PhotoCaptureDelegate: AnyObject {
 
     // MARK: Still Photo
 
-    func photoCaptureDidStartPhotoCapture(_ photoCapture: PhotoCapture)
-    func photoCapture(_ photoCapture: PhotoCapture, didFinishProcessingAttachment attachment: SignalAttachment)
-    func photoCapture(_ photoCapture: PhotoCapture, processingDidError error: Error)
+    func photoCaptureDidStart(_ photoCapture: PhotoCapture)
+    func photoCapture(_ photoCapture: PhotoCapture, didFinishProcessing attachment: SignalAttachment)
+    func photoCapture(_ photoCapture: PhotoCapture, didFailProcessing error: Error)
 
-    // MARK: Movie
+    // MARK: Video
 
-    func photoCaptureDidBeginMovie(_ photoCapture: PhotoCapture)
-    func photoCaptureDidCompleteMovie(_ photoCapture: PhotoCapture)
-    func photoCaptureDidCancelMovie(_ photoCapture: PhotoCapture)
+    func photoCaptureWillBeginRecording(_ photoCapture: PhotoCapture)
+    func photoCaptureDidBeginRecording(_ photoCapture: PhotoCapture)
+    func photoCaptureDidFinishRecording(_ photoCapture: PhotoCapture)
+    func photoCaptureDidCancelRecording(_ photoCapture: PhotoCapture)
 
     // MARK: Utility
 
     func photoCapture(_ photoCapture: PhotoCapture, didChangeOrientation: AVCaptureVideoOrientation)
+    func photoCapture(_ photoCapture: PhotoCapture, didChangeVideoZoomFactor: CGFloat, forCameraPosition: AVCaptureDevice.Position)
     func photoCaptureCanCaptureMoreItems(_ photoCapture: PhotoCapture) -> Bool
     func photoCaptureDidTryToCaptureTooMany(_ photoCapture: PhotoCapture)
-    var zoomScaleReferenceHeight: CGFloat? { get }
+    var zoomScaleReferenceDistance: CGFloat? { get }
 
     func beginCaptureButtonAnimation(_ duration: TimeInterval)
     func endCaptureButtonAnimation(_ duration: TimeInterval)
 
-    func photoCapture(_ photoCapture: PhotoCapture, didCompleteFocusingAtPoint focusPoint: CGPoint)
+    func photoCapture(_ photoCapture: PhotoCapture, didCompleteFocusing focusPoint: CGPoint)
 
 }
 
 // MARK: -
 
-@objc
 class PhotoCapture: NSObject {
 
     weak var delegate: PhotoCaptureDelegate?
@@ -82,7 +86,7 @@ class PhotoCapture: NSObject {
         let focusPoint = currentCaptureInput.device.focusPointOfInterest
 
         DispatchQueue.main.async {
-            self.delegate?.photoCapture(self, didCompleteFocusingAtPoint: focusPoint)
+            self.delegate?.photoCapture(self, didCompleteFocusing: focusPoint)
         }
     }
 
@@ -184,7 +188,7 @@ class PhotoCapture: NSObject {
             self.captureOrientation = initialCaptureOrientation
             self.session.sessionPreset = .high
 
-            try self.updateCurrentInput(position: .back)
+            try self.reconfigureCaptureInput()
 
             guard let photoOutput = self.captureOutput.photoOutput else {
                 owsFailDebug("Missing photoOutput.")
@@ -244,7 +248,7 @@ class PhotoCapture: NSObject {
         assertOnQueue(sessionQueue)
     }
 
-    public func switchCamera() -> Promise<Void> {
+    public func switchCameraPosition() -> Promise<Void> {
         AssertIsOnMainThread()
         let newPosition: AVCaptureDevice.Position
         switch desiredPosition {
@@ -257,7 +261,6 @@ class PhotoCapture: NSObject {
         @unknown default:
             owsFailDebug("Unexpected enum value.")
             newPosition = .front
-            break
         }
         desiredPosition = newPosition
 
@@ -266,16 +269,18 @@ class PhotoCapture: NSObject {
 
             self.session.beginConfiguration()
             defer { self.session.commitConfiguration() }
-            try self.updateCurrentInput(position: newPosition)
+            try self.reconfigureCaptureInput()
         }
     }
 
-    // This method should be called on the serial queue,
-    // and between calls to session.beginConfiguration/commitConfiguration
-    public func updateCurrentInput(position: AVCaptureDevice.Position) throws {
+    // This method should be called on the serial queue, and between calls to session.beginConfiguration/commitConfiguration
+    func reconfigureCaptureInput() throws {
         assertIsOnSessionQueue()
 
-        guard let device = captureOutput.videoDevice(position: position) else {
+        let avCaptureDevicePosition = desiredPosition
+        let avCaptureDeviceType = avCaptureDeviceType(forCameraSystem: bestAvailableCameraSystem(forPosition: avCaptureDevicePosition))
+
+        guard let device = captureOutput.videoDevice(for: avCaptureDeviceType, position: avCaptureDevicePosition) else {
             throw PhotoCaptureError.assertionError(description: description)
         }
 
@@ -292,23 +297,27 @@ class PhotoCapture: NSObject {
             focusObservation.invalidate()
         }
         self.focusObservation = newInput.observe(\.device.isAdjustingFocus,
-                                                 options: [.old, .new]) { [weak self] _, change in
-                                                    guard let self = self else { return }
+                                                  options: [.old, .new]) { [weak self] _, change in
+            guard let self = self else { return }
 
-                                                    guard let oldValue = change.oldValue else {
-                                                        return
-                                                    }
+            guard let oldValue = change.oldValue else {
+                return
+            }
 
-                                                    guard let newValue = change.newValue else {
-                                                        return
-                                                    }
+            guard let newValue = change.newValue else {
+                return
+            }
 
-                                                    if oldValue == true && newValue == false {
-                                                        self.didCompleteFocusing()
-                                                    }
+            if oldValue == true && newValue == false {
+                self.didCompleteFocusing()
+            }
         }
 
         currentCaptureInput = newInput
+
+        // Camera by default has zoom factor of 1, which would be UW camera on triple camera systems, but default camera in the UI is "wide".
+        // Also it is necessary to reset camera to "1x" when switching between front and rear to match Camera app behavior.
+        resetCameraZoomFactor(device)
 
         resetFocusAndExposure()
     }
@@ -333,9 +342,9 @@ class PhotoCapture: NSObject {
     }
 
     public func focus(with focusMode: AVCaptureDevice.FocusMode,
-               exposureMode: AVCaptureDevice.ExposureMode,
-               at devicePoint: CGPoint,
-               monitorSubjectAreaChange: Bool) {
+                      exposureMode: AVCaptureDevice.ExposureMode,
+                      at devicePoint: CGPoint,
+                      monitorSubjectAreaChange: Bool) {
         sessionQueue.async {
             Logger.debug("focusMode: \(focusMode), exposureMode: \(exposureMode), devicePoint: \(devicePoint), monitorSubjectAreaChange:\(monitorSubjectAreaChange)")
             guard let device = self.captureDevice else {
@@ -377,74 +386,262 @@ class PhotoCapture: NSObject {
         resetFocusAndExposure()
     }
 
+    // MARK: - Rear Camera Selection
+
+    // Order must be the same as it appears in the in-app camera UI.
+    enum CameraType: Comparable {
+        case ultraWide
+        case wideAngle
+        case telephoto
+    }
+
+    enum CameraSystem {
+        case wide       // Single-camera devices.
+        case dual       // W + T
+        case dualWide   // UW + W
+        case triple     // UW + W + T
+    }
+
+    private func availableCameras(forPosition position: AVCaptureDevice.Position) -> [CameraType] {
+        let avTypes = captureOutput.imageOutput.availableDeviceTypes(forPosition: position)
+        var cameras: [CameraType] = []
+
+        // AVCaptureDevice.DiscoverySession returns devices in an arbitrary order, explicit ordering is required
+        if #available(iOS 13, *), avTypes.contains(.builtInUltraWideCamera) {
+            cameras.append(.ultraWide)
+        }
+
+        if avTypes.contains(.builtInWideAngleCamera) {
+            cameras.append(.wideAngle)
+        }
+
+        if avTypes.contains(.builtInTelephotoCamera) {
+            cameras.append(.telephoto)
+        }
+
+        return cameras
+    }
+
+    private func bestAvailableCameraSystem(forPosition position: AVCaptureDevice.Position) -> CameraSystem {
+        let avTypes = captureOutput.imageOutput.availableDeviceTypes(forPosition: position)
+
+        // No iOS 12 device can have a triple camera system.
+        if #available(iOS 13, *) {
+            if avTypes.contains(.builtInTripleCamera) {
+                return .triple
+            }
+            if avTypes.contains(.builtInDualWideCamera) {
+                return .dualWide
+            }
+        }
+        if avTypes.contains(.builtInDualCamera) {
+            return .dual
+        }
+        return .wide
+    }
+
+    private func avCaptureDeviceType(forCameraSystem cameraSystem: CameraSystem) -> AVCaptureDevice.DeviceType {
+        switch cameraSystem {
+        case .wide:
+            return .builtInWideAngleCamera
+
+        case .dual:
+            return .builtInDualCamera
+
+        case .dualWide:
+            if #available(iOS 13, *) {
+                return .builtInDualWideCamera
+            }
+            fallthrough
+
+        case .triple:
+            if #available(iOS 13, *) {
+                return .builtInTripleCamera
+            }
+            fallthrough
+
+        default:
+            owsFailDebug("Unsupported camera system.")
+            return .builtInWideAngleCamera
+        }
+    }
+
     // MARK: - Zoom
 
-    private let minimumZoom: CGFloat = 1.0
-    private let maximumZoom: CGFloat = 3.0
-    private var previousZoomFactor: CGFloat = 1.0
-
-    public func updateZoom(alpha: CGFloat) {
-        owsAssertDebug(alpha >= 0 && alpha <= 1)
-        sessionQueue.async {
-            guard let captureDevice = self.captureDevice else {
-                owsFailDebug("captureDevice was unexpectedly nil")
-                return
-            }
-
-            // we might want this to be non-linear
-            let scale = CGFloatLerp(self.minimumZoom, self.maximumZoom, alpha)
-            let zoomFactor = self.clampZoom(scale, device: captureDevice)
-            self.updateZoom(factor: zoomFactor)
+    private func minVisibleVideoZoom(forDevice device: AVCaptureDevice) -> CGFloat {
+        if availableCameras(forPosition: device.position).contains(.ultraWide) {
+            return 0.5
         }
+        return 1
     }
 
-    public func updateZoom(scaleFromPreviousZoomFactor scale: CGFloat) {
-        sessionQueue.async {
-            guard let captureDevice = self.captureDevice else {
-                owsFailDebug("captureDevice was unexpectedly nil")
-                return
-            }
-
-            let zoomFactor = self.clampZoom(scale * self.previousZoomFactor, device: captureDevice)
-            self.updateZoom(factor: zoomFactor)
-        }
+    // 5x of the "zoom factor" of the camera with the longest focal length
+    private func maximumZoomFactor(forDevice device: AVCaptureDevice) -> CGFloat {
+        let devicePosition = device.position
+        let cameraZoomFactorMap = cameraZoomFactorMap(forPosition: devicePosition)
+        let maxVisibleZoomFactor = 5 * (cameraZoomFactorMap.values.max() ?? 1)
+        return maxVisibleZoomFactor / cameraZoomFactorMultiplier(forPosition: devicePosition)
     }
 
-    public func completeZoom(scaleFromPreviousZoomFactor scale: CGFloat) {
-        sessionQueue.async {
-            guard let captureDevice = self.captureDevice else {
-                owsFailDebug("captureDevice was unexpectedly nil")
-                return
-            }
+    func cameraZoomFactorMap(forPosition position: AVCaptureDevice.Position) -> [CameraType: CGFloat] {
+        let zoomFactors = captureOutput.imageOutput.cameraSwitchOverZoomFactors(forPosition: position)
+        let avTypes = captureOutput.imageOutput.availableDeviceTypes(forPosition: position)
+        let cameraZoomFactorMultiplier = cameraZoomFactorMultiplier(forPosition: position)
 
-            let zoomFactor = self.clampZoom(scale * self.previousZoomFactor, device: captureDevice)
-
-            Logger.debug("ended with scaleFactor: \(zoomFactor)")
-
-            self.previousZoomFactor = zoomFactor
-            self.updateZoom(factor: zoomFactor)
+        var cameraMap: [CameraType: CGFloat] = [:]
+        if #available(iOS 13, *), avTypes.contains(.builtInUltraWideCamera) {
+            owsAssertDebug(cameraZoomFactorMultiplier != 1, "cameraZoomFactorMultiplier could not be 1 because there's UW camera available.")
+            cameraMap[.ultraWide] = cameraZoomFactorMultiplier
         }
+        if avTypes.contains(.builtInTelephotoCamera), let lastZoomFactor = zoomFactors.last {
+            cameraMap[.telephoto] = cameraZoomFactorMultiplier * lastZoomFactor
+        }
+        if !Platform.isSimulator {
+            owsAssertDebug(avTypes.contains(.builtInWideAngleCamera))
+        }
+        cameraMap[.wideAngle] = 1 // wide angle is the default camera used with 1x zoom.
+
+        return cameraMap
     }
 
-    private func updateZoom(factor: CGFloat) {
-        assertIsOnSessionQueue()
+    // If device has an ultra-wide camera then API zoom factor of "1" means
+    // full FOV of the ultra-wide camera which is "0.5" in the UI.
+    private func cameraZoomFactorMultiplier(forPosition position: AVCaptureDevice.Position) -> CGFloat {
+        if availableCameras(forPosition: position).contains(.ultraWide) {
+            return 0.5
+        }
+        return 1
+    }
 
-        guard let captureDevice = self.captureDevice else {
-            owsFailDebug("captureDevice was unexpectedly nil")
+    func switchCamera(to camera: CameraType, at position: AVCaptureDevice.Position, animated: Bool) {
+        AssertIsOnMainThread()
+
+        owsAssertDebug(position == desiredPosition, "Attempt to select camera for incorrect position")
+
+        let cameraZoomFactorMap = cameraZoomFactorMap(forPosition: position)
+        guard let visibleZoomFactor = cameraZoomFactorMap[camera] else {
+            owsFailDebug("Requested an unsupported device type")
             return
         }
 
-        do {
-            try captureDevice.lockForConfiguration()
-            captureDevice.videoZoomFactor = factor
-            captureDevice.unlockForConfiguration()
-        } catch {
-            owsFailDebug("error: \(error)")
+        var zoomFactor = visibleZoomFactor / cameraZoomFactorMultiplier(forPosition: position)
+
+        // Tap on 1x changes zoom to 2x if there's only one rear camera available.
+        let availableCameras = availableCameras(forPosition: position)
+        if availableCameras.count == 1, let currentZoomFactor = captureDevice?.videoZoomFactor, currentZoomFactor == zoomFactor {
+            zoomFactor *= 2
+        }
+        sessionQueue.async { [weak self] in
+            guard let self = self else { return }
+            guard let captureDevice = self.captureDevice else {
+                owsFailDebug("captureDevice was unexpectedly nil")
+                return
+            }
+            owsAssertDebug(position == captureDevice.position, "Attempt to select camera for incorrect position")
+
+            self.update(captureDevice: captureDevice, zoomFactor: zoomFactor, animated: animated)
         }
     }
 
-    private func clampZoom(_ factor: CGFloat, device: AVCaptureDevice) -> CGFloat {
-        return min(factor.clamp(minimumZoom, maximumZoom), device.activeFormat.videoMaxZoomFactor)
+    private func resetCameraZoomFactor(_ captureDevice: AVCaptureDevice) {
+        assertIsOnSessionQueue()
+
+        let devicePosition = captureDevice.position
+
+        guard let defaultZoomFactor = cameraZoomFactorMap(forPosition: devicePosition)[.wideAngle] else {
+            owsFailDebug("Requested an unsupported device type")
+            return
+        }
+
+        let zoomFactor = defaultZoomFactor / cameraZoomFactorMultiplier(forPosition: devicePosition)
+        update(captureDevice: captureDevice, zoomFactor: zoomFactor, animated: false)
+    }
+
+    private var initialSlideZoomFactor: CGFloat?
+
+    func updateZoom(alpha: CGFloat) {
+        owsAssertDebug(alpha >= 0 && alpha <= 1)
+        sessionQueue.async { [weak self] in
+            guard let self = self else { return }
+            guard let captureDevice = self.captureDevice else {
+                owsFailDebug("captureDevice was unexpectedly nil")
+                return
+            }
+
+            let zoomFactor = CGFloatLerp(self.initialSlideZoomFactor!, self.maximumZoomFactor(forDevice: captureDevice), alpha)
+            self.update(captureDevice: captureDevice, zoomFactor: zoomFactor)
+        }
+    }
+
+    private var initialPinchZoomFactor: CGFloat = 1.0
+
+    func beginPinchZoom() {
+        sessionQueue.async { [weak self] in
+            guard let self = self else { return }
+            guard let captureDevice = self.captureDevice else {
+                owsFailDebug("captureDevice was unexpectedly nil")
+                return
+            }
+
+            self.initialPinchZoomFactor = captureDevice.videoZoomFactor
+            Logger.debug("began pinch zoom with factor: \(self.initialPinchZoomFactor)")
+        }
+    }
+
+    func updatePinchZoom(withScale scale: CGFloat) {
+        sessionQueue.async { [weak self] in
+            guard let self = self else { return }
+            guard let captureDevice = self.captureDevice else {
+                owsFailDebug("captureDevice was unexpectedly nil")
+                return
+            }
+
+            let zoomFactor = scale * self.initialPinchZoomFactor
+            self.update(captureDevice: captureDevice, zoomFactor: zoomFactor)
+        }
+    }
+
+    func completePinchZoom(withScale scale: CGFloat) {
+        sessionQueue.async { [weak self] in
+            guard let self = self else { return }
+            guard let captureDevice = self.captureDevice else {
+                owsFailDebug("captureDevice was unexpectedly nil")
+                return
+            }
+
+            let zoomFactor = scale * self.initialPinchZoomFactor
+            self.update(captureDevice: captureDevice, zoomFactor: zoomFactor)
+            Logger.debug("ended pitch zoom with factor: \(zoomFactor)")
+        }
+    }
+
+    private func update(captureDevice: AVCaptureDevice, zoomFactor: CGFloat, animated: Bool = false) {
+        assertIsOnSessionQueue()
+
+        do {
+            try captureDevice.lockForConfiguration()
+
+            let devicePosition = captureDevice.position
+            let zoomFactorMultiplier = cameraZoomFactorMultiplier(forPosition: devicePosition)
+
+            let minimumZoomFactor = minVisibleVideoZoom(forDevice: captureDevice) / zoomFactorMultiplier
+            let clampedZoomFactor = min(zoomFactor.clamp(minimumZoomFactor, maximumZoomFactor(forDevice: captureDevice)), captureDevice.activeFormat.videoMaxZoomFactor)
+            if animated {
+                captureDevice.ramp(toVideoZoomFactor: clampedZoomFactor, withRate: 16)
+            } else {
+                captureDevice.videoZoomFactor = clampedZoomFactor
+            }
+
+            captureDevice.unlockForConfiguration()
+
+            let visibleZoomFactor = clampedZoomFactor * zoomFactorMultiplier
+            DispatchQueue.main.async { [weak self] in
+                guard let self = self else { return }
+                self.delegate?.photoCapture(self, didChangeVideoZoomFactor: visibleZoomFactor, forCameraPosition: devicePosition)
+            }
+        } catch {
+            owsFailDebug("error: \(error)")
+        }
     }
 
     // MARK: - Photo
@@ -460,7 +657,7 @@ class PhotoCapture: NSObject {
         }
 
         let captureRect = captureOutputPhotoRect
-        delegate.photoCaptureDidStartPhotoCapture(self)
+        delegate.photoCaptureDidStart(self)
         sessionQueue.async {
             self.captureOutput.takePhoto(delegate: self, captureRect: captureRect)
         }
@@ -504,7 +701,7 @@ class PhotoCapture: NSObject {
                 movieRecordingBox.set(movieRecording)
             }.done {
                 // Don't mark recording as begun if recording has already been cancelled
-                // or superceded by another recording.
+                // or superseded by another recording.
                 let shouldBegin: Bool = {
                     if let lastMovieRecordingEndDate = self.lastMovieRecordingEndDate,
                        lastMovieRecordingEndDate > movieRecordingBox.startDate {
@@ -516,11 +713,13 @@ class PhotoCapture: NSObject {
                     throw PhotoCaptureError.invalidVideo
                 }
 
-                self.delegate?.photoCaptureDidBeginMovie(self)
+                self.delegate?.photoCaptureDidBeginRecording(self)
             }
         }.catch { error in
             self.handleMovieCaptureError(error)
         }
+
+        delegate.photoCaptureWillBeginRecording(self)
     }
 
     private func completeMovieCapture() {
@@ -536,7 +735,7 @@ class PhotoCapture: NSObject {
             AssertIsOnMainThread()
 
             // Don't mark recording as complete if recording has already been cancelled
-            // or superceded by another recording.
+            // or superseded by another recording.
             let shouldComplete: Bool = {
                 if let lastMovieRecordingEndDate = self.lastMovieRecordingEndDate,
                    lastMovieRecordingEndDate > movieRecordingStartDate {
@@ -555,7 +754,7 @@ class PhotoCapture: NSObject {
 
             // Inform UI that capture is stopping.
             self.lastMovieRecordingEndDate = movieRecordingStartDate
-            self.delegate?.photoCaptureDidCompleteMovie(self)
+            self.delegate?.photoCaptureDidFinishRecording(self)
         }.catch { error in
             self.handleMovieCaptureError(error)
         }
@@ -573,7 +772,7 @@ class PhotoCapture: NSObject {
             self.shouldHaveAudioCapture = false
         }
         self.lastMovieRecordingEndDate = Date()
-        self.delegate?.photoCapture(self, processingDidError: error)
+        self.delegate?.photoCapture(self, didFailProcessing: error)
     }
 
     private func cancelMovieCapture() {
@@ -592,7 +791,7 @@ class PhotoCapture: NSObject {
 
             // Inform UI that capture is stopping.
             self.lastMovieRecordingEndDate = Date()
-            self.delegate?.photoCaptureDidCancelMovie(self)
+            self.delegate?.photoCaptureDidCancelRecording(self)
         }.catch { error in
             self.handleMovieCaptureError(error)
         }
@@ -668,33 +867,38 @@ extension PhotoCapture: VolumeButtonObserver {
 
 // MARK: -
 
-extension PhotoCapture: CaptureButtonDelegate {
-    func didTapCaptureButton(_ captureButton: CaptureButton) {
+extension PhotoCapture: CameraCaptureControlDelegate {
+
+    func cameraCaptureControlDidRequestCapturePhoto(_ control: CameraCaptureControl) {
         takePhoto()
     }
 
-    func didBeginLongPressCaptureButton(_ captureButton: CaptureButton) {
+    func cameraCaptureControlDidRequestStartVideoRecording(_ control: CameraCaptureControl) {
+        if let captureDevice = captureDevice {
+            self.initialSlideZoomFactor = captureDevice.videoZoomFactor
+        }
         beginMovieCapture()
     }
 
-    func didCompleteLongPressCaptureButton(_ captureButton: CaptureButton) {
+    func cameraCaptureControlDidRequestFinishVideoRecording(_ control: CameraCaptureControl) {
         completeMovieCapture()
     }
 
-    func didCancelLongPressCaptureButton(_ captureButton: CaptureButton) {
+    func cameraCaptureControlDidRequestCancelVideoRecording(_ control: CameraCaptureControl) {
         cancelMovieCapture()
     }
 
-    func didPressStopCaptureButton(_ captureButton: CaptureButton) {
+    func didPressStopCaptureButton(_ control: CameraCaptureControl) {
         completeMovieCapture()
     }
 
-    var zoomScaleReferenceHeight: CGFloat? {
-        return delegate?.zoomScaleReferenceHeight
+    var zoomScaleReferenceDistance: CGFloat? {
+        return delegate?.zoomScaleReferenceDistance
     }
 
-    func longPressCaptureButton(_ captureButton: CaptureButton, didUpdateZoomAlpha zoomAlpha: CGFloat) {
-        updateZoom(alpha: zoomAlpha)
+    func cameraCaptureControl(_ control: CameraCaptureControl, didUpdateZoomLevel zoomLevel: CGFloat) {
+        owsAssertDebug(initialSlideZoomFactor != nil, "initialSlideZoomFactor is not set")
+        updateZoom(alpha: zoomLevel)
     }
 }
 
@@ -730,12 +934,12 @@ extension PhotoCapture: CaptureOutputDelegate {
 
         switch photoData {
         case .failure(let error):
-            delegate.photoCapture(self, processingDidError: error)
+            delegate.photoCapture(self, didFailProcessing: error)
         case .success(let photoData):
             let dataSource = DataSourceValue.dataSource(with: photoData, utiType: kUTTypeJPEG as String)
 
             let attachment = SignalAttachment.attachment(dataSource: dataSource, dataUTI: kUTTypeJPEG as String)
-            delegate.photoCapture(self, didFinishProcessingAttachment: attachment)
+            delegate.photoCapture(self, didFinishProcessing: attachment)
         }
     }
 
@@ -761,7 +965,7 @@ extension PhotoCapture: CaptureOutputDelegate {
             let attachment = SignalAttachment.attachment(dataSource: dataSource, dataUTI: kUTTypeMPEG4 as String)
 
             BenchEventComplete(eventId: "Movie Processing")
-            delegate.photoCapture(self, didFinishProcessingAttachment: attachment)
+            delegate.photoCapture(self, didFinishProcessing: attachment)
         }
     }
 
@@ -794,10 +998,11 @@ protocol CaptureOutputDelegate: AnyObject {
 // MARK: -
 
 protocol ImageCaptureOutput: AnyObject {
+    func availableDeviceTypes(forPosition position: AVCaptureDevice.Position) -> [AVCaptureDevice.DeviceType]
+    func cameraSwitchOverZoomFactors(forPosition position: AVCaptureDevice.Position) -> [CGFloat]
     var avOutput: AVCaptureOutput { get }
     var flashMode: AVCaptureDevice.FlashMode { get set }
-    func videoDevice(position: AVCaptureDevice.Position) -> AVCaptureDevice?
-
+    func videoDevice(for deviceType: AVCaptureDevice.DeviceType, position: AVCaptureDevice.Position) -> AVCaptureDevice?
     func takePhoto(delegate: CaptureOutputDelegate, captureRect: CGRect)
 }
 
@@ -887,8 +1092,8 @@ class CaptureOutput: NSObject {
         set { imageOutput.flashMode = newValue }
     }
 
-    func videoDevice(position: AVCaptureDevice.Position) -> AVCaptureDevice? {
-        return imageOutput.videoDevice(position: position)
+    func videoDevice(for deviceType: AVCaptureDevice.DeviceType, position: AVCaptureDevice.Position) -> AVCaptureDevice? {
+        return imageOutput.videoDevice(for: deviceType, position: position)
     }
 
     func takePhoto(delegate: CaptureOutputDelegate, captureRect: CGRect) {
@@ -1131,6 +1336,45 @@ class PhotoCaptureOutputAdaptee: NSObject, ImageCaptureOutput {
         return photoOutput
     }
 
+    private lazy var availableRearDeviceMap: [AVCaptureDevice.DeviceType: AVCaptureDevice] = {
+        return availableDevices(forPosition: .back)
+    }()
+
+    private lazy var availableFrontDeviceMap: [AVCaptureDevice.DeviceType: AVCaptureDevice] = {
+        return availableDevices(forPosition: .front)
+    }()
+
+    func availableDeviceTypes(forPosition position: AVCaptureDevice.Position) -> [AVCaptureDevice.DeviceType] {
+        switch position {
+        case .front, .unspecified:
+            return availableFrontDeviceMap.keys.map { $0 }
+
+        case .back:
+            return availableRearDeviceMap.keys.map { $0 }
+
+        @unknown default:
+            owsFailDebug("Unknown AVCaptureDevice.Position: [\(position)]")
+            return []
+        }
+    }
+
+    func cameraSwitchOverZoomFactors(forPosition position: AVCaptureDevice.Position) -> [CGFloat] {
+        let deviceMap = position == .front ? availableFrontDeviceMap : availableRearDeviceMap
+
+        guard #available(iOS 13, *) else {
+            // No iOS 12 device can have triple camera system.
+            if deviceMap[.builtInDualCamera] != nil {
+                return UIDevice.current.isPlusSizePhone ? [ 2.5 ] : [ 2 ]
+            }
+            return []
+        }
+
+        if let multiCameraDevice = deviceMap[.builtInTripleCamera] ?? deviceMap[.builtInDualWideCamera] ?? deviceMap[.builtInDualCamera] {
+            return multiCameraDevice.virtualDeviceSwitchOverVideoZoomFactors.map { CGFloat(truncating: $0) }
+        }
+        return []
+    }
+
     var flashMode: AVCaptureDevice.FlashMode = .off
 
     override init() {
@@ -1152,9 +1396,16 @@ class PhotoCaptureOutputAdaptee: NSObject, ImageCaptureOutput {
         photoOutput.capturePhoto(with: settings, delegate: photoProcessor)
     }
 
-    func videoDevice(position: AVCaptureDevice.Position) -> AVCaptureDevice? {
-        // use dual camera where available
-        return AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: position)
+    func videoDevice(for deviceType: AVCaptureDevice.DeviceType, position: AVCaptureDevice.Position) -> AVCaptureDevice? {
+        switch position {
+        case .back:
+            return availableRearDeviceMap[deviceType]
+        case .front:
+            return availableFrontDeviceMap[deviceType]
+        default:
+            owsFailDebug("Requested invalid camera position")
+            return nil
+        }
     }
 
     // MARK: -
@@ -1165,9 +1416,21 @@ class PhotoCaptureOutputAdaptee: NSObject, ImageCaptureOutput {
         photoSettings.isHighResolutionPhotoEnabled = true
 
         photoSettings.isAutoStillImageStabilizationEnabled =
-            photoOutput.isStillImageStabilizationSupported
+        photoOutput.isStillImageStabilizationSupported
 
         return photoSettings
+    }
+
+    private func availableDevices(forPosition position: AVCaptureDevice.Position) -> [AVCaptureDevice.DeviceType: AVCaptureDevice] {
+        var queryDeviceTypes: [AVCaptureDevice.DeviceType] = [ .builtInWideAngleCamera, .builtInTelephotoCamera, .builtInDualCamera ]
+        if #available(iOS 13, *) {
+            queryDeviceTypes.append(contentsOf: [ .builtInUltraWideCamera, .builtInDualWideCamera, .builtInTripleCamera ])
+        }
+        let session = AVCaptureDevice.DiscoverySession(deviceTypes: queryDeviceTypes, mediaType: .video, position: position)
+        let deviceMap = session.devices.reduce(into: [AVCaptureDevice.DeviceType: AVCaptureDevice]()) { deviceMap, device in
+            deviceMap[device.deviceType] = device
+        }
+        return deviceMap
     }
 
     private class PhotoProcessor: NSObject, AVCapturePhotoCaptureDelegate {

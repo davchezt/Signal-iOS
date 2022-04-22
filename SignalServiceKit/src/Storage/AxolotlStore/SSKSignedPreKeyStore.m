@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 #import "SSKSignedPreKeyStore.h"
@@ -70,17 +70,31 @@ NSString *const kPrekeyCurrentSignedPrekeyIdKey = @"currentSignedPrekeyId";
 
 @end
 
-@implementation SSKSignedPreKeyStore
+@implementation SSKSignedPreKeyStore {
+    OWSIdentity _identity;
+}
 
-- (instancetype)init
+- (instancetype)initForIdentity:(OWSIdentity)identity
 {
     self = [super init];
     if (!self) {
         return self;
     }
 
-    _keyStore = [[SDSKeyValueStore alloc] initWithCollection:@"TSStorageManagerSignedPreKeyStoreCollection"];
-    _metadataStore = [[SDSKeyValueStore alloc] initWithCollection:@"TSStorageManagerSignedPreKeyMetadataCollection"];
+    _identity = identity;
+
+    switch (identity) {
+        case OWSIdentityACI:
+            _keyStore = [[SDSKeyValueStore alloc] initWithCollection:@"TSStorageManagerSignedPreKeyStoreCollection"];
+            _metadataStore =
+                [[SDSKeyValueStore alloc] initWithCollection:@"TSStorageManagerSignedPreKeyMetadataCollection"];
+            break;
+        case OWSIdentityPNI:
+            _keyStore = [[SDSKeyValueStore alloc] initWithCollection:@"TSStorageManagerPNISignedPreKeyStoreCollection"];
+            _metadataStore =
+                [[SDSKeyValueStore alloc] initWithCollection:@"TSStorageManagerPNISignedPreKeyMetadataCollection"];
+            break;
+    }
 
     return self;
 }
@@ -93,7 +107,7 @@ NSString *const kPrekeyCurrentSignedPrekeyIdKey = @"currentSignedPrekeyId";
 
     // Signed prekey ids must be > 0.
     int preKeyId = 1 + arc4random_uniform(INT32_MAX - 1);
-    ECKeyPair *_Nullable identityKeyPair = [[OWSIdentityManager shared] identityKeyPair];
+    ECKeyPair *_Nullable identityKeyPair = [[OWSIdentityManager shared] identityKeyPairForIdentity:_identity];
     OWSAssert(identityKeyPair);
 
     @try {
@@ -153,85 +167,160 @@ NSString *const kPrekeyCurrentSignedPrekeyIdKey = @"currentSignedPrekeyId";
     __block NSNumber *_Nullable result;
     [self.databaseStorage readWithBlock:^(SDSAnyReadTransaction *transaction) {
         result = [self.metadataStore getObjectForKey:kPrekeyCurrentSignedPrekeyIdKey transaction:transaction];
-    }];
+    } file:__FILE__ function:__FUNCTION__ line:__LINE__];
     return result;
 }
 
-- (void)setCurrentSignedPrekeyId:(int)value
+- (void)setCurrentSignedPrekeyId:(int)value transaction:(SDSAnyWriteTransaction *)transaction
 {
     OWSLogInfo(@"%lu.", (unsigned long)value);
-    DatabaseStorageWrite(self.databaseStorage, ^(SDSAnyWriteTransaction *transaction) {
-        [self.metadataStore setObject:@(value) key:kPrekeyCurrentSignedPrekeyIdKey transaction:transaction];
-    });
+    [self.metadataStore setObject:@(value) key:kPrekeyCurrentSignedPrekeyIdKey transaction:transaction];
 }
 
 - (nullable SignedPreKeyRecord *)currentSignedPreKey
 {
     __block SignedPreKeyRecord *_Nullable currentRecord;
-    [self.databaseStorage readWithBlock:^(SDSAnyReadTransaction *transaction) {
-        NSNumber *_Nullable preKeyId = [self.metadataStore getObjectForKey:kPrekeyCurrentSignedPrekeyIdKey
-                                                               transaction:transaction];
-
-        if (preKeyId == nil) {
-            return;
+    [self.databaseStorage
+        readWithBlock:^(SDSAnyReadTransaction *transaction) {
+            currentRecord = [self currentSignedPreKeyWithTransaction:transaction];
         }
-
-        currentRecord = [self.keyStore signedPreKeyRecordForKey:preKeyId.stringValue transaction:transaction];
-    }];
+                 file:__FILE__
+             function:__FUNCTION__
+                 line:__LINE__];
 
     return currentRecord;
 }
 
+- (nullable SignedPreKeyRecord *)currentSignedPreKeyWithTransaction:(SDSAnyReadTransaction *)transaction
+{
+    NSNumber *_Nullable preKeyId = [self.metadataStore getObjectForKey:kPrekeyCurrentSignedPrekeyIdKey
+                                                           transaction:transaction];
+
+    if (preKeyId == nil) {
+        return nil;
+    }
+
+    return [self.keyStore signedPreKeyRecordForKey:preKeyId.stringValue transaction:transaction];
+}
+
+- (void)cullSignedPreKeyRecordsWithTransaction:(SDSAnyWriteTransaction *)transaction
+{
+    const NSTimeInterval kSignedPreKeysDeletionTime = 30 * kDayInterval;
+
+    SignedPreKeyRecord *_Nullable currentRecord = [self currentSignedPreKeyWithTransaction:transaction];
+    if (!currentRecord) {
+        OWSFailDebug(@"Couldn't find current signed pre-key; skipping culling until we have one");
+        return;
+    }
+
+    NSMutableArray<SignedPreKeyRecord *> *oldSignedPrekeys =
+        [[self loadSignedPreKeysWithTransaction:transaction] mutableCopy];
+    // Remove the current record from the list.
+    for (NSUInteger i = 0; i < oldSignedPrekeys.count; ++i) {
+        if (oldSignedPrekeys[i].Id == currentRecord.Id) {
+            [oldSignedPrekeys removeObjectAtIndex:i];
+            break;
+        }
+    }
+
+    // Sort the signed prekeys in ascending order of generation time.
+    [oldSignedPrekeys sortUsingComparator:^NSComparisonResult(
+        SignedPreKeyRecord *left, SignedPreKeyRecord *right) { return [left.generatedAt compare:right.generatedAt]; }];
+
+    unsigned oldSignedPreKeyCount = (unsigned)[oldSignedPrekeys count];
+    unsigned oldAcceptedSignedPreKeyCount = 0;
+    for (SignedPreKeyRecord *signedPrekey in oldSignedPrekeys) {
+        if (signedPrekey.wasAcceptedByService) {
+            oldAcceptedSignedPreKeyCount++;
+        }
+    }
+
+    OWSLogInfo(@"oldSignedPreKeyCount: %u, oldAcceptedSignedPreKeyCount: %u",
+        oldSignedPreKeyCount,
+        oldAcceptedSignedPreKeyCount);
+
+    // Iterate the signed prekeys in ascending order so that we try to delete older keys first.
+    for (SignedPreKeyRecord *signedPrekey in oldSignedPrekeys) {
+        OWSLogInfo(@"Considering signed prekey id: %d, generatedAt: %@, createdAt: %@, wasAcceptedByService: %d",
+            signedPrekey.Id,
+            signedPrekey.generatedAt,
+            signedPrekey.createdAt,
+            signedPrekey.wasAcceptedByService);
+
+        // Always keep at least 3 keys, accepted or otherwise.
+        if (oldSignedPreKeyCount <= 3) {
+            break;
+        }
+
+        // Never delete signed prekeys until they are N days old.
+        if (fabs([signedPrekey.generatedAt timeIntervalSinceNow]) < kSignedPreKeysDeletionTime) {
+            break;
+        }
+
+        // We try to keep a minimum of 3 "old, accepted" signed prekeys.
+        if (signedPrekey.wasAcceptedByService) {
+            if (oldAcceptedSignedPreKeyCount <= 3) {
+                continue;
+            } else {
+                oldAcceptedSignedPreKeyCount--;
+            }
+        }
+
+        if (signedPrekey.wasAcceptedByService) {
+            OWSProdInfo([OWSAnalyticsEvents prekeysDeletedOldAcceptedSignedPrekey]);
+        } else {
+            OWSProdInfo([OWSAnalyticsEvents prekeysDeletedOldUnacceptedSignedPrekey]);
+        }
+
+        oldSignedPreKeyCount--;
+        [self removeSignedPreKey:signedPrekey.Id transaction:transaction];
+    }
+}
+
 #pragma mark - Prekey update failures
 
-- (int)prekeyUpdateFailureCount
+- (int)prekeyUpdateFailureCountWithTransaction:(SDSAnyReadTransaction *)transaction
 {
-    __block NSNumber *_Nullable value;
-    [self.databaseStorage readWithBlock:^(SDSAnyReadTransaction *transaction) {
-        value = [self.metadataStore getObjectForKey:kPrekeyUpdateFailureCountKey transaction:transaction];
-    }];
+    NSNumber *_Nullable value = [self.metadataStore getObjectForKey:kPrekeyUpdateFailureCountKey
+                                                        transaction:transaction];
     // Will default to zero.
     return [value intValue];
 }
 
-- (void)clearPrekeyUpdateFailureCount
+- (void)clearPrekeyUpdateFailureCountWithTransaction:(SDSAnyWriteTransaction *)transaction
 {
-    DatabaseStorageWrite(self.databaseStorage, ^(SDSAnyWriteTransaction *transaction) {
-        [self.metadataStore removeValueForKey:kPrekeyUpdateFailureCountKey transaction:transaction];
-    });
+    [self.metadataStore removeValueForKey:kPrekeyUpdateFailureCountKey transaction:transaction];
+    [self.metadataStore removeValueForKey:kFirstPrekeyUpdateFailureDateKey transaction:transaction];
 }
 
-- (NSInteger)incrementPrekeyUpdateFailureCount
+- (NSInteger)incrementPrekeyUpdateFailureCountWithTransaction:(SDSAnyWriteTransaction *)transaction
 {
-    __block NSInteger result;
-    DatabaseStorageWrite(self.databaseStorage, ^(SDSAnyWriteTransaction *transaction) {
-        result = [self.metadataStore incrementIntForKey:kPrekeyUpdateFailureCountKey transaction:transaction];
-    });
-    return result;
+    NSInteger failureCount = [self.metadataStore incrementIntForKey:kPrekeyUpdateFailureCountKey
+                                                        transaction:transaction];
+
+    OWSLogInfo(@"new failureCount: %ld", (long)failureCount);
+
+    if (failureCount == 1 || ![self firstPrekeyUpdateFailureDateWithTransaction:transaction]) {
+        // If this is the "first" failure, record the timestamp of that failure.
+        [self.metadataStore setDate:[NSDate new] key:kFirstPrekeyUpdateFailureDateKey transaction:transaction];
+    }
+
+    return failureCount;
 }
 
-- (nullable NSDate *)firstPrekeyUpdateFailureDate
+- (void)setPrekeyUpdateFailureCount:(NSInteger)count
+                   firstFailureDate:(NSDate *)firstFailureDate
+                        transaction:(SDSAnyWriteTransaction *)transaction
 {
-    __block NSDate *_Nullable result;
-    [self.databaseStorage readWithBlock:^(SDSAnyReadTransaction *transaction) {
-        result = [self.metadataStore getDate:kFirstPrekeyUpdateFailureDateKey transaction:transaction];
-    }];
-    return result;
+    [self.metadataStore setInt:count key:kPrekeyUpdateFailureCountKey transaction:transaction];
+    [self.metadataStore setDate:firstFailureDate key:kFirstPrekeyUpdateFailureDateKey transaction:transaction];
 }
 
-- (void)setFirstPrekeyUpdateFailureDate:(nonnull NSDate *)value
+- (nullable NSDate *)firstPrekeyUpdateFailureDateWithTransaction:(SDSAnyReadTransaction *)transaction
 {
-    DatabaseStorageWrite(self.databaseStorage, ^(SDSAnyWriteTransaction *transaction) {
-        [self.metadataStore setDate:value key:kFirstPrekeyUpdateFailureDateKey transaction:transaction];
-    });
+    return [self.metadataStore getDate:kFirstPrekeyUpdateFailureDateKey transaction:transaction];
 }
 
-- (void)clearFirstPrekeyUpdateFailureDate
-{
-    DatabaseStorageWrite(self.databaseStorage, ^(SDSAnyWriteTransaction *transaction) {
-        [self.metadataStore removeValueForKey:kFirstPrekeyUpdateFailureDateKey transaction:transaction];
-    });
-}
 
 #pragma mark - Debugging
 
@@ -240,11 +329,12 @@ NSString *const kPrekeyCurrentSignedPrekeyIdKey = @"currentSignedPrekeyId";
     NSString *tag = @"SSKSignedPreKeyStore";
 
     NSNumber *currentId = [self currentSignedPrekeyId];
-    NSDate *firstPrekeyUpdateFailureDate = [self firstPrekeyUpdateFailureDate];
-    NSUInteger prekeyUpdateFailureCount = [self prekeyUpdateFailureCount];
 
     [self.databaseStorage readWithBlock:^(SDSAnyReadTransaction *transaction) {
         __block int i = 0;
+
+        NSDate *firstPrekeyUpdateFailureDate = [self firstPrekeyUpdateFailureDateWithTransaction:transaction];
+        NSUInteger prekeyUpdateFailureCount = [self prekeyUpdateFailureCountWithTransaction:transaction];
 
         OWSLogInfo(@"%@ SignedPreKeys Report:", tag);
         OWSLogInfo(@"%@   currentId: %@", tag, currentId);

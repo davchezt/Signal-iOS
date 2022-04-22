@@ -167,7 +167,7 @@ NSString *const ThemeKeyCurrentMode = @"ThemeKeyCurrentMode";
                                           defaultValue:ThemeMode_System
                                            transaction:transaction];
         }
-    }];
+    } file:__FILE__ function:__FUNCTION__ line:__LINE__];
 
     self.cachedCurrentThemeNumber = @(currentMode);
     return currentMode;
@@ -181,10 +181,6 @@ NSString *const ThemeKeyCurrentMode = @"ThemeKeyCurrentMode";
 - (void)setCurrentTheme:(ThemeMode)mode
 {
     OWSAssertIsOnMainThread();
-
-    DatabaseStorageWrite(self.databaseStorage, ^(SDSAnyWriteTransaction *transaction) {
-        [Theme.keyValueStore setUInt:mode key:ThemeKeyCurrentMode transaction:transaction];
-    });
 
     NSNumber *previousMode = self.isDarkThemeEnabledNumber;
 
@@ -201,6 +197,10 @@ NSString *const ThemeKeyCurrentMode = @"ThemeKeyCurrentMode";
     }
 
     self.cachedCurrentThemeNumber = @(mode);
+    // It's safe to do an async write because all accesses check self.cachedCurrentThemeNumber first.
+    DatabaseStorageAsyncWrite(self.databaseStorage, ^(SDSAnyWriteTransaction *transaction) {
+        [Theme.keyValueStore setUInt:mode key:ThemeKeyCurrentMode transaction:transaction];
+    });
 
     if (![previousMode isEqual:self.isDarkThemeEnabledNumber]) {
         [self themeDidChange];

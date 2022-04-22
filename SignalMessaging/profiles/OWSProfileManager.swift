@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -119,9 +119,9 @@ public extension OWSProfileManager {
     @objc
     @available(swift, obsoleted: 1.0)
     func rotateProfileKey(
-        intersectingPhoneNumbers: Set<String>,
-        intersectingUUIDs: Set<String>,
-        intersectingGroupIds: Set<Data>
+        intersectingPhoneNumbers: [String],
+        intersectingUUIDs: [String],
+        intersectingGroupIds: [Data]
     ) -> AnyPromise {
         return AnyPromise(rotateProfileKey(
             intersectingPhoneNumbers: intersectingPhoneNumbers,
@@ -131,9 +131,9 @@ public extension OWSProfileManager {
     }
 
     func rotateProfileKey(
-        intersectingPhoneNumbers: Set<String>,
-        intersectingUUIDs: Set<String>,
-        intersectingGroupIds: Set<Data>
+        intersectingPhoneNumbers: [String],
+        intersectingUUIDs: [String],
+        intersectingGroupIds: [Data]
     ) -> Promise<Void> {
         guard tsAccountManager.isRegisteredPrimaryDevice else {
             return Promise(error: OWSAssertionError("tsAccountManager.isRegistered was unexpectedly false"))
@@ -184,11 +184,11 @@ public extension OWSProfileManager {
                 // in which we persist our new profile key, since storing them is what marks the
                 // profile key rotation as "complete" (removing newly blocked users from the whitelist).
                 self.whitelistedPhoneNumbersStore.removeValues(
-                    forKeys: Array(intersectingPhoneNumbers),
+                    forKeys: intersectingPhoneNumbers,
                     transaction: transaction
                 )
                 self.whitelistedUUIDsStore.removeValues(
-                    forKeys: Array(intersectingUUIDs),
+                    forKeys: intersectingUUIDs,
                     transaction: transaction
                 )
                 self.whitelistedGroupsStore.removeValues(
@@ -202,6 +202,46 @@ public extension OWSProfileManager {
         }.done(on: .global()) {
             Logger.info("Completed profile key rotation.")
             self.groupsV2.processProfileKeyUpdates()
+        }
+    }
+
+    @objc
+    func blockedPhoneNumbersInWhitelist(transaction readTx: SDSAnyReadTransaction) -> [String] {
+        let allWhitelistedNumbers = whitelistedPhoneNumbersStore.allKeys(transaction: readTx)
+
+        return allWhitelistedNumbers.filter { candidate in
+            let address = SignalServiceAddress(phoneNumber: candidate)
+            return blockingManager.isAddressBlocked(address, transaction: readTx)
+        }
+    }
+
+    @objc
+    func blockedUUIDsInWhitelist(transaction readTx: SDSAnyReadTransaction) -> [String] {
+        let allWhitelistedUUIDs = whitelistedUUIDsStore.allKeys(transaction: readTx)
+
+        return allWhitelistedUUIDs.filter { candidate in
+            let address = SignalServiceAddress(uuidString: candidate)
+            return blockingManager.isAddressBlocked(address, transaction: readTx)
+        }
+    }
+
+    @objc
+    func blockedGroupIDsInWhitelist(transaction readTx: SDSAnyReadTransaction) -> [Data] {
+        let allWhitelistedGroupKeys = whitelistedGroupsStore.allKeys(transaction: readTx)
+
+        return allWhitelistedGroupKeys.lazy
+            .compactMap { self.groupIdForGroupKey($0) }
+            .filter { blockingManager.isGroupIdBlocked($0, transaction: readTx) }
+    }
+
+    private func groupIdForGroupKey(_ groupKey: String) -> Data? {
+        guard let groupId = Data.data(fromHex: groupKey) else { return nil }
+
+        if GroupManager.isValidGroupIdOfAnyKind(groupId) {
+            return groupId
+        } else {
+            owsFailDebug("Parsed group id has unexpected length: \(groupId.hexadecimalString) (\(groupId.count))")
+            return nil
         }
     }
 }
@@ -274,6 +314,59 @@ public extension OWSProfileManager {
 
     private static let storageServiceStore = SDSKeyValueStore(collection: "OWSProfileManager.storageServiceStore")
     private static let hasUpdatedStorageServiceKey = "hasUpdatedStorageServiceKey"
+}
+
+// MARK: - Bulk Fetching
+
+extension OWSProfileManager {
+    func fullNames(for addresses: [SignalServiceAddress], transaction: SDSAnyReadTransaction) -> [String?] {
+        return getUserProfiles(for: addresses, transaction: transaction).map {
+            $0?.fullName
+        }
+    }
+
+    @objc(userProfilesForAddresses:transaction:)
+    func getUserProfilesObjC(for addresses: [SignalServiceAddress],
+                             transaction: SDSAnyReadTransaction) -> [OWSMaybeUserProfile] {
+        return getUserProfiles(for: addresses, transaction: transaction).map { maybeProfile -> OWSMaybeUserProfile in
+            maybeProfile ?? NSNull()
+        }
+    }
+
+    // This is the batch version of -[OWSProfileManager getUserProfileForAddress:transaction:]
+    func getUserProfiles(for addresses: [SignalServiceAddress], transaction: SDSAnyReadTransaction) -> [OWSUserProfile?] {
+        userProfilesRefinery(for: addresses, transaction: transaction).values
+    }
+
+    // This unfortunately needs to be piped through to Obj-C for adherence to the
+    // ProfileManagerProtocol so it can be exposed to SignalServiceKit. It should
+    // never be called directly from swift.
+    @objc(objc_getUserProfilesForAddresses:transaction:)
+    @available(swift, obsoleted: 1.0)
+    func objc_getUserProfiles(
+        for addresses: [SignalServiceAddress],
+        transaction: SDSAnyReadTransaction
+    ) -> [SignalServiceAddress: OWSUserProfile] {
+        Dictionary(userProfilesRefinery(for: addresses, transaction: transaction))
+    }
+
+    private func userProfilesRefinery(for addresses: [SignalServiceAddress], transaction: SDSAnyReadTransaction) -> Refinery<SignalServiceAddress, OWSUserProfile> {
+        let resolvedAddresses = addresses.map { OWSUserProfile.resolve($0) }
+
+        return .init(resolvedAddresses).refine(condition: { address in
+            OWSUserProfile.isLocalProfileAddress(address)
+        }, then: { localAddresses in
+            lazy var profile = { self.getLocalUserProfile(with: transaction) }()
+            return localAddresses.lazy.map { _ in profile }
+        }, otherwise: { remoteAddresses in
+            return self.modelReadCaches.userProfileReadCache.getUserProfiles(for: remoteAddresses, transaction: transaction)
+        })
+    }
+
+    @objc(objc_fullNamesForAddresses:transaction:)
+    func fullNamesObjC(for addresses: [SignalServiceAddress], transaction: SDSAnyReadTransaction) -> [SSKMaybeString] {
+        return fullNames(for: addresses, transaction: transaction).toMaybeStrings()
+    }
 }
 
 // MARK: -

@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 #import <SignalServiceKit/BaseModel.h>
@@ -9,6 +9,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 typedef void (^OWSUserProfileCompletion)(void);
 
+@class AnyUserProfileFinder;
 @class OWSAES256Key;
 @class OWSUserProfileBadgeInfo;
 @class SDSAnyReadTransaction;
@@ -31,9 +32,13 @@ BOOL shouldUpdateStorageServiceForUserProfileWriter(UserProfileWriter userProfil
 
 NSString *NSStringForUserProfileWriter(UserProfileWriter userProfileWriter);
 
+@protocol OWSMaybeUserProfile
+@property (nonatomic, nullable, readonly) OWSUserProfile *userProfileOrNil;
+@end
+
 #pragma mark -
 
-@interface OWSUserProfile : BaseModel
+@interface OWSUserProfile : BaseModel <OWSMaybeUserProfile>
 
 @property (atomic, readonly) SignalServiceAddress *address;
 @property (atomic, readonly, nullable) OWSAES256Key *profileKey;
@@ -46,7 +51,7 @@ NSString *NSStringForUserProfileWriter(UserProfileWriter userProfileWriter);
 @property (atomic, readonly, nullable) NSString *bio;
 @property (atomic, readonly, nullable) NSString *bioEmoji;
 @property (atomic, readonly, nullable) NSString *username;
-@property (atomic, readonly) BOOL isUuidCapable;
+@property (atomic, readonly) BOOL isStoriesCapable;
 @property (atomic, readonly, nullable) OWSUserProfileBadgeInfo *primaryBadge;
 @property (atomic, readonly, nullable) NSArray<OWSUserProfileBadgeInfo *> *profileBadgeInfo;
 @property (atomic, readonly, nullable) NSString *avatarUrlPath;
@@ -82,7 +87,7 @@ NSString *NSStringForUserProfileWriter(UserProfileWriter userProfileWriter);
                              bio:(nullable NSString *)bio
                         bioEmoji:(nullable NSString *)bioEmoji
                       familyName:(nullable NSString *)familyName
-                   isUuidCapable:(BOOL)isUuidCapable
+                isStoriesCapable:(BOOL)isStoriesCapable
                    lastFetchDate:(nullable NSDate *)lastFetchDate
                lastMessagingDate:(nullable NSDate *)lastMessagingDate
                 profileBadgeInfo:(nullable NSArray<OWSUserProfileBadgeInfo *> *)profileBadgeInfo
@@ -91,13 +96,15 @@ NSString *NSStringForUserProfileWriter(UserProfileWriter userProfileWriter);
             recipientPhoneNumber:(nullable NSString *)recipientPhoneNumber
                    recipientUUID:(nullable NSString *)recipientUUID
                         username:(nullable NSString *)username
-NS_DESIGNATED_INITIALIZER NS_SWIFT_NAME(init(grdbId:uniqueId:avatarFileName:avatarUrlPath:bio:bioEmoji:familyName:isUuidCapable:lastFetchDate:lastMessagingDate:profileBadgeInfo:profileKey:profileName:recipientPhoneNumber:recipientUUID:username:));
+NS_DESIGNATED_INITIALIZER NS_SWIFT_NAME(init(grdbId:uniqueId:avatarFileName:avatarUrlPath:bio:bioEmoji:familyName:isStoriesCapable:lastFetchDate:lastMessagingDate:profileBadgeInfo:profileKey:profileName:recipientPhoneNumber:recipientUUID:username:));
 
 // clang-format on
 
 // --- CODE GENERATION MARKER
 
 @property (atomic, readonly, class) SignalServiceAddress *localProfileAddress;
+@property (nonatomic, readonly, class) AnyUserProfileFinder *userProfileFinder;
+
 + (BOOL)isLocalProfileAddress:(SignalServiceAddress *)address;
 + (SignalServiceAddress *)resolveUserProfileAddress:(SignalServiceAddress *)address;
 + (SignalServiceAddress *)publicAddressForAddress:(SignalServiceAddress *)address;
@@ -135,6 +142,9 @@ NS_DESIGNATED_INITIALIZER NS_SWIFT_NAME(init(grdbId:uniqueId:avatarFileName:avat
 
 - (OWSUserProfile *)shallowCopy;
 
+@end
+
+@interface NSNull (OWSUserProfile) <OWSMaybeUserProfile>
 @end
 
 NS_ASSUME_NONNULL_END

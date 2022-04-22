@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -272,36 +272,14 @@ public extension NSObject {
         SSKEnvironment.shared.groupsV2Ref
     }
 
-    final var signedPreKeyStore: SSKSignedPreKeyStore {
-        SSKEnvironment.shared.signedPreKeyStoreRef
+    @objc(signalProtocolStoreForIdentity:)
+    final func signalProtocolStore(for identity: OWSIdentity) -> SignalProtocolStore {
+        SSKEnvironment.shared.signalProtocolStoreRef(for: identity)
     }
 
-    static var signedPreKeyStore: SSKSignedPreKeyStore {
-        SSKEnvironment.shared.signedPreKeyStoreRef
-    }
-
-    final var preKeyStore: SSKPreKeyStore {
-        SSKEnvironment.shared.preKeyStoreRef
-    }
-
-    static var preKeyStore: SSKPreKeyStore {
-        SSKEnvironment.shared.preKeyStoreRef
-    }
-
-    final var sessionStore: SSKSessionStore {
-        SSKEnvironment.shared.sessionStoreRef
-    }
-
-    static var sessionStore: SSKSessionStore {
-        SSKEnvironment.shared.sessionStoreRef
-    }
-
-    final var identityKeyStore: OWSIdentityManager {
-        return SSKEnvironment.shared.identityManagerRef
-    }
-
-    static var identityKeyStore: OWSIdentityManager {
-        SSKEnvironment.shared.identityManagerRef
+    @objc(signalProtocolStoreForIdentity:)
+    static func signalProtocolStore(for identity: OWSIdentity) -> SignalProtocolStore {
+        SSKEnvironment.shared.signalProtocolStoreRef(for: identity)
     }
 
     final var appExpiry: AppExpiry {
@@ -785,36 +763,12 @@ public extension Dependencies {
         SSKEnvironment.shared.groupsV2Ref
     }
 
-    var signedPreKeyStore: SSKSignedPreKeyStore {
-        SSKEnvironment.shared.signedPreKeyStoreRef
+    func signalProtocolStore(for identity: OWSIdentity) -> SignalProtocolStore {
+        SSKEnvironment.shared.signalProtocolStoreRef(for: identity)
     }
 
-    static var signedPreKeyStore: SSKSignedPreKeyStore {
-        SSKEnvironment.shared.signedPreKeyStoreRef
-    }
-
-    var preKeyStore: SSKPreKeyStore {
-        SSKEnvironment.shared.preKeyStoreRef
-    }
-
-    static var preKeyStore: SSKPreKeyStore {
-        SSKEnvironment.shared.preKeyStoreRef
-    }
-
-    var sessionStore: SSKSessionStore {
-        SSKEnvironment.shared.sessionStoreRef
-    }
-
-    static var sessionStore: SSKSessionStore {
-        SSKEnvironment.shared.sessionStoreRef
-    }
-
-    var identityKeyStore: OWSIdentityManager {
-        return SSKEnvironment.shared.identityManagerRef
-    }
-
-    static var identityKeyStore: OWSIdentityManager {
-        SSKEnvironment.shared.identityManagerRef
+    static func signalProtocolStore(for identity: OWSIdentity) -> SignalProtocolStore {
+        SSKEnvironment.shared.signalProtocolStoreRef(for: identity)
     }
 
     var appExpiry: AppExpiry {

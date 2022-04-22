@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -120,6 +120,9 @@ extension SignalRecipient {
         if let contactThread = AnyContactThreadFinder().contactThread(for: address, transaction: transaction.asAnyRead) {
             SDSDatabaseStorage.shared.touch(thread: contactThread, shouldReindex: true, transaction: transaction.asAnyWrite)
         }
+        TSGroupMember.enumerateGroupMembers(for: address, transaction: transaction.asAnyRead) { member, _ in
+            GRDBFullTextSearchFinder.modelWasUpdated(model: member, transaction: transaction)
+        }
 
         // Update SignalServiceAddressCache with the new uuid <-> phone number mapping
         let recipientUUID = self.recipientUUID
@@ -221,7 +224,7 @@ extension SignalRecipient {
 
         transaction.addAsyncCompletion(queue: .global()) {
             // Evacuate caches again once the transaction completes, in case
-            // some kind of race occured.
+            // some kind of race occurred.
             ModelReadCaches.shared.evacuateAllCaches()
         }
     }
@@ -353,12 +356,12 @@ extension SignalRecipient {
                 DBTableMapping(databaseTableName: "\(ThreadRecord.databaseTableName)",
                                uuidColumn: "\(threadColumn: .contactUUID)",
                                phoneNumberColumn: "\(threadColumn: .contactPhoneNumber)"),
-                DBTableMapping(databaseTableName: "\(GroupMemberRecord.databaseTableName)",
-                               uuidColumn: "\(groupMemberColumn: .uuidString)",
-                               phoneNumberColumn: "\(groupMemberColumn: .phoneNumber)"),
-                DBTableMapping(databaseTableName: "\(ReactionRecord.databaseTableName)",
-                               uuidColumn: "\(reactionColumn: .reactorUUID)",
-                               phoneNumberColumn: "\(reactionColumn: .reactorE164)"),
+                DBTableMapping(databaseTableName: "\(TSGroupMember.databaseTableName)",
+                               uuidColumn: "\(TSGroupMember.columnName(.uuidString))",
+                               phoneNumberColumn: "\(TSGroupMember.columnName(.phoneNumber))"),
+                DBTableMapping(databaseTableName: "\(OWSReaction.databaseTableName)",
+                               uuidColumn: "\(OWSReaction.columnName(.reactorUUID))",
+                               phoneNumberColumn: "\(OWSReaction.columnName(.reactorE164))"),
                 DBTableMapping(databaseTableName: "\(InteractionRecord.databaseTableName)",
                                uuidColumn: "\(interactionColumn: .authorUUID)",
                                phoneNumberColumn: "\(interactionColumn: .authorPhoneNumber)"),

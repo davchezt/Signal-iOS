@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -144,7 +144,7 @@ fileprivate extension OWSContactsManager {
         if cache.contains(groupThread: groupThread) {
             return false
         }
-        if nil == groupThread.groupModel.groupAvatarData {
+        if nil == groupThread.groupModel.avatarHash {
             // DO NOT add to the cache.
             return false
         }
@@ -631,7 +631,7 @@ extension OWSContactsManager {
         owsAssertDebug(addressesWithTheSameName.contains(address))
         if addressesWithTheSameName.count > 1,
            let index = addressesWithTheSameName.firstIndex(of: address) {
-            let format = NSLocalizedString("PHONE_NUMBER_TYPE_AND_INDEX_NAME_FORMAT",
+            let format = OWSLocalizedString("PHONE_NUMBER_TYPE_AND_INDEX_NAME_FORMAT",
                                            comment: "Format for phone number label with an index. Embeds {{Phone number label (e.g. 'home')}} and {{index, e.g. 2}}.")
             return String(format: format,
                           addressLabel,
@@ -978,5 +978,123 @@ extension OWSContactsManager {
         databaseStorage.read { transaction in
             self.displayName(forSignalAccount: signalAccount, transaction: transaction)
         }
+    }
+
+    // This is based on -[OWSContactsManager displayNameForAddress:transaction:].
+    // Rather than being called once for each address, we call it once with all the
+    // addresses and it will use a single database query per step to assign
+    // display names to addresses using different techniques.
+    private func displayNamesRefinery(
+        for addresses: [SignalServiceAddress],
+        transaction: SDSAnyReadTransaction
+    ) -> Refinery<SignalServiceAddress, String> {
+        return .init(addresses).refine { addresses in
+            // Prefer a saved name from system contacts, if available.
+            return cachedContactNames(for: addresses, transaction: transaction)
+        }.refine { addresses in
+            profileManager.fullNames(forAddresses: Array(addresses),
+                                     transaction: transaction).sequenceWithNils
+        }.refine { addresses in
+            return self.phoneNumbers(for: Array(addresses),
+                                     transaction: transaction).lazy.map {
+                return $0?.nilIfEmpty
+            }
+        }.refine { addresses in
+            return self.profileManager.usernames(forAddresses: Array(addresses), transaction: transaction).map { maybeUsername in
+                guard let username = maybeUsername.stringOrNil else {
+                    return nil
+                }
+                return CommonFormats.formatUsername(username)
+            }
+        }.refine { addresses in
+            return addresses.lazy.map {
+                self.fetchProfile(forUnknownAddress: $0)
+                return self.unknownUserLabel
+            }
+        }
+    }
+
+    @objc
+    public func displayNamesByAddress(
+        for addresses: [SignalServiceAddress],
+        transaction: SDSAnyReadTransaction
+    ) -> [SignalServiceAddress: String] {
+        Dictionary(displayNamesRefinery(for: addresses, transaction: transaction))
+    }
+
+    @objc(objc_displayNamesForAddresses:transaction:)
+    func displayNames(for addresses: [SignalServiceAddress], transaction: SDSAnyReadTransaction) -> [String] {
+        displayNamesRefinery(for: addresses, transaction: transaction).values.map { $0! }
+    }
+
+    func phoneNumbers(for addresses: [SignalServiceAddress],
+                      transaction: SDSAnyReadTransaction) -> [String?] {
+        return Refinery<SignalServiceAddress, String>(addresses).refine {
+            return $0.map { $0.phoneNumber?.filterStringForDisplay() }
+        }.refine { (addresses: AnySequence<SignalServiceAddress>) -> [String?] in
+            let accounts = fetchSignalAccounts(for: addresses, transaction: transaction)
+            return accounts.map { maybeAccount in
+                return maybeAccount?.recipientPhoneNumber?.filterStringForDisplay()
+            }
+        }.values
+    }
+
+    func fetchSignalAccounts(for addresses: AnySequence<SignalServiceAddress>,
+                             transaction: SDSAnyReadTransaction) -> [SignalAccount?] {
+        return modelReadCaches.signalAccountReadCache.getSignalAccounts(addresses: addresses, transaction: transaction)
+    }
+
+    @objc(cachedContactNameForAddress:transaction:)
+    func cachedContactName(for address: SignalServiceAddress, trasnaction: SDSAnyReadTransaction) -> String? {
+        return cachedContactNames(for: AnySequence([address]), transaction: trasnaction)[0]
+    }
+
+    func cachedContactNames(for addresses: AnySequence<SignalServiceAddress>,
+                            transaction: SDSAnyReadTransaction) -> [String?] {
+        // First, get full names from accounts where possible.
+        let accounts = fetchSignalAccounts(for: addresses, transaction: transaction)
+        let accountFullNames = accounts.lazy.map { $0?.fullName }
+
+        // Build a list of addreses that don't have accounts. Leave nil placeholders for those
+        // addresses that don't need to be queried so that we can keep all our arrays parallel.
+        let addressesToQuery = zip(addresses, accounts).map { tuple -> SignalServiceAddress? in
+            let (address, account) = tuple
+            if account != nil {
+                return nil
+            }
+            return address
+        }
+
+        // Do a batch lookup of phone numbers for addresses that don't have accounts and use the cache of Contacts
+        // to get their names.
+        let phoneNumberFullNames = Refinery<SignalServiceAddress?, String>(addressesToQuery).refineNonnilKeys { (addresses: AnySequence<SignalServiceAddress>) -> [String?] in
+            let phoneNumbers = phoneNumbers(for: Array(addresses), transaction: transaction)
+            return phoneNumbers.map { (maybePhoneNumber: String?) -> String? in
+                guard let phoneNumber = maybePhoneNumber else {
+                    return nil
+                }
+                // Fast (in-memory) lookup of a non-Signal contact. For example, no-longer-registered Signal users.
+                return contact(forPhoneNumber: phoneNumber, transaction: transaction)?.fullName
+            }
+        }.values
+
+        // At this point each address will either have a full name from its account, from its phone number, or neither.
+        // Return the nonnil value for each if one exists.
+        return zip(accountFullNames, phoneNumberFullNames).map { tuple in
+            return tuple.0 ?? tuple.1
+        }
+    }
+}
+
+private extension SignalAccount {
+    var fullName: String? {
+        // Name may be either the nickname or the full name of the contact
+        guard let fullName = contactPreferredDisplayName()?.nilIfEmpty else {
+            return nil
+        }
+        guard let label = multipleAccountLabelText.nilIfEmpty else {
+            return fullName
+        }
+        return "\(fullName) (\(label))"
     }
 }

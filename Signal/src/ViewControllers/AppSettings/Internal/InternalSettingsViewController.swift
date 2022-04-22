@@ -5,6 +5,7 @@
 import Foundation
 import SignalServiceKit
 import SignalMessaging
+import UIKit
 
 @objc
 class InternalSettingsViewController: OWSTableViewController2 {
@@ -59,6 +60,15 @@ class InternalSettingsViewController: OWSTableViewController2 {
                 self?.navigationController?.pushViewController(vc, animated: true)
             }
         ))
+        debugSection.add(.actionItem(
+            withText: "Export Database",
+            actionBlock: { [weak self] in
+                guard let self = self else {
+                    return
+                }
+                SignalApp.showExportDatabaseUI(from: self)
+            }
+        ))
 
         contents.addSection(debugSection)
 
@@ -73,7 +83,9 @@ class InternalSettingsViewController: OWSTableViewController2 {
 
         infoSection.add(.copyableItem(label: "Local Phone Number", value: tsAccountManager.localNumber))
 
-        infoSection.add(.copyableItem(label: "Local UUID", value: tsAccountManager.localUuid?.uuidString))
+        infoSection.add(.copyableItem(label: "Local ACI", value: tsAccountManager.localUuid?.uuidString))
+
+        infoSection.add(.copyableItem(label: "Local PNI", value: tsAccountManager.localPni?.uuidString))
 
         infoSection.add(.copyableItem(label: "Device ID", value: "\(tsAccountManager.storedDeviceId())"))
         if let deviceName = tsAccountManager.storedDeviceName() {
@@ -155,16 +167,14 @@ class InternalSettingsViewController: OWSTableViewController2 {
 
         if DebugFlags.groupsV2memberStatusIndicators, let localAddress = tsAccountManager.localAddress {
 
-            let (hasGroupsV2Capability, hasGroupMigrationCapability, hasSenderKeyCapability) = databaseStorage.read {
+            let (hasGroupMigrationCapability, hasSenderKeyCapability) = databaseStorage.read {
                 (
-                    GroupManager.doesUserHaveGroupsV2Capability(address: localAddress, transaction: $0),
                     GroupManager.doesUserHaveGroupsV2MigrationCapability(address: localAddress, transaction: $0),
                     GroupManager.doesUserHaveSenderKeyCapability(address: localAddress, transaction: $0)
                 )
             }
 
             let memberStatusSection = OWSTableSection()
-            memberStatusSection.add(.label(withText: "Has Groups v2 capability: \(hasGroupsV2Capability)"))
             memberStatusSection.add(.label(withText: "Has Group Migration capability: \(hasGroupMigrationCapability)"))
             memberStatusSection.add(.label(withText: "Has SenderKey capability: \(hasSenderKeyCapability)"))
             contents.addSection(memberStatusSection)

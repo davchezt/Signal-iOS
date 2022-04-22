@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 #import <SignalServiceKit/TSOutgoingMessage.h>
@@ -7,12 +7,15 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @class SDSAnyReadTransaction;
-@class SSKProtoSyncMessageBuilder;
+
+// Work around a limitation with Swift and nested @objc classes.
+@protocol SSKProtoSyncMessageBuilderProtocol
+@end
 
 /**
  * Abstract base class used for the family of sync messages which take care
  * of keeping your multiple registered devices consistent. E.g. sharing contacts, sharing groups,
- * notifiying your devices of sent messages, and "read" receipts.
+ * notifying your devices of sent messages, and "read" receipts.
  */
 @interface OWSOutgoingSyncMessage : TSOutgoingMessage
 
@@ -52,8 +55,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype)initWithTimestamp:(uint64_t)timestamp thread:(TSThread *)thread NS_DESIGNATED_INITIALIZER;
 - (nullable instancetype)initWithCoder:(NSCoder *)coder NS_DESIGNATED_INITIALIZER;
 
-- (nullable SSKProtoSyncMessageBuilder *)syncMessageBuilderWithTransaction:(SDSAnyReadTransaction *)transaction
-    NS_SWIFT_NAME(syncMessageBuilder(transaction:));
+- (nullable id<SSKProtoSyncMessageBuilderProtocol>)syncMessageBuilderWithTransaction:
+    (SDSAnyReadTransaction *)transaction NS_SWIFT_NAME(syncMessageBuilder(transaction:));
 
 @end
 

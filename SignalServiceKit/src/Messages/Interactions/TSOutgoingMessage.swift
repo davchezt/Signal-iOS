@@ -1,9 +1,9 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
-import SignalClient
+import LibSignalClient
 
 // Every time we add a new property to TSOutgoingMessage, we should:
 //
@@ -36,7 +36,10 @@ public class TSOutgoingMessageBuilder: TSMessageBuilder {
                          messageSticker: MessageSticker? = nil,
                          isViewOnceMessage: Bool = false,
                          changeActionsProtoData: Data? = nil,
-                         additionalRecipients: [SignalServiceAddress]? = nil) {
+                         additionalRecipients: [SignalServiceAddress]? = nil,
+                         storyAuthorAddress: SignalServiceAddress? = nil,
+                         storyTimestamp: UInt64? = nil,
+                         storyReactionEmoji: String? = nil) {
 
         super.init(thread: thread,
                    timestamp: timestamp,
@@ -49,7 +52,10 @@ public class TSOutgoingMessageBuilder: TSMessageBuilder {
                    contactShare: contactShare,
                    linkPreview: linkPreview,
                    messageSticker: messageSticker,
-                   isViewOnceMessage: isViewOnceMessage)
+                   isViewOnceMessage: isViewOnceMessage,
+                   storyAuthorAddress: storyAuthorAddress,
+                   storyTimestamp: storyTimestamp,
+                   storyReactionEmoji: storyReactionEmoji)
 
         self.isVoiceMessage = isVoiceMessage
         self.groupMetaMessage = groupMetaMessage
@@ -88,7 +94,10 @@ public class TSOutgoingMessageBuilder: TSMessageBuilder {
                               messageSticker: MessageSticker?,
                               isViewOnceMessage: Bool,
                               changeActionsProtoData: Data?,
-                              additionalRecipients: [SignalServiceAddress]?) -> TSOutgoingMessageBuilder {
+                              additionalRecipients: [SignalServiceAddress]?,
+                              storyAuthorAddress: SignalServiceAddress?,
+                              storyTimestamp: NSNumber?,
+                              storyReactionEmoji: String?) -> TSOutgoingMessageBuilder {
         return TSOutgoingMessageBuilder(thread: thread,
                                         timestamp: timestamp,
                                         messageBody: messageBody,
@@ -104,7 +113,10 @@ public class TSOutgoingMessageBuilder: TSMessageBuilder {
                                         messageSticker: messageSticker,
                                         isViewOnceMessage: isViewOnceMessage,
                                         changeActionsProtoData: changeActionsProtoData,
-                                        additionalRecipients: additionalRecipients)
+                                        additionalRecipients: additionalRecipients,
+                                        storyAuthorAddress: storyAuthorAddress,
+                                        storyTimestamp: storyTimestamp?.uint64Value,
+                                        storyReactionEmoji: storyReactionEmoji)
     }
 
     private var hasBuilt = false
@@ -182,7 +194,7 @@ extension TSOutgoingMessage {
     /// Returns a groupId relevant to the message. This is included in the envelope, outside the content encryption.
     ///
     /// Usually, this will be the groupId of the target thread. However, there's a special case here where message resend
-    /// responses will inherit the groupId of the original message. This probably shouldn't be overriden by anything except
+    /// responses will inherit the groupId of the original message. This probably shouldn't be overridden by anything except
     /// OWSOutgoingMessageResendResponse
     @objc
     func envelopeGroupIdWithTransaction(_ transaction: SDSAnyReadTransaction) -> Data? {

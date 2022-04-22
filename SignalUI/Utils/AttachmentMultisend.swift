@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -34,7 +34,7 @@ public class AttachmentMultisend: Dependencies {
                 var messages: [TSOutgoingMessage] = []
 
                 for (conversation, attachments) in conversationAttachments {
-                    guard let thread = conversation.thread(transaction: transaction) else {
+                    guard let thread = conversation.getOrCreateThread(transaction: transaction) else {
                         owsFailDebug("Missing thread for conversation")
                         continue
                     }
@@ -43,7 +43,9 @@ public class AttachmentMultisend: Dependencies {
                     ThreadUtil.addThreadToProfileWhitelistIfEmptyOrPendingRequestAndSetDefaultTimer(thread: thread,
                                                                                                     transaction: transaction)
 
-                    let message = try! ThreadUtil.createUnsentMessage(body: approvalMessageBody,
+                    let messageBodyForContext = approvalMessageBody?.forNewContext(thread, transaction: transaction.unwrapGrdbRead)
+
+                    let message = try! ThreadUtil.createUnsentMessage(body: messageBodyForContext,
                                                                       mediaAttachments: attachments,
                                                                       thread: thread,
                                                                       quotedReplyModel: nil,
@@ -52,7 +54,7 @@ public class AttachmentMultisend: Dependencies {
                     messages.append(message)
                     threads.append(thread)
 
-                    thread.donateSendMessageIntent(transaction: transaction)
+                    thread.donateSendMessageIntent(for: message, transaction: transaction)
                 }
 
                 // map of attachments we'll upload to their copies in each recipient thread
@@ -108,7 +110,7 @@ public class AttachmentMultisend: Dependencies {
             self.databaseStorage.write { transaction in
 
                 for (conversation, attachments) in conversationAttachments {
-                    guard let thread = conversation.thread(transaction: transaction) else {
+                    guard let thread = conversation.getOrCreateThread(transaction: transaction) else {
                         owsFailDebug("Missing thread for conversation")
                         continue
                     }
@@ -117,7 +119,9 @@ public class AttachmentMultisend: Dependencies {
                     ThreadUtil.addThreadToProfileWhitelistIfEmptyOrPendingRequestAndSetDefaultTimer(thread: thread,
                                                                                                     transaction: transaction)
 
-                    let message = try! ThreadUtil.createUnsentMessage(body: approvalMessageBody,
+                    let messageBodyForContext = approvalMessageBody?.forNewContext(thread, transaction: transaction.unwrapGrdbRead)
+
+                    let message = try! ThreadUtil.createUnsentMessage(body: messageBodyForContext,
                                                                       mediaAttachments: attachments,
                                                                       thread: thread,
                                                                       quotedReplyModel: nil,
@@ -126,7 +130,7 @@ public class AttachmentMultisend: Dependencies {
                     messages.append(message)
                     threads.append(thread)
 
-                    thread.donateSendMessageIntent(transaction: transaction)
+                    thread.donateSendMessageIntent(for: message, transaction: transaction)
                 }
 
                 // map of attachments we'll upload to their copies in each recipient thread

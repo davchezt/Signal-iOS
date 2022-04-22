@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 #import "TSQuotedMessage.h"
@@ -285,7 +285,7 @@ typedef NS_ENUM(NSUInteger, OWSAttachmentInfoReference) {
 {
     if (quotedMessage.isViewOnceMessage) {
         // We construct a quote that does not include any of the quoted message's renderable content.
-        NSString *body = NSLocalizedString(@"PER_MESSAGE_EXPIRATION_NOT_VIEWABLE",
+        NSString *body = OWSLocalizedString(@"PER_MESSAGE_EXPIRATION_NOT_VIEWABLE",
             @"inbox cell and notification text for an already viewed view-once media message.");
         return [[TSQuotedMessage alloc] initWithTimestamp:quotedMessage.timestamp
                                             authorAddress:proto.authorAddress
@@ -307,6 +307,8 @@ typedef NS_ENUM(NSUInteger, OWSAttachmentInfoReference) {
         // Contact share bodies are special-cased in OWSQuotedReplyModel
         // We need to account for that here.
         body = [@"👤 " stringByAppendingString:quotedMessage.contactShare.name.displayName];
+    } else if (quotedMessage.storyReactionEmoji.length > 0) {
+        body = quotedMessage.storyReactionEmoji;
     }
 
     SSKProtoDataMessageQuoteQuotedAttachment *_Nullable firstAttachmentProto = proto.attachments.firstObject;

@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -95,7 +95,7 @@ extension DeviceTransferProgressViewController: DeviceTransferServiceObserver {
         case .certificateMismatch:
             progressView.renderError(
                 text: NSLocalizedString("DEVICE_TRANSFER_ERROR_CERTIFICATE_MISMATCH",
-                                        comment: "An error indicating that we were unable to verify the indentity of the new device to complete the transfer")
+                                        comment: "An error indicating that we were unable to verify the identity of the new device to complete the transfer")
             )
         case .notEnoughSpace:
             owsFailDebug("This should never happen on the old device")

@@ -112,7 +112,7 @@ const NSUInteger kMinimumSearchLength = 1;
     OWSSearchBar *searchBar = [OWSSearchBar new];
     _searchBar = searchBar;
     searchBar.delegate = self;
-    if (RemoteConfig.usernames) {
+    if (SSKFeatureFlags.usernames) {
         searchBar.placeholder = NSLocalizedString(@"SEARCH_BY_NAME_OR_USERNAME_OR_NUMBER_PLACEHOLDER_TEXT",
             @"Placeholder text indicating the user can search for contacts by name, username, or phone number.");
     } else {
@@ -181,7 +181,7 @@ const NSUInteger kMinimumSearchLength = 1;
 - (void)pullToRefreshPerformed:(UIRefreshControl *)refreshControl
 {
     OWSAssertIsOnMainThread();
-    OWSLogInfo(@"beggining refreshing.");
+    OWSLogInfo(@"beginning refreshing.");
 
     [self.contactsManagerImpl userRequestedSystemContactsRefresh]
         .then(^(id value) {
@@ -340,13 +340,6 @@ const NSUInteger kMinimumSearchLength = 1;
     [self.contactsManagerImpl requestSystemContactsOnce];
 
     [self showContactAppropriateViews];
-}
-
-- (void)viewDidAppear:(BOOL)animated
-{
-    [super viewDidAppear:animated];
-
-    [OWSActionSheets showIOSUpgradeNagIfNecessary];
 }
 
 #pragma mark - Table Contents
@@ -508,12 +501,12 @@ const NSUInteger kMinimumSearchLength = 1;
                 NSInteger sectionIndex =
                     [strongSelf.collation sectionForSectionIndexTitleAtIndex:index] + beforeContactsSectionCount;
                 if (sectionIndex < 0) {
-                    // Sentinal in case we change our section ordering in a surprising way.
+                    // Sentinel in case we change our section ordering in a surprising way.
                     OWSCFailDebug(@"Unexpected negative section index");
                     return 0;
                 }
                 if (sectionIndex >= (NSInteger)strongContents.sections.count) {
-                    // Sentinal in case we change our section ordering in a surprising way.
+                    // Sentinel in case we change our section ordering in a surprising way.
                     OWSCFailDebug(@"Unexpectedly large index");
                     return 0;
                 }
@@ -773,7 +766,7 @@ const NSUInteger kMinimumSearchLength = 1;
     }
 
     // Username lookup
-    if (RemoteConfig.usernames) {
+    if (SSKFeatureFlags.usernames) {
         NSString *usernameMatch = self.searchText;
         NSString *_Nullable localUsername = self.profileManager.localUsername;
 

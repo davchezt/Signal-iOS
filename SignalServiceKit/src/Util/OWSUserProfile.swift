@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -53,6 +53,23 @@ public class OWSUserProfileBadgeInfo: NSObject, SDSSwiftSerializable {
             description += ", Visible: \(isVisible ? "Yes" : "No")"
         }
         return description
+    }
+
+    override public func isEqual(_ object: Any?) -> Bool {
+        guard let other = object as? OWSUserProfileBadgeInfo else {
+            return false
+        }
+        if badgeId != other.badgeId {
+            return false
+        }
+        // NOTE: We do not compare badges because the badgeId is good enough for equality purposes.
+        if expiration != other.expiration {
+            return false
+        }
+        if isVisible != other.isVisible {
+            return false
+        }
+        return true
     }
 }
 
@@ -323,7 +340,7 @@ public class UserProfileChanges: NSObject {
     @objc
     public var username: OptionalStringValue?
     @objc
-    public var isUuidCapable: BoolValue?
+    public var isStoriesCapable: BoolValue?
     @objc
     public var avatarUrlPath: OptionalStringValue?
     @objc
@@ -386,13 +403,13 @@ public extension OWSUserProfile {
               completion: completion)
     }
 
-    @objc(updateWithGivenName:familyName:bio:bioEmoji:username:isUuidCapable:badges:avatarUrlPath:lastFetchDate:userProfileWriter:transaction:completion:)
+    @objc(updateWithGivenName:familyName:bio:bioEmoji:username:isStoriesCapable:badges:avatarUrlPath:lastFetchDate:userProfileWriter:transaction:completion:)
     func update(givenName: String?,
                 familyName: String?,
                 bio: String?,
                 bioEmoji: String?,
                 username: String?,
-                isUuidCapable: Bool,
+                isStoriesCapable: Bool,
                 badges: [OWSUserProfileBadgeInfo],
                 avatarUrlPath: String?,
                 lastFetchDate: Date,
@@ -405,7 +422,7 @@ public extension OWSUserProfile {
         changes.bio = .init(bio)
         changes.bioEmoji = .init(bioEmoji)
         changes.username = .init(username)
-        changes.isUuidCapable = .init(isUuidCapable)
+        changes.isStoriesCapable = .init(isStoriesCapable)
         changes.badges = badges
         changes.avatarUrlPath = .init(avatarUrlPath)
         changes.lastFetchDate = .init(lastFetchDate)
@@ -415,13 +432,13 @@ public extension OWSUserProfile {
               completion: completion)
     }
 
-    @objc(updateWithGivenName:familyName:bio:bioEmoji:username:isUuidCapable:badges:avatarUrlPath:avatarFileName:lastFetchDate:userProfileWriter:transaction:completion:)
+    @objc(updateWithGivenName:familyName:bio:bioEmoji:username:isStoriesCapable:badges:avatarUrlPath:avatarFileName:lastFetchDate:userProfileWriter:transaction:completion:)
     func update(givenName: String?,
                 familyName: String?,
                 bio: String?,
                 bioEmoji: String?,
                 username: String?,
-                isUuidCapable: Bool,
+                isStoriesCapable: Bool,
                 badges: [OWSUserProfileBadgeInfo],
                 avatarUrlPath: String?,
                 avatarFileName: String?,
@@ -435,7 +452,7 @@ public extension OWSUserProfile {
         changes.bio = .init(bio)
         changes.bioEmoji = .init(bioEmoji)
         changes.username = .init(username)
-        changes.isUuidCapable = .init(isUuidCapable)
+        changes.isStoriesCapable = .init(isStoriesCapable)
         changes.badges = badges
         changes.avatarUrlPath = .init(avatarUrlPath)
         changes.avatarFileName = .init(avatarFileName)
@@ -470,7 +487,7 @@ public extension OWSUserProfile {
         changes.bio = .init(nil)
         changes.bioEmoji = .init(nil)
         changes.username = .init(nil)
-        // builder.isUuidCapable = .init(nil)
+        // builder.isStoriesCapable = .init(nil)
         changes.avatarUrlPath = .init(nil)
         changes.avatarFileName = .init(nil)
         // builder.lastFetchDate = .init(nil)
@@ -511,12 +528,12 @@ public extension OWSUserProfile {
     }
 
     func update(username: String?,
-                isUuidCapable: Bool,
+                isStoriesCapable: Bool,
                 userProfileWriter: UserProfileWriter,
                 transaction: SDSAnyWriteTransaction) {
         let changes = UserProfileChanges()
         changes.username = .init(username)
-        changes.isUuidCapable = .init(isUuidCapable)
+        changes.isStoriesCapable = .init(isStoriesCapable)
         apply(changes,
               userProfileWriter: userProfileWriter,
               transaction: transaction,
@@ -524,13 +541,13 @@ public extension OWSUserProfile {
     }
 
     func update(username: String?,
-                isUuidCapable: Bool,
+                isStoriesCapable: Bool,
                 lastFetchDate: Date,
                 userProfileWriter: UserProfileWriter,
                 transaction: SDSAnyWriteTransaction) {
         let changes = UserProfileChanges()
         changes.username = .init(username)
-        changes.isUuidCapable = .init(isUuidCapable)
+        changes.isStoriesCapable = .init(isStoriesCapable)
         changes.lastFetchDate = .init(lastFetchDate)
         apply(changes,
               userProfileWriter: userProfileWriter,
@@ -571,4 +588,14 @@ public extension OWSUserProfile {
               completion: nil)
     }
     #endif
+}
+
+extension OWSUserProfile {
+    static func getFor(keys: [SignalServiceAddress], transaction: SDSAnyReadTransaction) -> [OWSUserProfile?] {
+        let resolvedAddresses = keys.map { address -> SignalServiceAddress in
+            owsAssertDebug(address.isValid)
+            return resolve(address)
+        }
+        return userProfileFinder.userProfiles(for: resolvedAddresses, transaction: transaction)
+    }
 }

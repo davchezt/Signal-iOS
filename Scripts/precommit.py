@@ -1,15 +1,22 @@
-#!/usr/bin/env python2.7
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
 
 import os
 import sys
 import subprocess
 import datetime
 import argparse
-import commands
+from typing import Iterable
+from pathlib import Path
 
 
-git_repo_path = os.path.abspath(subprocess.check_output(['git', 'rev-parse', '--show-toplevel']).strip())
+EXTENSIONS_TO_CHECK = set((
+    ".h", ".hpp", ".cpp", ".m", ".mm", ".pch", ".swift"
+))
+
+
+git_repo_path = os.path.abspath(
+    subprocess.check_output(['git', 'rev-parse', '--show-toplevel'], text=True).strip()
+)
 
 
 
@@ -56,7 +63,7 @@ def parse_include(line):
     elif not remainder:
         return None
     else:
-        print ('Unexpected import or include: '+ line)
+        print('Unexpected import or include: ' + line)
         sys.exit(1)
 
     comment = None
@@ -64,7 +71,7 @@ def parse_include(line):
         isQuote = True
         endIndex = remainder.find('"', 1)
         if endIndex < 0:
-            print ('Unexpected import or include: '+ line)
+            print('Unexpected import or include: ' + line)
             sys.exit(1)
         body = remainder[1:endIndex]
         comment = remainder[endIndex+1:]
@@ -72,12 +79,12 @@ def parse_include(line):
         isQuote = False
         endIndex = remainder.find('>', 1)
         if endIndex < 0:
-            print ('Unexpected import or include: '+ line)
+            print('Unexpected import or include: ' + line)
             sys.exit(1)
         body = remainder[1:endIndex]
         comment = remainder[endIndex+1:]
     else:
-        print ('Unexpected import or include: '+ remainder)
+        print('Unexpected import or include: ' + remainder)
         sys.exit(1)
 
     return include(isInclude, isQuote, body, comment)
@@ -96,8 +103,6 @@ def parse_includes(text):
 
 
 def sort_include_block(text, filepath, filename, file_extension):
-    lines = text.split('\n')
-
     includes = parse_includes(text)
 
     blocks = []
@@ -129,26 +134,8 @@ def sort_include_block(text, filepath, filename, file_extension):
     includes = other_includes
 
     def formatBlock(includes):
-        lines = [include.format() for include in includes]
-        lines = list(set(lines))
-        def include_sorter(a, b):
-            # return cmp(a.lower(), b.lower())
-            return cmp(a, b)
-        # print 'before'
-        # for line in lines:
-        #     print '\t', line
-        # print
-        lines.sort(include_sorter)
-        # print 'after'
-        # for line in lines:
-        #     print '\t', line
-        # print
-        # print
-        # print 'filepath'
-        # for line in lines:
-        #     print '\t', line
-        # print
-        return '\n'.join(lines)
+        lines = set([include.format() for include in includes])
+        return "\n".join(sorted(lines))
 
     includeAngles = [include for include in includes if include.isInclude and not include.isQuote]
     includeQuotes = [include for include in includes if include.isInclude and include.isQuote]
@@ -256,7 +243,7 @@ def sort_matching_blocks(sort_name, filepath, filename, file_extension, text, ma
             break
 
     if text != processed:
-        print sort_name, filepath
+        print(sort_name, filepath)
     return processed
 
 
@@ -303,46 +290,19 @@ def sort_forward_protocol_statements(filepath, filename, file_extension, text):
     return sort_matching_blocks('sort_forward_protocol_statements', filepath, filename, file_extension, text, find_forward_protocol_statement_section, sort_forward_decl_statement_block)
 
 
-def splitall(path):
-    allparts = []
-    while 1:
-        parts = os.path.split(path)
-        if parts[0] == path:  # sentinel for absolute paths
-            allparts.insert(0, parts[0])
-            break
-        elif parts[1] == path: # sentinel for relative paths
-            allparts.insert(0, parts[1])
-            break
-        else:
-            path = parts[0]
-            allparts.insert(0, parts[1])
-    return allparts
+def get_ext(file: str) -> str:
+    return os.path.splitext(file)[1]
 
 
 def process(filepath):
-
     short_filepath = filepath[len(git_repo_path):]
     if short_filepath.startswith(os.sep):
        short_filepath = short_filepath[len(os.sep):]
 
     filename = os.path.basename(filepath)
     if filename.startswith('.'):
-        raise "shouldn't call process with dotfile"
-    file_ext = os.path.splitext(filename)[1]
-    if file_ext in ('.swift'):
-        env_copy = os.environ.copy()
-        env_copy["SCRIPT_INPUT_FILE_COUNT"] = "1"
-        env_copy["SCRIPT_INPUT_FILE_0"] = '%s' % ( short_filepath, )
-        try:
-            lint_output = subprocess.check_output(['swiftlint', '--fix', '--use-script-input-files'], env=env_copy)
-        except subprocess.CalledProcessError, e:
-            lint_output = e.output
-        print lint_output
-        try:
-            lint_output = subprocess.check_output(['swiftlint', 'lint', '--use-script-input-files'], env=env_copy)
-        except subprocess.CalledProcessError, e:
-            lint_output = e.output
-        print lint_output
+        raise Exception("shouldn't call process with dotfile")
+    file_ext = get_ext(filename)
 
     with open(filepath, 'rt') as f:
         text = f.read()
@@ -377,40 +337,76 @@ def process(filepath):
     if original_text == text:
         return
 
-    print 'Updating:', short_filepath
+    print('Updating:', short_filepath)
 
     with open(filepath, 'wt') as f:
         f.write(text)
 
 
-def should_ignore_path(path):
-    ignore_paths = [
-        os.path.join(git_repo_path, '.git')
-    ]
-    for ignore_path in ignore_paths:
-        if path.startswith(ignore_path):
-            return True
-    for component in splitall(path):
+def get_file_paths_in(path: str) -> Iterable[str]:
+    for rootdir, _, filenames in os.walk(path):
+        for filename in filenames:
+            yield os.path.abspath(os.path.join(rootdir, filename))
+
+
+def get_file_paths_for_commands(commands: Iterable[list[str]]) -> Iterable[str]:
+    for command in commands:
+        lines = subprocess.check_output(command, text=True).split("\n")
+        for line in lines:
+            file_path = os.path.abspath(os.path.join(git_repo_path, line))
+            if os.path.exists(file_path):
+                yield file_path
+
+
+def should_process_file(file_path: str) -> bool:
+    if get_ext(file_path) not in EXTENSIONS_TO_CHECK:
+        return False
+
+    for component in Path(file_path).parts:
         if component.startswith('.'):
-            return True
+            return False
         if component.endswith('.framework'):
-            return True
+            return False
         if component in ('Pods', 'ThirdParty', 'Carthage',):
-            return True
+            return False
 
-    return False
+    return True
 
 
-def process_if_appropriate(filepath):
-    filename = os.path.basename(filepath)
-    if filename.startswith('.'):
+def lint_swift_files(file_paths: set[str]) -> None:
+    swift_file_paths = list(filter(
+        lambda f: get_ext(f) == ".swift",
+        file_paths
+    ))
+
+    file_count = len(swift_file_paths)
+    if file_count < 1:
         return
-    file_ext = os.path.splitext(filename)[1]
-    if file_ext not in ('.h', '.hpp', '.cpp', '.m', '.mm', '.pch', '.swift'):
-        return
-    if should_ignore_path(filepath):
-        return
-    process(filepath)
+
+    env = os.environ.copy()
+    env["SCRIPT_INPUT_FILE_COUNT"] = str(file_count)
+    for i, file_path in enumerate(swift_file_paths):
+        env[f"SCRIPT_INPUT_FILE_{i}"] = file_path
+
+    try:
+        lint_output = subprocess.check_output(
+            ["swiftlint", "lint", "--fix", "--use-script-input-files"],
+            env=env,
+            text=True
+        )
+    except subprocess.CalledProcessError as error:
+        lint_output = error.output
+    print(lint_output)
+
+    try:
+        lint_output = subprocess.check_output(
+            ["swiftlint", "lint", "--use-script-input-files"],
+            env=env,
+            text=True
+        )
+    except subprocess.CalledProcessError as error:
+        lint_output = error.output
+    print(lint_output)
 
 
 def check_diff_for_keywords():
@@ -439,7 +435,7 @@ def check_diff_for_keywords():
     command_line = 'git diff --staged | grep --color=always -C 3 -E "%s"' % matching_expression
     try:
         output = subprocess.check_output(command_line, shell=True)
-    except subprocess.CalledProcessError, e:
+    except subprocess.CalledProcessError as e:
         # > man grep
         #  EXIT STATUS
         #  The grep utility exits with one of the following values:
@@ -465,53 +461,32 @@ if __name__ == "__main__":
     parser.add_argument('--ref', help='process all files that have changed since the given ref')
     args = parser.parse_args()
 
+    all_file_paths: Iterable[str] = []
     clang_format_commit = 'HEAD'
-
     if args.all:
-        for rootdir, dirnames, filenames in os.walk(git_repo_path):
-            for filename in filenames:
-                file_path = os.path.abspath(os.path.join(rootdir, filename))
-                process_if_appropriate(file_path)
+        all_file_paths = get_file_paths_in(git_repo_path)
     elif args.path:
-        for rootdir, dirnames, filenames in os.walk(args.path):
-            for filename in filenames:
-                file_path = os.path.abspath(os.path.join(rootdir, filename))
-                process_if_appropriate(file_path)
+        all_file_paths = get_file_paths_in(args.path)
     elif args.ref:
-        filepaths = []
-
-        output = commands.getoutput('git diff --name-only --diff-filter=ACMR HEAD %s' % args.ref)
-        filepaths.extend([line.strip() for line in output.split('\n')])
-
-        # Only process each path once.
-        filepaths = sorted(set(filepaths))
-
-        for filepath in filepaths:
-            filepath = os.path.abspath(os.path.join(git_repo_path, filepath))
-            if os.path.exists(filepath):
-                process_if_appropriate(filepath)
-
+        all_file_paths = get_file_paths_for_commands([
+            ["git", "diff", "--name-only", "--diff-filter=ACMR", args.ref, "HEAD"]
+        ])
         clang_format_commit = args.ref
     else:
-        filepaths = []
+        all_file_paths = get_file_paths_for_commands([
+            ["git", "diff", "--cached", "--name-only", "--diff-filter=ACMR"],
+            ["git", "diff", "--name-only", "--diff-filter=ACMR"]
+        ])
 
-        # Staging
-        output = commands.getoutput('git diff --cached --name-only --diff-filter=ACMR')
-        filepaths.extend([line.strip() for line in output.split('\n')])
+    file_paths = set(filter(should_process_file, all_file_paths))
 
-        # Working
-        output = commands.getoutput('git diff --name-only --diff-filter=ACMR')
-        filepaths.extend([line.strip() for line in output.split('\n')])
+    lint_swift_files(file_paths)
 
-        # Only process each path once.
-        filepaths = sorted(set(filepaths))
+    for file_path in file_paths:
+        process(file_path)
 
-        for filepath in filepaths:
-            filepath = os.path.abspath(os.path.join(git_repo_path, filepath))
-            process_if_appropriate(filepath)
-
-    print 'git clang-format...'
+    print('git clang-format...')
     # we don't want to format .proto files, so we specify every other supported extension
-    print commands.getoutput('git clang-format --extensions "c,h,m,mm,cc,cp,cpp,c++,cxx,hh,hxx,cu,java,js,ts,cs" --commit %s' % clang_format_commit)
+    print(subprocess.getoutput('git clang-format --extensions "c,h,m,mm,cc,cp,cpp,c++,cxx,hh,hxx,cu,java,js,ts,cs" --commit %s' % clang_format_commit))
  
     check_diff_for_keywords()

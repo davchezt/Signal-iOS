@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -258,16 +258,21 @@ public extension TSThread {
             : .onThisDevice
 
         let finder = InteractionFinder(threadUniqueId: uniqueId)
-        for message in finder.allUnreadMessages(transaction: transaction.unwrapGrdbRead) {
-            message.markAsRead(
-                atTimestamp: Date.ows_millisecondTimestamp(),
-                thread: self,
-                circumstance: circumstance,
-                transaction: transaction
-            )
+        var cursor = finder.fetchAllUnreadMessages(transaction: transaction.unwrapGrdbRead)
+        do {
+            while let message = try cursor.next() {
+                message.markAsRead(
+                    atTimestamp: Date.ows_millisecondTimestamp(),
+                    thread: self,
+                    circumstance: circumstance,
+                    transaction: transaction
+                )
+            }
+        } catch {
+            owsFailDebug("unexpected failure fetching unread messages: \(error)")
         }
 
         // Just to be defensive, we'll also check for unread messages.
-        owsAssertDebug(finder.allUnreadMessages(transaction: transaction.unwrapGrdbRead).isEmpty)
+        owsAssertDebug(finder.unreadCount(transaction: transaction.unwrapGrdbRead) == 0)
     }
 }

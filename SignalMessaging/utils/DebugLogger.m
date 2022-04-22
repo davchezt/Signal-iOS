@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 #import "DebugLogger.h"
@@ -9,6 +9,7 @@
 #import <CocoaLumberjack/DDTTYLogger.h>
 #import <SignalCoreKit/NSDate+OWS.h>
 #import <SignalServiceKit/AppContext.h>
+#import <SignalServiceKit/AppVersion.h>
 #import <SignalServiceKit/OWSFileSystem.h>
 #import <SignalServiceKit/SignalServiceKit-Swift.h>
 #import <SignalServiceKit/TestAppContext.h>
@@ -21,6 +22,9 @@ const NSUInteger kMaxDebugLogFileSize = 1024 * 1024 * 3;
 
 @property (nonatomic, nullable) DDFileLogger *fileLogger;
 
+@end
+
+@interface DebugLogFileManager : DDLogFileManagerDefault
 @end
 
 #pragma mark -
@@ -88,8 +92,8 @@ const NSUInteger kMaxDebugLogFileSize = 1024 * 1024 * 3;
     NSString *logsDirPath = [self logsDirPath];
 
     // Logging to file, because it's in the Cache folder, they are not uploaded in iTunes/iCloud backups.
-    id<DDLogFileManager> logFileManager =
-        [[DDLogFileManagerDefault alloc] initWithLogsDirectory:logsDirPath defaultFileProtectionLevel:@""];
+    id<DDLogFileManager> logFileManager = [[DebugLogFileManager alloc] initWithLogsDirectory:logsDirPath
+                                                                  defaultFileProtectionLevel:@""];
     self.fileLogger = [[DDFileLogger alloc] initWithLogFileManager:logFileManager];
 
     // 24 hour rolling.
@@ -226,6 +230,17 @@ const NSUInteger kMaxDebugLogFileSize = 1024 * 1024 * 3;
     }
 }
 
+static NSString *const kFirstValidLogVersion = @"5.35.1";
+- (void)postLaunchLogCleanup
+{
+    NSString *lastCompletedAppLaunch = AppVersion.shared.lastCompletedLaunchMainAppVersion;
+    if ([AppVersion compareAppVersion:lastCompletedAppLaunch with:kFirstValidLogVersion] == NSOrderedAscending) {
+        [self wipeLogs];
+        OWSLogWarn(@"Wiped logs. (%@ < %@)", lastCompletedAppLaunch, kFirstValidLogVersion);
+    }
+    [self removeObsoleteDebugLogs];
+}
+
 @end
 
 #pragma mark -
@@ -245,6 +260,63 @@ const NSUInteger kMaxDebugLogFileSize = 1024 * 1024 * 3;
     // "choo-choo"
     const SystemSoundID errorSound = 1023;
     AudioServicesPlayAlertSound(errorSound);
+}
+
+@end
+
+#pragma mark -
+
+@implementation DebugLogFileManager
+
+- (void)deleteLogFilesInDirectory:(NSString *)logsDirPath olderThanDate:(NSDate *)cutoffDate
+{
+    NSURL *logsDirectory = [NSURL fileURLWithPath:logsDirPath];
+    if (!logsDirectory) {
+        return;
+    }
+
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    NSArray<NSURL *> *logFiles = [fileManager contentsOfDirectoryAtURL:logsDirectory
+                                            includingPropertiesForKeys:@[ NSURLContentModificationDateKey ]
+                                                               options:NSDirectoryEnumerationSkipsHiddenFiles
+                                                                 error:NULL];
+    for (NSURL *logFile in logFiles) {
+        if (![logFile.pathExtension isEqualToString:@"log"]) {
+            // This file is not a log file; don't touch it.
+            continue;
+        }
+        NSDate *lastModified;
+        if (![logFile getResourceValue:&lastModified forKey:NSURLContentModificationDateKey error:NULL]) {
+            // Couldn't get the modification date.
+            continue;
+        }
+        if ([lastModified isAfterDate:cutoffDate]) {
+            // Still within the window.
+            continue;
+        }
+        // Attempt to remove the item, but don't stress if it fails.
+        [fileManager removeItemAtURL:logFile error:NULL];
+    }
+}
+
+- (void)didArchiveLogFile:(NSString *)logFilePath wasRolled:(BOOL)wasRolled
+{
+    if (![CurrentAppContext() isMainApp]) {
+        return;
+    }
+
+    // Use this opportunity to delete old log files from extensions as well.
+
+    // Compute an approximate "N days ago", ignoring calendars and daylight savings changes and such.
+    NSDate *cutoffDate = [NSDate dateWithTimeIntervalSinceNow:self.maximumNumberOfLogFiles * -kDayInterval];
+
+    for (NSString *logsDirPath in [DebugLogger allLogsDirPaths]) {
+        if ([logsDirPath isEqual:self.logsDirectory]) {
+            // Managed directly by the base class.
+            continue;
+        }
+        [self deleteLogFilesInDirectory:logsDirPath olderThanDate:cutoffDate];
+    }
 }
 
 @end

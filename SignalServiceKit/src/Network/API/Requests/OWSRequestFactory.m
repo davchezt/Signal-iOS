@@ -8,7 +8,6 @@
 #import "OWSDevice.h"
 #import "OWSIdentityManager.h"
 #import "ProfileManagerProtocol.h"
-#import "RemoteAttestation.h"
 #import "SSKEnvironment.h"
 #import "SignedPrekeyRecord.h"
 #import "TSAccountManager.h"
@@ -16,12 +15,21 @@
 #import <Curve25519Kit/Curve25519.h>
 #import <SignalCoreKit/Cryptography.h>
 #import <SignalCoreKit/NSData+OWS.h>
-#import <SignalMetadataKit/SignalMetadataKit-Swift.h>
 #import <SignalServiceKit/SignalServiceKit-Swift.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
 NSString *const OWSRequestKey_AuthKey = @"AuthKey";
+
+static NSString *_Nullable queryParamForIdentity(OWSIdentity identity)
+{
+    switch (identity) {
+        case OWSIdentityACI:
+            return nil;
+        case OWSIdentityPNI:
+            return @"identity=pni";
+    }
+}
 
 @implementation OWSRequestFactory
 
@@ -160,9 +168,13 @@ NSString *const OWSRequestKey_AuthKey = @"AuthKey";
     return [TSRequest requestWithUrl:[NSURL URLWithString:@"v3/attachments/form/upload"] method:@"GET" parameters:@{}];
 }
 
-+ (TSRequest *)availablePreKeysCountRequest
++ (TSRequest *)availablePreKeysCountRequestForIdentity:(OWSIdentity)identity
 {
-    NSString *path = [NSString stringWithFormat:@"%@", self.textSecureKeysAPI];
+    NSString *path = self.textSecureKeysAPI;
+    NSString *queryParam = queryParamForIdentity(identity);
+    if (queryParam != nil) {
+        path = [path stringByAppendingFormat:@"?%@", queryParam];
+    }
     return [TSRequest requestWithUrl:[NSURL URLWithString:path] method:@"GET" parameters:@{}];
 }
 
@@ -489,6 +501,10 @@ NSString *const OWSRequestKey_AuthKey = @"AuthKey";
     capabilities[@"gv1-migration"] = @(YES);
     capabilities[@"senderKey"] = @(YES);
 
+    if (SSKFeatureFlags.stories) {
+        capabilities[@"stories"] = @(YES);
+    }
+
     // If the storage service requires (or will require) secondary devices
     // to have a capability in order to be linked, we might need to always
     // set that capability here if isSecondaryDevice is true.
@@ -554,25 +570,36 @@ NSString *const OWSRequestKey_AuthKey = @"AuthKey";
     return request;
 }
 
-+ (TSRequest *)registerSignedPrekeyRequestWithSignedPreKeyRecord:(SignedPreKeyRecord *)signedPreKey
++ (TSRequest *)registerSignedPrekeyRequestForIdentity:(OWSIdentity)identity
+                                         signedPreKey:(SignedPreKeyRecord *)signedPreKey
 {
     OWSAssertDebug(signedPreKey);
 
     NSString *path = self.textSecureSignedKeysAPI;
+    NSString *queryParam = queryParamForIdentity(identity);
+    if (queryParam != nil) {
+        path = [path stringByAppendingFormat:@"?%@", queryParam];
+    }
     return [TSRequest requestWithUrl:[NSURL URLWithString:path]
                               method:@"PUT"
                           parameters:[self dictionaryFromSignedPreKey:signedPreKey]];
 }
 
-+ (TSRequest *)registerPrekeysRequestWithPrekeyArray:(NSArray *)prekeys
-                                         identityKey:(NSData *)identityKeyPublic
-                                        signedPreKey:(SignedPreKeyRecord *)signedPreKey
++ (TSRequest *)registerPrekeysRequestForIdentity:(OWSIdentity)identity
+                                     prekeyArray:(NSArray *)prekeys
+                                     identityKey:(NSData *)identityKeyPublic
+                                    signedPreKey:(SignedPreKeyRecord *)signedPreKey
 {
     OWSAssertDebug(prekeys.count > 0);
     OWSAssertDebug(identityKeyPublic.length > 0);
     OWSAssertDebug(signedPreKey);
 
     NSString *path = self.textSecureKeysAPI;
+    NSString *queryParam = queryParamForIdentity(identity);
+    if (queryParam != nil) {
+        path = [path stringByAppendingFormat:@"?%@", queryParam];
+    }
+
     NSString *publicIdentityKey = [[identityKeyPublic prependKeyType] base64EncodedStringWithOptions:0];
     NSMutableArray *serializedPrekeyList = [NSMutableArray array];
     for (PreKeyRecord *preKey in prekeys) {
@@ -613,18 +640,14 @@ NSString *const OWSRequestKey_AuthKey = @"AuthKey";
 
 #pragma mark - Remote Attestation
 
-+ (TSRequest *)remoteAttestationAuthRequestForService:(RemoteAttestationService)service
++ (TSRequest *)remoteAttestationAuthRequestForKeyBackup
 {
-    NSString *path;
-    switch (service) {
-        case RemoteAttestationServiceContactDiscovery:
-            path = @"v1/directory/auth";
-            break;
-        case RemoteAttestationServiceKeyBackup:
-            path = @"v1/backup/auth";
-            break;
-    }
-    return [TSRequest requestWithUrl:[NSURL URLWithString:path] method:@"GET" parameters:@{}];
+    return [TSRequest requestWithUrl:[NSURL URLWithString:@"v1/backup/auth"] method:@"GET" parameters:@{}];
+}
+
++ (TSRequest *)remoteAttestationAuthRequestForContactDiscovery
+{
+    return [TSRequest requestWithUrl:[NSURL URLWithString:@"v1/directory/auth"] method:@"GET" parameters:@{}];
 }
 
 #pragma mark - CDS
@@ -649,6 +672,12 @@ NSString *const OWSRequestKey_AuthKey = @"AuthKey";
     }
     NSString *path = [NSString stringWithFormat:@"v1/directory/feedback-v3/%@", status];
     return [TSRequest requestWithUrl:[NSURL URLWithString:path] method:@"PUT" parameters:parameters];
+}
+
++ (TSRequest *)hsmDirectoryAuthRequest
+{
+    NSURL *url = [NSURL URLWithString:@"v2/directory/auth"];
+    return [TSRequest requestWithUrl:url method:@"GET" parameters:@{}];
 }
 
 #pragma mark - KBS
@@ -885,12 +914,12 @@ NSString *const OWSRequestKey_AuthKey = @"AuthKey";
                           parameters:@{ @"type" : @"recaptcha", @"token" : serverToken, @"captcha" : captchaToken }];
 }
 
-+ (TSRequest *)reportSpamFromPhoneNumber:(NSString *)phoneNumber withServerGuid:(NSString *)serverGuid
++ (TSRequest *)reportSpamFromUuid:(NSUUID *)senderUuid withServerGuid:(NSString *)serverGuid
 {
-    OWSAssertDebug(phoneNumber.length > 0);
+    OWSAssertDebug(senderUuid != nil);
     OWSAssertDebug(serverGuid.length > 0);
 
-    NSString *path = [NSString stringWithFormat:@"/v1/messages/report/%@/%@", phoneNumber, serverGuid];
+    NSString *path = [NSString stringWithFormat:@"/v1/messages/report/%@/%@", senderUuid.UUIDString, serverGuid];
     return [TSRequest requestWithUrl:[NSURL URLWithString:path] method:@"POST" parameters:@{}];
 }
 

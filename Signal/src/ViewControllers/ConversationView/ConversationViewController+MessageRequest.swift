@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -80,7 +80,7 @@ extension ConversationViewController: MessageRequestDelegate {
         }
         syncManager.sendMessageRequestResponseSyncMessage(thread: thread,
                                                           responseType: .block)
-        NotificationCenter.default.post(name: HomeViewController.clearSearch, object: nil)
+        NotificationCenter.default.post(name: ChatListViewController.clearSearch, object: nil)
     }
 
     func blockThreadAndDelete() {
@@ -113,7 +113,7 @@ extension ConversationViewController: MessageRequestDelegate {
             ),
             extraVInset: bottomBar.height
         )
-        NotificationCenter.default.post(name: HomeViewController.clearSearch, object: nil)
+        NotificationCenter.default.post(name: ChatListViewController.clearSearch, object: nil)
     }
 
     func reportSpam() {
@@ -121,8 +121,8 @@ extension ConversationViewController: MessageRequestDelegate {
             return owsFailDebug("Unexpected thread type for reporting spam \(type(of: thread))")
         }
 
-        guard let senderPhoneNumber = contactThread.contactAddress.phoneNumber else {
-            return owsFailDebug("Missing phone number for reporting spam from \(contactThread.contactAddress)")
+        guard let senderUuid = contactThread.contactAddress.uuid else {
+            return owsFailDebug("Missing uuid for reporting spam from \(contactThread.contactAddress)")
         }
 
         // We only report a selection of the N most recent messages
@@ -157,18 +157,18 @@ extension ConversationViewController: MessageRequestDelegate {
             return
         }
 
-        Logger.info("Reporting \(guidsToReport.count) message(s) from \(senderPhoneNumber) as spam.")
+        Logger.info("Reporting \(guidsToReport.count) message(s) from \(senderUuid) as spam.")
 
         var promises = [Promise<Void>]()
         for guid in guidsToReport {
-            let request = OWSRequestFactory.reportSpam(fromPhoneNumber: senderPhoneNumber, withServerGuid: guid)
+            let request = OWSRequestFactory.reportSpam(from: senderUuid, withServerGuid: guid)
             promises.append(networkManager.makePromise(request: request).asVoid())
         }
 
         Promise.when(fulfilled: promises).done {
-            Logger.info("Successfully reported \(guidsToReport.count) message(s) from \(senderPhoneNumber) as spam.")
+            Logger.info("Successfully reported \(guidsToReport.count) message(s) from \(senderUuid) as spam.")
         }.catch { error in
-            owsFailDebug("Failed to report message(s) from \(senderPhoneNumber) as spam with error: \(error)")
+            owsFailDebug("Failed to report message(s) from \(senderUuid) as spam with error: \(error)")
         }
     }
 
@@ -219,7 +219,7 @@ extension ConversationViewController: MessageRequestDelegate {
                 self.thread.softDelete(with: transaction)
             }
             self.conversationSplitViewController?.closeSelectedConversation(animated: true)
-            NotificationCenter.default.post(name: HomeViewController.clearSearch, object: nil)
+            NotificationCenter.default.post(name: ChatListViewController.clearSearch, object: nil)
         }
 
         guard let groupThread = thread as? TSGroupThread,
@@ -259,7 +259,7 @@ extension ConversationViewController: MessageRequestDelegate {
                 // Send our profile key to the sender
                 let profileKeyMessage = OWSProfileKeyMessage(thread: thread)
                 Self.messageSenderJobQueue.add(message: profileKeyMessage.asPreparer, transaction: transaction)
-                NotificationCenter.default.post(name: HomeViewController.clearSearch, object: nil)
+                NotificationCenter.default.post(name: ChatListViewController.clearSearch, object: nil)
             }
         }
 

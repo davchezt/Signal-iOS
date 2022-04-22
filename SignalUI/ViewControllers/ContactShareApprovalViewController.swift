@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -63,7 +63,7 @@ class ContactShareFieldBase<ContactFieldType: OWSContactField>: NSObject, Contac
     }
 
     func applyToContact(contact: ContactShareViewModel) {
-        notImplemented()
+        fatalError("applyToContact(contact:) has not been implemented")
     }
 }
 
@@ -167,7 +167,7 @@ class ContactShareFieldView: UIStackView {
 
     @available(*, unavailable, message: "use init(call:) constructor instead.")
     required init(coder aDecoder: NSCoder) {
-        notImplemented()
+        fatalError("init(coder:) has not been implemented")
     }
 
     required init(field: ContactShareField, previewViewBlock : @escaping (() -> UIView), delegate: ContactShareFieldViewDelegate) {
@@ -350,7 +350,7 @@ public class ContactShareApprovalViewController: OWSViewController, EditContactS
         if let title = delegate?.contactApprovalCustomTitle(self) {
             self.navigationItem.title = title
         } else {
-            self.navigationItem.title = NSLocalizedString("CONTACT_SHARE_APPROVAL_VIEW_TITLE",
+            self.navigationItem.title = OWSLocalizedString("CONTACT_SHARE_APPROVAL_VIEW_TITLE",
                                                           comment: "Title for the 'Approve contact share' view.")
         }
 
@@ -461,7 +461,7 @@ public class ContactShareApprovalViewController: OWSViewController, EditContactS
         stackView.addArrangedSubview(nameLabel)
 
         let editNameLabel = UILabel()
-        editNameLabel.text = NSLocalizedString("CONTACT_EDIT_NAME_BUTTON", comment: "Label for the 'edit name' button in the contact share approval view.")
+        editNameLabel.text = OWSLocalizedString("CONTACT_EDIT_NAME_BUTTON", comment: "Label for the 'edit name' button in the contact share approval view.")
         editNameLabel.font = UIFont.ows_dynamicTypeBody
         editNameLabel.textColor = Theme.accentBlueColor
         stackView.addArrangedSubview(editNameLabel)
@@ -492,12 +492,12 @@ public class ContactShareApprovalViewController: OWSViewController, EditContactS
         AssertIsOnMainThread()
 
         guard isAtLeastOneFieldSelected() else {
-            OWSActionSheets.showErrorAlert(message: NSLocalizedString("CONTACT_SHARE_NO_FIELDS_SELECTED",
+            OWSActionSheets.showErrorAlert(message: OWSLocalizedString("CONTACT_SHARE_NO_FIELDS_SELECTED",
                                                                 comment: "Error indicating that at least one contact field must be selected before sharing a contact."))
             return
         }
         guard contactShare.ows_isValid else {
-            OWSActionSheets.showErrorAlert(message: NSLocalizedString("CONTACT_SHARE_INVALID_CONTACT",
+            OWSActionSheets.showErrorAlert(message: OWSLocalizedString("CONTACT_SHARE_INVALID_CONTACT",
                                                                 comment: "Error indicating that an invalid contact cannot be shared."))
             return
         }

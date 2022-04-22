@@ -1,5 +1,4 @@
-#!/usr/bin/env python2.7
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
 
 import os
 import subprocess
@@ -11,8 +10,10 @@ def fail(*args):
     raise Exception(error)
 
 
-git_repo_path = os.path.abspath(subprocess.check_output(['git', 'rev-parse', '--show-toplevel']).strip())
-print 'git_repo_path:', git_repo_path
+git_repo_path = os.path.abspath(
+    subprocess.check_output(["git", "rev-parse", "--show-toplevel"], text=True).strip()
+)
+print('git_repo_path:', git_repo_path)
 
 def sds_to_relative_path(path):
     path = os.path.abspath(path)

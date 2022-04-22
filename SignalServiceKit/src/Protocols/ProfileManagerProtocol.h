@@ -1,14 +1,18 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 @class AnyPromise;
 @class BadgeStore;
+@class ModelReadCacheSizeLease;
 @class OWSAES256Key;
 @class OWSUserProfile;
 @class OWSUserProfileBadgeInfo;
 @class SDSAnyReadTransaction;
 @class SDSAnyWriteTransaction;
+
+@protocol SSKMaybeString;
+
 @class SignalServiceAddress;
 @class TSThread;
 
@@ -53,9 +57,14 @@ typedef NS_ENUM(NSUInteger, UserProfileWriter) {
 
 - (nullable NSString *)fullNameForAddress:(SignalServiceAddress *)address
                               transaction:(SDSAnyReadTransaction *)transaction;
+- (NSArray<id<SSKMaybeString>> *)fullNamesForAddresses:(NSArray<SignalServiceAddress *> *)addresses
+                                           transaction:(SDSAnyReadTransaction *)transaction;
 
 - (nullable OWSUserProfile *)getUserProfileForAddress:(SignalServiceAddress *)addressParam
                                           transaction:(SDSAnyReadTransaction *)transaction;
+- (NSDictionary<SignalServiceAddress *, OWSUserProfile *> *)
+    getUserProfilesForAddresses:(NSArray<SignalServiceAddress *> *)addresses
+                    transaction:(SDSAnyReadTransaction *)transaction;
 - (nullable NSData *)profileKeyDataForAddress:(SignalServiceAddress *)address
                                   transaction:(SDSAnyReadTransaction *)transaction;
 - (nullable OWSAES256Key *)profileKeyForAddress:(SignalServiceAddress *)address
@@ -143,7 +152,7 @@ typedef NS_ENUM(NSUInteger, UserProfileWriter) {
                             bio:(nullable NSString *)bio
                        bioEmoji:(nullable NSString *)bioEmoji
                        username:(nullable NSString *)username
-                  isUuidCapable:(BOOL)isUuidCapable
+               isStoriesCapable:(BOOL)isStoriesCapable
                   avatarUrlPath:(nullable NSString *)avatarUrlPath
           optionalAvatarFileUrl:(nullable NSURL *)optionalAvatarFileUrl
                   profileBadges:(nullable NSArray<OWSUserProfileBadgeInfo *> *)profileBadges
@@ -151,7 +160,8 @@ typedef NS_ENUM(NSUInteger, UserProfileWriter) {
               userProfileWriter:(UserProfileWriter)userProfileWriter
                     transaction:(SDSAnyWriteTransaction *)writeTx;
 
-- (BOOL)recipientAddressIsUuidCapable:(SignalServiceAddress *)address transaction:(SDSAnyReadTransaction *)transaction;
+- (BOOL)recipientAddressIsStoriesCapable:(SignalServiceAddress *)address
+                             transaction:(SDSAnyReadTransaction *)transaction;
 
 - (void)warmCaches;
 
@@ -168,6 +178,14 @@ typedef NS_ENUM(NSUInteger, UserProfileWriter) {
                                transaction:(SDSAnyWriteTransaction *)transaction;
 
 - (void)reuploadLocalProfile;
+
+- (nullable ModelReadCacheSizeLease *)leaseCacheSize:(NSInteger)size;
+
+- (nullable NSString *)usernameForAddress:(SignalServiceAddress *)address
+                              transaction:(SDSAnyReadTransaction *)transaction;
+- (NSArray<id<SSKMaybeString>> *)usernamesForAddresses:(NSArray<SignalServiceAddress *> *)addresses
+                                           transaction:(SDSAnyReadTransaction *)transaction;
+
 
 @end
 

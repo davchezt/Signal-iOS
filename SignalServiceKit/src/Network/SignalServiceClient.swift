@@ -1,9 +1,8 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
-import SignalMetadataKit
 
 @objc
 public enum SignalServiceError: Int, Error {
@@ -15,10 +14,10 @@ public enum SignalServiceError: Int, Error {
 public protocol SignalServiceClient {
     func requestPreauthChallenge(e164: String, pushToken: String, isVoipToken: Bool) -> Promise<Void>
     func requestVerificationCode(e164: String, preauthChallenge: String?, captchaToken: String?, transport: TSVerificationTransport) -> Promise<Void>
-    func verifySecondaryDevice(verificationCode: String, phoneNumber: String, authKey: String, encryptedDeviceName: Data) -> Promise<UInt32>
-    func getAvailablePreKeys() -> Promise<Int>
-    func registerPreKeys(identityKey: IdentityKey, signedPreKeyRecord: SignedPreKeyRecord, preKeyRecords: [PreKeyRecord]) -> Promise<Void>
-    func setCurrentSignedPreKey(_ signedPreKey: SignedPreKeyRecord) -> Promise<Void>
+    func verifySecondaryDevice(verificationCode: String, phoneNumber: String, authKey: String, encryptedDeviceName: Data) -> Promise<VerifySecondaryDeviceResponse>
+    func getAvailablePreKeys(for identity: OWSIdentity) -> Promise<Int>
+    func registerPreKeys(for identity: OWSIdentity, identityKey: IdentityKey, signedPreKeyRecord: SignedPreKeyRecord, preKeyRecords: [PreKeyRecord]) -> Promise<Void>
+    func setCurrentSignedPreKey(_ signedPreKey: SignedPreKeyRecord, for identity: OWSIdentity) -> Promise<Void>
     func requestUDSenderCertificate(uuidOnly: Bool) -> Promise<Data>
     func updatePrimaryDeviceAccountAttributes() -> Promise<Void>
     func getAccountWhoAmI() -> Promise<WhoAmIResponse>
@@ -62,10 +61,10 @@ public class SignalServiceRestClient: NSObject, SignalServiceClient {
         return networkManager.makePromise(request: request).asVoid()
     }
 
-    public func getAvailablePreKeys() -> Promise<Int> {
+    public func getAvailablePreKeys(for identity: OWSIdentity) -> Promise<Int> {
         Logger.debug("")
 
-        let request = OWSRequestFactory.availablePreKeysCountRequest()
+        let request = OWSRequestFactory.availablePreKeysCountRequest(for: identity)
         return firstly {
             networkManager.makePromise(request: request)
         }.map(on: .global()) { response in
@@ -83,17 +82,23 @@ public class SignalServiceRestClient: NSObject, SignalServiceClient {
         }
     }
 
-    public func registerPreKeys(identityKey: IdentityKey, signedPreKeyRecord: SignedPreKeyRecord, preKeyRecords: [PreKeyRecord]) -> Promise<Void> {
+    public func registerPreKeys(for identity: OWSIdentity,
+                                identityKey: IdentityKey,
+                                signedPreKeyRecord: SignedPreKeyRecord,
+                                preKeyRecords: [PreKeyRecord]) -> Promise<Void> {
         Logger.debug("")
 
-        let request = OWSRequestFactory.registerPrekeysRequest(withPrekeyArray: preKeyRecords, identityKey: identityKey, signedPreKey: signedPreKeyRecord)
+        let request = OWSRequestFactory.registerPrekeysRequest(for: identity,
+                                                               prekeyArray: preKeyRecords,
+                                                               identityKey: identityKey,
+                                                               signedPreKey: signedPreKeyRecord)
         return networkManager.makePromise(request: request).asVoid()
     }
 
-    public func setCurrentSignedPreKey(_ signedPreKey: SignedPreKeyRecord) -> Promise<Void> {
+    public func setCurrentSignedPreKey(_ signedPreKey: SignedPreKeyRecord, for identity: OWSIdentity) -> Promise<Void> {
         Logger.debug("")
 
-        let request = OWSRequestFactory.registerSignedPrekeyRequest(with: signedPreKey)
+        let request = OWSRequestFactory.registerSignedPrekeyRequest(for: identity, signedPreKey: signedPreKey)
         return networkManager.makePromise(request: request).asVoid()
     }
 
@@ -131,19 +136,7 @@ public class SignalServiceRestClient: NSObject, SignalServiceClient {
             guard let json = response.responseBodyJson else {
                 throw OWSAssertionError("Missing or invalid JSON.")
             }
-            guard let parser = ParamParser(responseObject: json) else {
-                throw OWSAssertionError("Missing or invalid response.")
-            }
-
-            let uuidString: String = try parser.required(key: "uuid")
-
-            guard let uuid = UUID(uuidString: uuidString) else {
-                throw OWSAssertionError("Missing or invalid uuid.")
-            }
-
-            let e164: String? = try parser.optional(key: "number")
-
-            return WhoAmIResponse(uuid: uuid, e164: e164)
+            return try WhoAmIResponse.parse(json)
         }
     }
 
@@ -169,7 +162,7 @@ public class SignalServiceRestClient: NSObject, SignalServiceClient {
     public func verifySecondaryDevice(verificationCode: String,
                                       phoneNumber: String,
                                       authKey: String,
-                                      encryptedDeviceName: Data) -> Promise<UInt32> {
+                                      encryptedDeviceName: Data) -> Promise<VerifySecondaryDeviceResponse> {
 
         let request = OWSRequestFactory.verifySecondaryDeviceRequest(verificationCode: verificationCode,
                                                                      phoneNumber: phoneNumber,
@@ -187,8 +180,10 @@ public class SignalServiceRestClient: NSObject, SignalServiceClient {
             }
 
             let deviceId: UInt32 = try parser.required(key: "deviceId")
-            return deviceId
-        }.recover { error -> Promise<UInt32> in
+            let pni: UUID = try parser.required(key: "pni")
+
+            return VerifySecondaryDeviceResponse(pni: pni, deviceId: deviceId)
+        }.recover { error -> Promise<VerifySecondaryDeviceResponse> in
             if let statusCode = error.httpStatusCode,
                 statusCode == 409 {
                 // Convert 409 errors into .obsoleteLinkedDevice
@@ -249,6 +244,24 @@ public class SignalServiceRestClient: NSObject, SignalServiceClient {
 // MARK: -
 
 public struct WhoAmIResponse {
-    public let uuid: UUID
+    public let aci: UUID
+    public let pni: UUID
     public let e164: String?
+
+    public static func parse(_ json: Any?) throws -> Self {
+        guard let parser = ParamParser(responseObject: json) else {
+            throw OWSAssertionError("Missing or invalid response.")
+        }
+
+        let aci: UUID = try parser.required(key: "uuid")
+        let pni: UUID = try parser.required(key: "pni")
+        let e164: String? = try parser.optional(key: "number")
+
+        return WhoAmIResponse(aci: aci, pni: pni, e164: e164)
+    }
+}
+
+public struct VerifySecondaryDeviceResponse {
+    public let pni: UUID
+    public let deviceId: UInt32
 }

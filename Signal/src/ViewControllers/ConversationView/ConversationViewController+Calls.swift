@@ -1,8 +1,8 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
-import Foundation
+import SignalUI
 
 public extension ConversationViewController {
 
@@ -38,9 +38,9 @@ public extension ConversationViewController {
         if thread.isBlockedByAnnouncementOnly {
             OWSActionSheets.showActionSheet(
                 title: NSLocalizedString("GROUP_CALL_BLOCKED_BY_ANNOUNCEMENT_ONLY_TITLE",
-                                           comment: "Title for eror alert indicating that only group administrators can start calls in announcement-only groups."),
+                                           comment: "Title for error alert indicating that only group administrators can start calls in announcement-only groups."),
                 message: NSLocalizedString("GROUP_CALL_BLOCKED_BY_ANNOUNCEMENT_ONLY_MESSAGE",
-                                         comment: "Message for eror alert indicating that only group administrators can start calls in announcement-only groups.")
+                                         comment: "Message for error alert indicating that only group administrators can start calls in announcement-only groups.")
             )
             return
         }
@@ -97,23 +97,13 @@ public extension ConversationViewController {
         // We initiated a call, so if there was a pending message request we should accept it.
         ThreadUtil.addThreadToProfileWhitelistIfEmptyOrPendingRequestAndSetDefaultTimerWithSneakyTransaction(thread: thread)
 
-        outboundIndividualCallInitiator.initiateCall(address: contactThread.contactAddress,
-                                                     isVideo: withVideo)
-        NotificationCenter.default.post(name: HomeViewController.clearSearch, object: nil)
+        outboundIndividualCallInitiator.initiateCall(thread: contactThread, isVideo: withVideo)
+        NotificationCenter.default.post(name: ChatListViewController.clearSearch, object: nil)
     }
 
     func refreshCallState() {
-        guard thread.isGroupV2Thread,
-              let groupThread = thread as? TSGroupThread else {
-            return
-        }
-        // We dispatch async in an effort to avoid "bad food" crashes when
-        // presenting the view. peekCallAndUpdateThread() uses a write
-        // transaction.
-        DispatchQueue.main.async {
-            Self.databaseStorage.read { transaction in
-                Self.callService.peekCallAndUpdateThread(groupThread, transaction: transaction)
-            }
+        if let groupThread = thread as? TSGroupThread {
+            callService.peekCallAndUpdateThread(groupThread)
         }
     }
 

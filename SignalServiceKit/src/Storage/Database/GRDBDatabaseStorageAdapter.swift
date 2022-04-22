@@ -1,9 +1,10 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
 import GRDB
+import UIKit
 
 @objc
 public class GRDBDatabaseStorageAdapter: NSObject {
@@ -132,10 +133,6 @@ public class GRDBDatabaseStorageAdapter: NSObject {
         unregisterKVO?()
     }
 
-    public func add(function: DatabaseFunction) {
-        pool.add(function: function)
-    }
-
     static var tables: [SDSTableMetadata] {
         [
             // Models
@@ -155,14 +152,9 @@ public class GRDBDatabaseStorageAdapter: NSObject {
             OWSUserProfile.table,
             OWSDevice.table,
             TestModel.table,
-            OWSReaction.table,
             IncomingGroupsV2MessageJob.table,
-            TSMention.table,
             TSPaymentModel.table,
-            TSPaymentRequestModel.table,
-            TSGroupMember.table
-            // NOTE: We don't include OWSMessageDecryptJob,
-            // since we should never use it with GRDB.
+            TSPaymentRequestModel.table
         ]
     }
 
@@ -175,7 +167,12 @@ public class GRDBDatabaseStorageAdapter: NSObject {
             MessageSendLog.Payload.self,
             MessageSendLog.Recipient.self,
             MessageSendLog.Message.self,
-            ProfileBadge.self
+            ProfileBadge.self,
+            StoryMessage.self,
+            DonationReceipt.self,
+            OWSReaction.self,
+            TSGroupMember.self,
+            TSMention.self
         ]
     }
 
@@ -254,7 +251,6 @@ public class GRDBDatabaseStorageAdapter: NSObject {
     }
 
     func setup() throws {
-        MediaGalleryManager.setup(storage: self)
         try setupDatabaseChangeObserver()
     }
 
@@ -281,7 +277,7 @@ public class GRDBDatabaseStorageAdapter: NSObject {
     /// - Returns: The key data, if available.
     @objc
     public static var debugOnly_keyData: Data? {
-        owsAssert(OWSIsTestableBuild())
+        owsAssert(OWSIsTestableBuild() || DebugFlags.internalSettings)
         return try? keyspec.fetchData()
     }
 
@@ -370,6 +366,15 @@ public class GRDBDatabaseStorageAdapter: NSObject {
         let keyspec = try keyspec.fetchString()
         try db.execute(sql: "PRAGMA \(prefix)key = \"\(keyspec)\"")
         try db.execute(sql: "PRAGMA \(prefix)cipher_plaintext_header_size = 32")
+        if !CurrentAppContext().isMainApp {
+            let perConnectionCacheSizeInKibibytes = 2000 / (GRDBStorage.maximumReaderCountInExtensions + 1)
+            // Limit the per-connection cache size based on the number of possible readers.
+            // (The default is 2000KiB per connection regardless of how many other connections there are).
+            // The minus sign indicates that this is in KiB rather than the database's page size.
+            // An alternative would be to use SQLite's "shared cache" mode to have a single memory pool,
+            // but unfortunately that changes the locking model in a way GRDB doesn't support.
+            try db.execute(sql: "PRAGMA \(prefix)cache_size = -\(perConnectionCacheSizeInKibibytes)")
+        }
     }
 }
 
@@ -885,17 +890,28 @@ private struct GRDBStorage {
         }
     }
 
+    fileprivate static var maximumReaderCountInExtensions: Int { 4 }
+
     private static func buildConfiguration(keyspec: GRDBKeySpecSource) -> Configuration {
         var configuration = Configuration()
         configuration.readonly = false
         configuration.foreignKeysEnabled = true // Default is already true
-        configuration.trace = { logString in
-            dbQueryLog(logString)
-        }
+
+        #if DEBUG
+        configuration.publicStatementArguments = true
+        #endif
+
+        // TODO: We should set this to `false` (or simply remove this line, as `false` is the default).
+        // Historically, we took advantage of SQLite's old permissive behavior, but the SQLite
+        // developers [regret this][0] and may change it in the future.
+        //
+        // [0]: https://sqlite.org/quirks.html#dblquote
+        configuration.acceptsDoubleQuotedStringLiterals = true
+
         // Useful when your app opens multiple databases
         configuration.label = "GRDB Storage"
         let isMainApp = CurrentAppContext().isMainApp
-        configuration.maximumReaderCount = isMainApp ? 10 : 5  // The default is 5
+        configuration.maximumReaderCount = isMainApp ? 10 : maximumReaderCountInExtensions
         configuration.busyMode = .callback({ (retryCount: Int) -> Bool in
             // sleep N milliseconds
             let millis = 25
@@ -917,8 +933,12 @@ private struct GRDBStorage {
                 return true
             }
         })
-        configuration.prepareDatabase = { db in
+        configuration.prepareDatabase { db in
             try GRDBDatabaseStorageAdapter.prepareDatabase(db: db, keyspec: keyspec)
+
+            db.trace { dbQueryLog("\($0)") }
+
+            MediaGalleryManager.setup(database: db)
         }
         configuration.defaultTransactionKind = .immediate
         configuration.allowsUnsafeTransactions = true
@@ -1024,13 +1044,36 @@ extension GRDBDatabaseStorageAdapter {
         do {
             containerPathItems = try FileManager.default.contentsOfDirectory(atPath: containerDirectory.path)
         } catch {
-            owsFailDebug("Failed to fetch other diretory items: \(error)")
+            owsFailDebug("Failed to fetch other directory items: \(error)")
             containerPathItems = []
         }
 
         return containerPathItems
             .filter { $0.hasPrefix(DirectoryMode.commonGRDBPrefix) }
             .map { containerDirectory.appendingPathComponent($0) }
+    }
+
+    public static func runIntegrityCheck() -> Promise<String> {
+        return firstly(on: .global(qos: .userInitiated)) {
+            let storageCoordinator: StorageCoordinator
+            if SSKEnvironment.hasShared() {
+                storageCoordinator = SSKEnvironment.shared.storageCoordinator
+            } else {
+                storageCoordinator = StorageCoordinator()
+            }
+            // Workaround to disambiguate between NSObject.databaseStorage and StorageCoordinator.databaseStorage.
+            let databaseStorage = storageCoordinator.value(forKey: "databaseStorage") as! SDSDatabaseStorage
+            // Use quick_check (O(N)) instead of integrity_check (O(NlogN)).
+            let sql = "PRAGMA quick_check"
+            let results: String = databaseStorage.read { transaction in
+                do {
+                    return try String.fetchAll(transaction.unwrapGrdbRead.database, sql: sql).joined(separator: "\n")
+                } catch {
+                    return "error"
+                }
+            }
+            return "\(sql)\n\(results)"
+        }
     }
 }
 

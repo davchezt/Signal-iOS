@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -17,9 +17,9 @@ extension GiphyError: LocalizedError, UserErrorDescriptionProvider {
     public var localizedDescription: String {
         switch self {
         case .assertionError:
-            return NSLocalizedString("GIF_PICKER_ERROR_GENERIC", comment: "Generic error displayed when picking a GIF")
+            return OWSLocalizedString("GIF_PICKER_ERROR_GENERIC", comment: "Generic error displayed when picking a GIF")
         case .fetchFailure:
-            return NSLocalizedString("GIF_PICKER_ERROR_FETCH_FAILURE", comment: "Error displayed when there is a failure fetching a GIF from the remote service.")
+            return OWSLocalizedString("GIF_PICKER_ERROR_FETCH_FAILURE", comment: "Error displayed when there is a failure fetching a GIF from the remote service.")
         }
     }
 }
@@ -78,8 +78,7 @@ extension GiphyImageInfo {
     }
 
     public var fullSizeAsset: GiphyAsset? {
-        let validTypes: [GiphyAsset.FileType] = RemoteConfig
-            .giphySendAsMP4 ? [.gif, .mp4] : [.gif]
+        let validTypes: [GiphyAsset.FileType] = [.gif, .mp4]
 
         return assets
             .filter { !$0.rendition.isStill }

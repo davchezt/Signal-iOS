@@ -35,20 +35,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (nullable OWSTableSection *)sectionForThread:(nullable TSThread *)thread
 {
     NSMutableArray<OWSTableItem *> *items = [NSMutableArray new];
-    
-    if (TSConstants.isUsingProductionService) {
-        [items addObject:[OWSTableItem itemWithTitle:@"Switch to Staging Environment"
-                                         actionBlock:^{
-                                             [TSConstants forceStaging];
-                                             OWSAssertDebug(!TSConstants.isUsingProductionService);
-                                         }]];
-    } else {
-        [items addObject:[OWSTableItem itemWithTitle:@"Switch to Production Environment"
-                                         actionBlock:^{
-                                             [TSConstants forceProduction];
-                                             OWSAssertDebug(TSConstants.isUsingProductionService);
-                                         }]];
-    }
 
     [items addObject:[OWSTableItem itemWithTitle:@"Enable Manual Censorship Circumvention"
                                      actionBlock:^{
@@ -81,6 +67,18 @@ NS_ASSUME_NONNULL_BEGIN
                                    }
                                });
                            }]];
+
+    __block __weak OWSTableItem *makeNextAppLaunchFailItemRef;
+    [items addObject:[OWSTableItem itemWithTitle:@"Make next app launch fail"
+                                     actionBlock:^{
+                                         [[CurrentAppContext() appUserDefaults]
+                                             setBool:YES
+                                              forKey:kShouldFailNextLaunchForTestingPurposesKey];
+                                         [makeNextAppLaunchFailItemRef.tableViewController
+                                             presentToastWithText:@"Okay, the next app launch will fail!"
+                                                      extraVInset:0];
+                                     }]];
+    makeNextAppLaunchFailItemRef = items.lastObject;
 
     [items addObject:[OWSTableItem
                          itemWithTitle:@"Re-register"
@@ -190,6 +188,14 @@ NS_ASSUME_NONNULL_BEGIN
     [items addObject:[OWSTableItem itemWithTitle:@"Remove All Sessions"
                                      actionBlock:^() { [DebugUIMisc removeAllSessions]; }]];
 
+    [items addObject:[OWSTableItem itemWithTitle:@"Fake PNI pre-key upload failures"
+                                     actionBlock:^() {
+                                         [TSPreKeyManager storeFakePreKeyUploadFailuresForIdentity:OWSIdentityPNI];
+                                     }]];
+
+    [items addObject:[OWSTableItem itemWithTitle:@"Remove local PNI identity key"
+                                     actionBlock:^() { [DebugUIMisc removeLocalPniIdentityKey]; }]];
+
     [items addObject:[OWSTableItem itemWithTitle:@"Discard All Profile Keys"
                                      actionBlock:^() { [DebugUIMisc discardAllProfileKeys]; }]];
 
@@ -226,16 +232,30 @@ NS_ASSUME_NONNULL_BEGIN
 + (void)removeAllPrekeys
 {
     DatabaseStorageWrite(self.databaseStorage, ^(SDSAnyWriteTransaction *transaction) {
-        [SSKEnvironment.shared.signedPreKeyStore removeAll:transaction];
-        [SSKEnvironment.shared.preKeyStore removeAll:transaction];
+        SignalProtocolStore *signalProtocolStore = [self signalProtocolStoreForIdentity:OWSIdentityACI];
+        [signalProtocolStore.signedPreKeyStore removeAll:transaction];
+        [signalProtocolStore.preKeyStore removeAll:transaction];
+
+        signalProtocolStore = [self signalProtocolStoreForIdentity:OWSIdentityPNI];
+        [signalProtocolStore.signedPreKeyStore removeAll:transaction];
+        [signalProtocolStore.preKeyStore removeAll:transaction];
     });
 }
 
 + (void)removeAllSessions
 {
     DatabaseStorageWrite(self.databaseStorage, ^(SDSAnyWriteTransaction *transaction) {
-        [SSKEnvironment.shared.signedPreKeyStore removeAll:transaction];
-        [SSKEnvironment.shared.preKeyStore removeAll:transaction];
+        SignalProtocolStore *signalProtocolStore = [self signalProtocolStoreForIdentity:OWSIdentityACI];
+        // FIXME: This isn't removing sessions!
+        [signalProtocolStore.signedPreKeyStore removeAll:transaction];
+        [signalProtocolStore.preKeyStore removeAll:transaction];
+    });
+}
+
++ (void)removeLocalPniIdentityKey
+{
+    DatabaseStorageWrite(self.databaseStorage, ^(SDSAnyWriteTransaction *transaction) {
+        [self.identityManager storeIdentityKeyPair:nil forIdentity:OWSIdentityPNI transaction:transaction];
     });
 }
 
@@ -504,7 +524,7 @@ NS_ASSUME_NONNULL_BEGIN
     // OWSUserProfile
     [[OWSUserProfile getOrBuildUserProfileForAddress:address1
                                          transaction:transaction] updateWithUsername:nil
-                                                                       isUuidCapable:YES
+                                                                    isStoriesCapable:YES
                                                                    userProfileWriter:UserProfileWriter_Debugging
                                                                          transaction:transaction];
 

@@ -1,4 +1,4 @@
-platform :ios, '11.0'
+platform :ios, '12.2'
 plugin 'cocoapods-binary'
 
 use_frameworks!
@@ -14,19 +14,17 @@ pod 'SwiftProtobuf', ">= 1.14.0"
 pod 'SignalCoreKit', git: 'git@github.com:signalapp/SignalCoreKit', testspecs: ["Tests"]
 # pod 'SignalCoreKit', path: '../SignalCoreKit', testspecs: ["Tests"]
 
-pod 'SignalClient', git: 'https://github.com/signalapp/libsignal-client.git', testspecs: ["Tests"]
-# pod 'SignalClient', path: '../libsignal-client', testspecs: ["Tests"]
+pod 'LibSignalClient', git: 'https://github.com/signalapp/libsignal-client.git', testspecs: ["Tests"]
+# pod 'LibSignalClient', path: '../libsignal-client', testspecs: ["Tests"]
 
 pod 'Curve25519Kit', git: 'ssh://git@github.com/signalapp/Curve25519Kit', testspecs: ["Tests"], branch: 'feature/SignalClient-adoption'
 # pod 'Curve25519Kit', path: '../Curve25519Kit', testspecs: ["Tests"]
-
-pod 'SignalMetadataKit', git: 'ssh://git@github.com/signalapp/SignalMetadataKit', testspecs: ["Tests"]
-# pod 'SignalMetadataKit', path: '../SignalMetadataKit', testspecs: ["Tests"]
 
 pod 'blurhash', git: 'https://github.com/signalapp/blurhash', branch: 'signal-master'
 # pod 'blurhash', path: '../blurhash'
 
 pod 'SignalServiceKit', path: '.', testspecs: ["Tests"]
+pod 'SignalRingRTC', path: 'ThirdParty/SignalRingRTC.podspec', inhibit_warnings: true
 
 pod 'SignalArgon2', git: 'https://github.com/signalapp/Argon2.git', submodules: true, testspecs: ["Tests"]
 # pod 'SignalArgon2', path: '../Argon2', testspecs: ["Tests"]
@@ -71,8 +69,8 @@ def ui_pods
   pod 'Starscream', git: 'https://github.com/signalapp/Starscream.git', branch: 'signal-release'
   # pod 'Starscream', path: '../Starscream'
 
-  pod 'LibMobileCoin', git: 'https://github.com/signalapp/libmobilecoin-ios-artifacts.git', branch: 'signal/1.1.0'
-  pod 'MobileCoin', git: 'https://github.com/mobilecoinofficial/MobileCoin-Swift.git', :tag => 'v1.1.0'
+  pod 'LibMobileCoin/CoreHTTP', git: 'https://github.com/signalapp/libmobilecoin-ios-artifacts.git', branch: 'signal/1.2.0-pre10'
+  pod 'MobileCoin/CoreHTTP', git: 'https://github.com/mobilecoinofficial/MobileCoin-Swift.git', :tag => 'v1.2.0-pre10'
 end
 
 target 'Signal' do
@@ -80,7 +78,6 @@ target 'Signal' do
 
   # Pods only available inside the main Signal app
   pod 'SSZipArchive', :inhibit_warnings => true
-  pod 'SignalRingRTC', path: 'ThirdParty/SignalRingRTC.podspec', inhibit_warnings: true
   ui_pods
 
   target 'SignalTests' do

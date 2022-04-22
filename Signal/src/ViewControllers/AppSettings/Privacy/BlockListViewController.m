@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 #import "BlockListViewController.h"
@@ -90,17 +90,15 @@ NS_ASSUME_NONNULL_BEGIN
 
     // "Blocklist" section
 
-    NSMutableSet<SignalServiceAddress *> *blockedAddressesSet = [NSMutableSet new];
-    for (NSString *phoneNumber in self.blockingManager.blockedPhoneNumbers) {
-        [blockedAddressesSet addObject:[[SignalServiceAddress alloc] initWithPhoneNumber:phoneNumber]];
-    }
-
-    for (NSString *uuidString in self.blockingManager.blockedUUIDStrings) {
-        [blockedAddressesSet addObject:[[SignalServiceAddress alloc] initWithUuidString:uuidString]];
-    }
+    __block NSSet<SignalServiceAddress *> *blockedAddressSet = nil;
+    __block NSArray<TSGroupModel *> *blockedGroupModels = nil;
+    [self.databaseStorage readWithBlock:^(SDSAnyReadTransaction *readTx) {
+        blockedAddressSet = [self.blockingManager blockedAddressesWithTransaction:readTx];
+        blockedGroupModels = [self.blockingManager blockedGroupModelsWithTransaction:readTx];
+    }];
 
     NSArray<SignalServiceAddress *> *blockedAddresses =
-        [blockedAddressesSet.allObjects sortedArrayUsingSelector:@selector(compare:)];
+        [blockedAddressSet.allObjects sortedArrayUsingSelector:@selector(compare:)];
     if (blockedAddresses.count > 0) {
         OWSTableSection *blockedContactsSection = [OWSTableSection new];
         blockedContactsSection.headerTitle = NSLocalizedString(
@@ -127,14 +125,13 @@ NS_ASSUME_NONNULL_BEGIN
         [contents addSection:blockedContactsSection];
     }
 
-    NSArray<TSGroupModel *> *blockedGroups = self.blockingManager.blockedGroupModels;
-    if (blockedGroups.count > 0) {
+    if (blockedGroupModels.count > 0) {
         OWSTableSection *blockedGroupsSection = [OWSTableSection new];
         blockedGroupsSection.headerTitle = NSLocalizedString(
             @"BLOCK_LIST_BLOCKED_GROUPS_SECTION", @"Section header for groups that have been blocked");
 
-        for (TSGroupModel *blockedGroup in blockedGroups) {
-            UIImage *_Nullable image = blockedGroup.groupAvatarImage;
+        for (TSGroupModel *blockedGroup in blockedGroupModels) {
+            UIImage *_Nullable image = blockedGroup.avatarImage;
             if (!image) {
                 image = [self.avatarBuilder avatarImageForGroupId:blockedGroup.groupId
                                                    diameterPoints:AvatarBuilder.standardAvatarSizePoints];

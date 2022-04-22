@@ -149,22 +149,25 @@
 "APN_Message" = "Du kanske har nya meddelanden";
 
 /* Message for the 'app launch failed' alert. */
-"APP_LAUNCH_FAILURE_ALERT_MESSAGE" = "Signal kan inte startas. Vänligen skicka en felsökningslogg till support@signal.org så att vi kan felsöka problemet.";
+"APP_LAUNCH_FAILURE_ALERT_MESSAGE" = "Signal kan inte startas. Skicka en felsökningslogg till support@signal.org så att vi kan felsöka problemet.";
 
 /* Title for the 'app launch failed' alert. */
 "APP_LAUNCH_FAILURE_ALERT_TITLE" = "Fel";
+
+/* No comment provided by engineer. */
+"APP_LAUNCH_FAILURE_CHECK_DATABASE" = "Run Database Integrity Check";
 
 /* Error indicating that the app could not launch because the database could not be loaded. */
 "APP_LAUNCH_FAILURE_COULD_NOT_LOAD_DATABASE" = "Det gick inte att läsa in databasen";
 
 /* Error indicating that the app could not launch without reverting unknown database migrations. */
-"APP_LAUNCH_FAILURE_INVALID_DATABASE_VERSION_MESSAGE" = "Vänligen uppgradera till den senaste versionen av Signal.";
+"APP_LAUNCH_FAILURE_INVALID_DATABASE_VERSION_MESSAGE" = "Uppgradera till den senaste versionen av Signal.";
 
 /* Error indicating that the app could not launch without reverting unknown database migrations. */
 "APP_LAUNCH_FAILURE_INVALID_DATABASE_VERSION_TITLE" = "Okänd databasversion.";
 
 /* Error indicating that the app could not restore transferred data. */
-"APP_LAUNCH_FAILURE_RESTORE_FAILED_MESSAGE" = "Data som överförts från din gamla enhet kunde inte återställas. Vänligen skicka en felsökningslogg till support@signal.org så att vi kan felsöka problemet. Om du installerar om Signal kan din meddelandehistorik försvinna.";
+"APP_LAUNCH_FAILURE_RESTORE_FAILED_MESSAGE" = "Data som överförts från din gamla enhet kunde inte återställas. Skicka en felsökningslogg till support@signal.org så att vi kan felsöka problemet. Om du installerar om Signal kan din meddelandehistorik försvinna.";
 
 /* Error indicating that the app could not restore transferred data. */
 "APP_LAUNCH_FAILURE_RESTORE_FAILED_TITLE" = "Det gick inte att slutföra överföringen";
@@ -305,7 +308,7 @@
 "ATTACHMENT_PICKER_DOCUMENTS_FAILED_ALERT_TITLE" = "Det gick inte att välja dokument.";
 
 /* Alert body when picking a document fails because user picked a directory/bundle */
-"ATTACHMENT_PICKER_DOCUMENTS_PICKED_DIRECTORY_FAILED_ALERT_BODY" = "Vänligen skapa ett komprimerat arkiv av denna fil eller katalogen och försök att skicka den istället.";
+"ATTACHMENT_PICKER_DOCUMENTS_PICKED_DIRECTORY_FAILED_ALERT_BODY" = "Skapa ett komprimerat arkiv av denna fil eller katalogen och försök att skicka den istället.";
 
 /* Alert title when picking a document fails because user picked a directory/bundle */
 "ATTACHMENT_PICKER_DOCUMENTS_PICKED_DIRECTORY_FAILED_ALERT_TITLE" = "Filen stöds inte";
@@ -377,13 +380,13 @@
 "BADGE_DETAILS_GIVE_A_BOOST" = "Ge Signal en boost";
 
 /* String explaing to the user that their boost badge has expired on the badge expiry sheetsheet. */
-"BADGE_EXIPRED_BOOST_BODY_FORMAT" = "Ditt Boost-märke har upphört att gälla och är inte längre synligt på din profil.\n\nDu kan fortsätta använda Signal men för att stöda teknik som är byggd för dig, överväg att bli en månatlig upprätthållare.";
+"BADGE_EXIPRED_BOOST_BODY_FORMAT" = "Your Boost badge has expired and is no longer visible on your profile.\n\nYou can keep using Signal but to support technology that is built for you, consider becoming a sustainer by making a monthly donation.";
 
 /* String explaing to the user that their boost badge has expired while they are a current subscription sustainer on the badge expiry sheetsheet. */
 "BADGE_EXIPRED_BOOST_CURRENT_SUSTAINER_BODY_FORMAT" = "Ditt Boost-märke har upphört att gälla och är inte längre synligt på din profil.\n\nDu kan återaktivera ditt Boost-märke i ytterligare 30 dagar med ett engångsbidrag.";
 
 /* String explaing to the user that their subscription badge has expired on the badge expiry sheetsheet. Embed {badge name}. */
-"BADGE_EXIPRED_SUBSCRIPTION_BODY_FORMAT" = "Ditt upprätthållarabonnemang avslutades automatiskt eftersom du var inaktiv för länge. Ditt %@-märke är inte längre synligt på din profil.\n\nDu kan fortsätta använda Signal men för att stöda appen och återaktivera ditt märke, förnya nu.";
+"BADGE_EXIPRED_SUBSCRIPTION_BODY_FORMAT" = "Your recurring monthly donation was automatically cancelled because you were inactive for too long. Your %@ badge is no longer visible on your profile.\n\nYou can keep using Signal but to support the app and reactivate your badge, renew now.";
 
 /* Button title for boost on the badge expiration sheet, used if the user is not already a sustainer. */
 "BADGE_EXPIRED_BOOST_RENEWAL_BUTTON" = "Bli en upprätthållare";
@@ -398,7 +401,7 @@
 "BADGE_EXPIRED_SUBSCRIPTION_RENEWAL_BUTTON" = "Förnya abonnemang";
 
 /* Title for subscription on the badge expiration sheet. */
-"BADGE_EXPIRED_SUBSCRIPTION_TITLE" = "Abonnemang uppsagt";
+"BADGE_EXPIRED_SUBSCRIPTION_TITLE" = "Monthly Donation Cancelled";
 
 /* Title for boost on the thank you sheet. */
 "BADGE_THANKS_BOOST_TITLE" = "Tack för boosten!";
@@ -416,7 +419,7 @@
 "BADGE_THANKS_TOGGLE_FOOTER" = "När du har mer än ett märke kan du välja ett för att visa andra i din profil.";
 
 /* String explaing to the user that they've earned a badge on the badge thank you sheet. Embed {badge name}. */
-"BADGE_THANKS_YOU_EARNED_FORMAT" = "Du har tjänat %@-märket! Hjälp Signal att skapa medvetenhet genom att visa detta märke på din profil.";
+"BADGE_THANKS_YOU_EARNED_FORMAT" = "You’ve earned a %@ badge. Display this badge on your profile to build awareness for donating to Signal.";
 
 /* Accessibility label for banner close button */
 "BANNER_CLOSE_ACCESSIBILITY_LABEL" = "Stäng skylten";
@@ -497,7 +500,7 @@
 "BOOST_VIEW_AMOUNT_LABEL" = "Ställ in valuta";
 
 /* The body text for the donate to signal view */
-"BOOST_VIEW_BODY" = "Säg \"Tack!\" och få Boost-märket i 30 dagar.";
+"BOOST_VIEW_BODY" = "Make a one-time donation and earn a Boost badge for 30 days.";
 
 /* The body text for the donate to signal view, embeds {{Expiration}} */
 "BOOST_VIEW_BODY_WITH_EXPIRATION_FORMAT" = "Ditt Boost-märke upphör att gälla %@.";
@@ -586,8 +589,17 @@
 /* notification body */
 "CALL_AUDIO_INCOMING_NOTIFICATION_BODY" = "Inkommande ljudsamtal";
 
-/* notification body */
+/* notification body for a missed call in the last 24 hours. Embeds {{time}}, e.g. '3:30 PM'. */
+"CALL_AUDIO_MISSED_24_HOURS_NOTIFICATION_BODY_FORMAT" = "📞 Missed audio call at %@";
+
+/* notification body for a call that was just missed */
 "CALL_AUDIO_MISSED_NOTIFICATION_BODY" = "Missat ljudsamtal";
+
+/* notification body for a missed call from more than a week ago. Embeds {{short date}}, e.g. '6/28'. */
+"CALL_AUDIO_MISSED_PAST_NOTIFICATION_BODY_FORMAT" = "📞 Missed audio call on %@";
+
+/* notification body for a missed call from the last week. Embeds {{weekday}}, e.g. 'Monday'. */
+"CALL_AUDIO_MISSED_WEEK_NOTIFICATION_BODY_FORMAT" = "📞 Missed audio call on %@";
 
 /* Alert message when calling and permissions for microphone are missing */
 "CALL_AUDIO_PERMISSION_MESSAGE" = "Du kan aktivera mikrofonåtkomst i Inställningar för att ringa och spela in röstmeddelanden i Signal.";
@@ -619,8 +631,17 @@
 /* notification body */
 "CALL_VIDEO_INCOMING_NOTIFICATION_BODY" = "Inkommande videosamtal...";
 
-/* notification body */
+/* notification body for a missed call in the last 24 hours. Embeds {{time}}, e.g. '3:30 PM'. */
+"CALL_VIDEO_MISSED_24_HOURS_NOTIFICATION_BODY_FORMAT" = "📹 Missed video call at %@";
+
+/* notification body for a call that was just missed */
 "CALL_VIDEO_MISSED_NOTIFICATION_BODY" = "Missat videosamtal";
+
+/* notification body for a missed call from more than a week ago. Embeds {{short date}}, e.g. '6/28'. */
+"CALL_VIDEO_MISSED_PAST_NOTIFICATION_BODY_FORMAT" = "📹 Missed video call on %@";
+
+/* notification body for a missed call from the last week. Embeds {{weekday}}, e.g. 'Monday'. */
+"CALL_VIDEO_MISSED_WEEK_NOTIFICATION_BODY_FORMAT" = "📹 Missed video call on %@";
 
 /* label for accepting incoming video calls as audio  only */
 "CALL_VIEW_ACCEPT_INCOMING_CALL_AUDIO_ONLY_LABEL" = "Svara utan video";
@@ -680,16 +701,16 @@
 "CHANGE_AVATAR_BUTTON_LABEL" = "Ändra foto";
 
 /* Error indicating that the user's old and new phone numbers are identical. */
-"CHANGE_PHONE_NUMBER_IDENTICAL_PHONE_NUMBERS_ALERT_MESSAGE" = "Ditt nya nummer kan inte vara detsamma som ditt gamla. Vänligen ange ett nytt telefonnummer för att ändra ditt nummer.";
+"CHANGE_PHONE_NUMBER_IDENTICAL_PHONE_NUMBERS_ALERT_MESSAGE" = "Ditt nya nummer kan inte vara detsamma som ditt gamla. Ange ett nytt telefonnummer för att ändra ditt nummer.";
 
 /* Error indicating that the user's old phone number was not entered correctly. */
 "CHANGE_PHONE_NUMBER_INCORRECT_OLD_PHONE_NUMBER_ALERT_MESSAGE" = "Telefonnumret du angav matchar inte dina kontons nummer.";
 
 /* Error indicating that the user's new phone number is not valid. */
-"CHANGE_PHONE_NUMBER_INVALID_PHONE_NUMBER_ALERT_MESSAGE_NEW" = "Ogiltigt nytt telefonnummer. Vänligen ange ett giltigt telefonnummer för att ändra ditt nummer.";
+"CHANGE_PHONE_NUMBER_INVALID_PHONE_NUMBER_ALERT_MESSAGE_NEW" = "Ogiltigt nytt telefonnummer. Ange ett giltigt telefonnummer för att ändra ditt nummer.";
 
 /* Error indicating that the user's old phone number is not valid. */
-"CHANGE_PHONE_NUMBER_INVALID_PHONE_NUMBER_ALERT_MESSAGE_OLD" = "Ogiltigt gammalt telefonnummer. Vänligen ange ett giltigt telefonnummer för att ändra ditt nummer.";
+"CHANGE_PHONE_NUMBER_INVALID_PHONE_NUMBER_ALERT_MESSAGE_OLD" = "Ogiltigt gammalt telefonnummer. Ange ett giltigt telefonnummer för att ändra ditt nummer.";
 
 /* Title of the 'change phone number PIN' view. */
 "CHANGE_PHONE_NUMBER_PIN_EXPLANATION" = "Ange PIN-koden för det nya telefonnumret. Denna skiljer sig från din SMS-verifieringskod.";
@@ -735,6 +756,9 @@
 
 /* Tooltip highlighting the auto chat color option. */
 "CHAT_COLORS_AUTO_TOOLTIP" = "Matchar automatiskt färgen till bakgrunden";
+
+/* Title for the chat list's default mode. */
+"CHAT_LIST_TITLE_INBOX" = "Chattar";
 
 /* Title for the color & wallpaper settings view. */
 "COLOR_AND_WALLPAPER_SETTINGS_TITLE" = "Chattfärg och -bakgrund";
@@ -1306,6 +1330,21 @@
 /* Tooltip highlighting the custom chat color controls. */
 "CUSTOM_CHAT_COLOR_SETTINGS_TOOLTIP" = "Dra för att ändra lutningens riktning";
 
+/* Button to run the database integrity check */
+"DATABASE_INTEGRITY_CHECK_ACTION_RUN" = "Run";
+
+/* Message for alert before running a database integrity check */
+"DATABASE_INTEGRITY_CHECK_MESSAGE" = "This may take a while (several minutes or more) depending on how much you have used Signal. It is safe to close Signal if it is taking too long.";
+
+/* Button to save database integrity check results to the debug log */
+"DATABASE_INTEGRITY_CHECK_RESULTS_ACTION_LOG" = "Add to Debug Log";
+
+/* Title for alert after running a database integrity check */
+"DATABASE_INTEGRITY_CHECK_RESULTS_TITLE" = "Integrity check results";
+
+/* Title for alert before running a database integrity check */
+"DATABASE_INTEGRITY_CHECK_TITLE" = "Run database integrity check?";
+
 /* Subtitle shown while the app is updating its database. */
 "DATABASE_VIEW_OVERLAY_SUBTITLE" = "Detta kan ta några minuter.";
 
@@ -1330,9 +1369,6 @@
 /* The day before today. */
 "DATE_YESTERDAY" = "Igår";
 
-/* Error indicating that the debug logs could not be copied. */
-"DEBUG_LOG_ALERT_COULD_NOT_COPY_LOGS" = "Det gick inte att kopiera loggarna.";
-
 /* Error indicating that the debug logs could not be packaged. */
 "DEBUG_LOG_ALERT_COULD_NOT_PACKAGE_LOGS" = "Det gick inte att paketera loggar.";
 
@@ -1353,6 +1389,9 @@
 
 /* Label for the 'email debug log' option of the debug log alert. */
 "DEBUG_LOG_ALERT_OPTION_EMAIL" = "Skicka e-post till support";
+
+/* Label for the 'Export Logs' fallback option for the alert when debug log uploading fails. */
+"DEBUG_LOG_ALERT_OPTION_EXPORT_LOG_ARCHIVE" = "Exportera Loggar";
 
 /* Label for the 'send to self' option of the debug log alert. */
 "DEBUG_LOG_ALERT_OPTION_SEND_TO_SELF" = "Skicka till mig själv";
@@ -1480,11 +1519,11 @@
 /* A warning for the device transfer 'choice' view indicating you can only have one device registered with your number */
 "DEVICE_TRANSFER_CHOICE_WARNING" = "Om du fortsätter kommer det att inaktivera Signal på andra enheter som för närvarande är registrerade med samma telefonnummer.";
 
-/* An error indicating that we were unable to verify the indentity of the new device to complete the transfer */
-"DEVICE_TRANSFER_ERROR_CERTIFICATE_MISMATCH" = "Det gick inte att verifiera din nya enhet, vänligen försök igen";
+/* An error indicating that we were unable to verify the identity of the new device to complete the transfer */
+"DEVICE_TRANSFER_ERROR_CERTIFICATE_MISMATCH" = "Det gick inte att verifiera din nya enhet, försök igen";
 
 /* An error indicating that something went wrong with the transfer and it could not complete */
-"DEVICE_TRANSFER_ERROR_GENERIC" = "Överföringen kunde inte slutföras, vänligen se till att dina enheter är nära varandra och försök igen";
+"DEVICE_TRANSFER_ERROR_GENERIC" = "Överföringen kunde inte slutföras, se till att dina enheter är nära varandra och försök igen";
 
 /* An error indicating the user must scan this code with a linked device to transfer. */
 "DEVICE_TRANSFER_ERROR_MODE_MISMATCH_LINKED" = "Om du vill ställa in denna iPad som en länkad enhet måste du skanna med din gamla iPad";
@@ -1585,38 +1624,41 @@
 /* Section title for the 'domain fronting country' view. */
 "DOMAIN_FRONTING_COUNTRY_VIEW_SECTION_HEADER" = "Kringgå censur för platsen";
 
-/* Donation amount label for the donate to signal view */
-"DONATION_VIEW_AMOUNT_LABEL" = "Donationsbelopp";
+/* Section title for donation amount on receipts */
+"DONATION_RECEIPT_AMOUNT" = "Belopp";
 
-/* Default text for the custom amount field of the donation view. */
-"DONATION_VIEW_CUSTOM_AMOUNT_PLACEHOLDER" = "Ange anpassat belopp";
+/* Section title for donation date on receipts */
+"DONATION_RECEIPT_DATE_PAID" = "Betalningsdatum";
+
+/* Title on the view where you can see a single receipt */
+"DONATION_RECEIPT_DETAILS" = "Detaljer";
+
+/* Text on the button that exports the receipt */
+"DONATION_RECEIPT_EXPORT_RECEIPT_BUTTON" = "Share Receipt";
+
+/* Footer text at the bottom of donation receipts */
+"DONATION_RECEIPT_FOOTER" = "Thank you for supporting Signal. Your contribution helps fuel the mission of developing open source privacy technology that protects free expression and enables secure global communication for millions around the world. If you’re a resident of the United States, please retain this receipt for your tax records. Signal Technology Foundation is a tax-exempt nonprofit organization in the United States under section 501c3 of the Internal Revenue Code. Our Federal Tax ID is 82-4506840.";
+
+/* Title for one-time donation receipts */
+"DONATION_RECEIPT_ONE_TIME" = "One-time";
+
+/* Title for recurring donation receipts */
+"DONATION_RECEIPT_RECURRING" = "Återkommande";
+
+/* Title on donation receipts */
+"DONATION_RECEIPT_TITLE" = "Donationskvitto";
+
+/* Section title for donation type on receipts */
+"DONATION_RECEIPT_TYPE" = "Type";
+
+/* Title of view where you can see all of your donation receipts, or button to take you there */
+"DONATION_RECEIPTS" = "Donationskvitton";
+
+/* Text at the bottom of the donation receipts list, telling users that receipts might not be available */
+"DONATION_RECEIPTS_MIGHT_BE_MISSING_IF_YOU_REINSTALLED" = "Om du har installerat om Signal kommer kvitton från tidigare donationer inte vara tillgängliga.";
 
 /* Text describing to the user that they're going to pay a donation to Signal */
 "DONATION_VIEW_DONATION_TO_SIGNAL" = "Donation till Signal";
-
-/* Text explaining there are other ways to donate on the donation view. */
-"DONATION_VIEW_OTHER_WAYS" = "Andra sätt att donera";
-
-/* Error text notifying the user they must select a large amount on the donate to signal view */
-"DONATION_VIEW_SELECT_A_LARGER_AMOUNT" = "Välj ett större belopp att donera";
-
-/* Error text notifying the user they must select a smaller amount on the donate to signal view */
-"DONATION_VIEW_SELECT_A_SMALLER_AMOUNT" = "Välj ett lägre belopp att donera";
-
-/* Error text notifying the user they must select an amount on the donate to signal view */
-"DONATION_VIEW_SELECT_AN_AMOUNT" = "Välj ett belopp att donera";
-
-/* Thank you message on the donate to signal view */
-"DONATION_VIEW_THANKS_FOR_YOUR_SUPPORT" = "Tack för ditt stöd!";
-
-/* Title for the donate to signal view */
-"DONATION_VIEW_TITLE" = "Signal drivs av människor som du.";
-
-/* The body of the 'Why Donate' section of the donate to signal view */
-"DONATION_VIEW_WHY_DONATE_BODY" = "Teamet på Signal är engagerat i uppdraget att utveckla öppen källkods integritetsteknik som skyddar yttrandefrihet och möjliggör säker global kommunikation. Ditt bidrag driver upp denna rättsfråga. Inga annonser. Inga spårare. Inget påhitt.\n\nDin donation hjälper till att betala för utveckling, servrar och bandbredd för en app som används av miljoner runt om i världen för privat och omedelbar kommunikation.";
-
-/* The title of the 'Why Donate' section of the donate to signal view */
-"DONATION_VIEW_WHY_DONATE_TITLE" = "Varför donera?";
 
 /* Alert body for when the user has just tried to edit a contacts after declining to give Signal contacts permissions */
 "EDIT_CONTACT_WITHOUT_CONTACTS_PERMISSION_ALERT_BODY" = "Du kan ge åtkomst i appen Inställningar i iOS.";
@@ -1733,7 +1775,7 @@
 "ERROR_DESCRIPTION_MESSAGE_SEND_FAILED_DUE_TO_BLOCK_LIST" = "Det gick inte att skicka meddelande eftersom du har blockerat användaren.";
 
 /* Generic error used whenever Signal can't contact the server */
-"ERROR_DESCRIPTION_NO_INTERNET" = "Signal kunde inte ansluta till Internet. Vänligen försök igen.";
+"ERROR_DESCRIPTION_NO_INTERNET" = "Signal kunde inte ansluta till Internet. Försök igen.";
 
 /* Error indicating that an outgoing message had no valid recipients. */
 "ERROR_DESCRIPTION_NO_VALID_RECIPIENTS" = "Det gick inte att skicka meddelandet då det saknas giltiga mottagare.";
@@ -1748,10 +1790,10 @@
 "ERROR_DESCRIPTION_RESPONSE_FAILED" = "Ogiltigt svar från tjänsten.";
 
 /* Error message when attempting to send message */
-"ERROR_DESCRIPTION_SENDING_UNAUTHORIZED" = "Denna enhet är inte längre registrerad med ditt telefonnummer. Vänligen installera om Signal.";
+"ERROR_DESCRIPTION_SENDING_UNAUTHORIZED" = "Denna enhet är inte längre registrerad med ditt telefonnummer. Installera om Signal.";
 
 /* Generic server error */
-"ERROR_DESCRIPTION_SERVER_FAILURE" = "Serverfel. Vänligen försök igen senare.";
+"ERROR_DESCRIPTION_SERVER_FAILURE" = "Serverfel. Försök igen senare.";
 
 /* Description for errors returned from the server due to suspected spam. */
 "ERROR_DESCRIPTION_SUSPECTED_SPAM" = "Server kräver användarverifiering innan meddelandet skickas.";
@@ -1805,19 +1847,19 @@
 "ERROR_NETWORK_FAILURE" = "Nätverksfel";
 
 /* Format string for an error alert notification message. Embes {{ error string }} */
-"ERROR_NOTIFICATION_MESSAGE_FORMAT" = "Vänligen hjälp oss att förbättra Signal genom att rapportera detta fel tillsammans med felsökningsloggar från din enhet till support@signal.org; %@";
+"ERROR_NOTIFICATION_MESSAGE_FORMAT" = "Hjälp oss att förbättra Signal genom att rapportera detta fel tillsammans med felsökningsloggar från din enhet till support@signal.org; %@";
 
 /* Format string for an error alert notification title. */
 "ERROR_NOTIFICATION_TITLE" = "Signal Beta: Ett fel uppstod";
 
 /* Error indicating a send failure due to a delinked application. */
-"ERROR_SENDING_DELINKED" = "Din enhet är inte längre länkad. Vänligen länka igen för att skicka ytterligare meddelanden.";
+"ERROR_SENDING_DELINKED" = "Din enhet är inte längre länkad. Länka igen för att skicka ytterligare meddelanden.";
 
 /* Error indicating a send failure due to a deregistered application. */
-"ERROR_SENDING_DEREGISTERED" = "Din enhet är inte längre registrerad. Vänligen registrera dig igen för att skicka ytterligare meddelanden.";
+"ERROR_SENDING_DEREGISTERED" = "Din enhet är inte längre registrerad. Registrera dig igen för att skicka ytterligare meddelanden.";
 
 /* Error indicating a send failure due to an expired application. */
-"ERROR_SENDING_EXPIRED" = "Din version av Signal har upphört att gälla. Vänligen uppdatera för att skicka fler meddelanden.";
+"ERROR_SENDING_EXPIRED" = "Din version av Signal har upphört att gälla. Uppdatera för att skicka fler meddelanden.";
 
 /* Format string for 'unregistered user' error. Embeds {{the unregistered user's name or signal id}}. */
 "ERROR_UNREGISTERED_USER_FORMAT" = "Oregistrerad kontakt: %@";
@@ -1832,7 +1874,7 @@
 "EXPIRATION_WARNING_TODAY" = "Din version av Signal upphör att gälla i dag. Tryck för att uppdatera till den senaste versionen.";
 
 /* action sheet header when re-sending message which failed because of too many attempts */
-"FAILED_SENDING_BECAUSE_RATE_LIMIT" = "För många misslyckanden med denna kontakt. Vänligen försök igen senare.";
+"FAILED_SENDING_BECAUSE_RATE_LIMIT" = "För många misslyckanden med denna kontakt. Försök igen senare.";
 
 /* action sheet header when re-sending message which failed because of untrusted identity keys */
 "FAILED_SENDING_BECAUSE_UNTRUSTED_IDENTITY_KEY" = "Ditt säkerhetsnummer med %@ har nyligen ändrats. Du vill nog verifiera innan du skickar detta meddelande igen.";
@@ -1916,7 +1958,7 @@
 "GET_STARTED_CARD_NEW_GROUP" = "Ny grupp";
 
 /* Error displayed when there is a failure fetching a GIF from the remote service. */
-"GIF_PICKER_ERROR_FETCH_FAILURE" = "Det gick inte att hämta den begärda GIF-bilden. Vänligen kontrollera att du är ansluten.";
+"GIF_PICKER_ERROR_FETCH_FAILURE" = "Det gick inte att hämta den begärda GIF-bilden. Kontrollera att du är ansluten.";
 
 /* Generic error displayed when picking a GIF */
 "GIF_PICKER_ERROR_GENERIC" = "Ett okänt fel uppstod.";
@@ -1925,7 +1967,7 @@
 "GIF_PICKER_FAILURE_ALERT_TITLE" = "Det går inte att välja GIF";
 
 /* Alert message shown when user tries to search for GIFs without entering any search terms. */
-"GIF_PICKER_VIEW_MISSING_QUERY" = "Vänligen ange din sökning.";
+"GIF_PICKER_VIEW_MISSING_QUERY" = "Ange din sökning.";
 
 /* Title for the 'GIF picker' dialog. */
 "GIF_PICKER_VIEW_TITLE" = "GIF-sökning";
@@ -1984,10 +2026,10 @@
 /* Title for alert explaining that a group call participant is blocked. Embeds {{ user's name }} */
 "GROUP_CALL_BLOCKED_ALERT_TITLE_FORMAT" = "%@ är blockerad";
 
-/* Message for eror alert indicating that only group administrators can start calls in announcement-only groups. */
+/* Message for error alert indicating that only group administrators can start calls in announcement-only groups. */
 "GROUP_CALL_BLOCKED_BY_ANNOUNCEMENT_ONLY_MESSAGE" = "Endast administratörer för denna grupp kan starta ett samtal.";
 
-/* Title for eror alert indicating that only group administrators can start calls in announcement-only groups. */
+/* Title for error alert indicating that only group administrators can start calls in announcement-only groups. */
 "GROUP_CALL_BLOCKED_BY_ANNOUNCEMENT_ONLY_TITLE" = "Det går inte att starta gruppsamtal";
 
 /* String displayed in group call grid cell when a user is blocked. Embeds {user's name} */
@@ -2260,6 +2302,9 @@
 /* Message indicating that 'announcement-only' mode was enabled by a remote user. Embeds {{ user who enabled 'announcement-only' mode }}. */
 "GROUP_IS_ANNOUNCEMENT_ONLY_ENABLED_BY_REMOTE_USER_FORMAT" = "%@ ändrade gruppinställningarna så att endast administratörer tillåts skicka meddelanden.";
 
+/* Subtitle indicating that the local user has been blocked from joining the group */
+"GROUP_LINK_ACTION_SHEET_VIEW_BLOCKED_FROM_JOINING_SUBTITLE" = "Du kan inte gå med i denna grupp via grupplänken eftersom att en administratör tog bort dig.";
+
 /* Subtitle indicating that the group invite link has expired in the 'group invite link' action sheet. */
 "GROUP_LINK_ACTION_SHEET_VIEW_EXPIRED_LINK_SUBTITLE" = "Denna grupplänk är inte längre giltig.";
 
@@ -2279,10 +2324,10 @@
 "GROUP_LINK_ACTION_SHEET_VIEW_MESSAGE" = "Vill du gå med i denna grupp och dela ditt namn och foto med dess medlemmar?";
 
 /* Error message the attempt to request to join the group failed due to network connectivity. */
-"GROUP_LINK_COULD_NOT_REQUEST_TO_JOIN_GROUP_DUE_TO_NETWORK_ERROR_MESSAGE" = "Vänligen kontrollera att du är ansluten och försök igen.";
+"GROUP_LINK_COULD_NOT_REQUEST_TO_JOIN_GROUP_DUE_TO_NETWORK_ERROR_MESSAGE" = "Kontrollera att du är ansluten och försök igen.";
 
 /* Error message the attempt to request to join the group failed. */
-"GROUP_LINK_COULD_NOT_REQUEST_TO_JOIN_GROUP_ERROR_MESSAGE" = "Vänligen försök igen.";
+"GROUP_LINK_COULD_NOT_REQUEST_TO_JOIN_GROUP_ERROR_MESSAGE" = "Försök igen.";
 
 /* Message for the 'invalid group invite link' alert. */
 "GROUP_LINK_INVALID_GROUP_INVITE_LINK_ERROR_MESSAGE" = "Detta är inte en giltig grupplänk. Se till att hela länken är intakt och korrekt innan du försöker gå med.";
@@ -2404,7 +2449,7 @@
 /* Message indicating that the local user was removed from the group by an unknown user. */
 "GROUP_LOCAL_USER_REMOVED_BY_UNKNOWN_USER" = "Du togs bort från gruppen.";
 
-/* Message indicating that the local user's request to join the group was approved by another user. Embeds {{ %@ the name of the user who approved the reuqest }}. */
+/* Message indicating that the local user's request to join the group was approved by another user. Embeds {{ %@ the name of the user who approved the request }}. */
 "GROUP_LOCAL_USER_REQUEST_APPROVED_BY_REMOTE_USER_FORMAT" = "%@ godkänt din förfrågan om att gå med i gruppen.";
 
 /* Message indicating that the local user cancelled their request to join the group. */
@@ -2598,6 +2643,9 @@
 
 /* The title for the 'group requests and invites' view. */
 "GROUP_REQUESTS_AND_INVITES_VIEW_TITLE" = "Förfrågningar & inbjudningar";
+
+/* Name for a group story on the stories list. Embeds {author's name}, {group name} */
+"GROUP_STORY_NAME_FORMAT" = "%1$@ till %2$@";
 
 /* Info message indicating that the group was updated by an unknown user. */
 "GROUP_UPDATED" = "Gruppen uppdaterad.";
@@ -2941,14 +2989,11 @@
 /* Title for the conversation list's 'archive' mode. */
 "HOME_VIEW_TITLE_ARCHIVE" = "Arkiv";
 
-/* Title for the conversation list's default mode. */
-"HOME_VIEW_TITLE_INBOX" = "Signal";
-
-/* Title for the 'Select Chats' option in the HomeView. */
+/* Title for the 'Select Chats' option in the ChatList. */
 "HOME_VIEW_TITLE_SELECT_CHATS" = "Välj chattar";
 
-/* Title 'Read All' button in the toolbar of the homeview if multi-section is active. */
-"HOME_VIEW_TOOLBAR_READ_ALL" = "Read All";
+/* Title 'Read All' button in the toolbar of the ChatList if multi-section is active. */
+"HOME_VIEW_TOOLBAR_READ_ALL" = "Alla läst";
 
 /* The image editor hint that you can draw blur */
 "IMAGE_EDITOR_BLUR_HINT" = "Rita var som helst för att oskärpa";
@@ -3110,7 +3155,7 @@
 "LEAVE_GROUP_FAILED" = "Ett fel uppstod när gruppen lämnades.";
 
 /* report an invalid linking code */
-"LINK_DEVICE_INVALID_CODE_BODY" = "Denna QR-kod är inte giltig. Vänligen se till att du skannar QR-koden som visas på enheten som du vill länka.";
+"LINK_DEVICE_INVALID_CODE_BODY" = "Denna QR-kod är inte giltig. Se till att du skannar QR-koden som visas på enheten som du vill länka.";
 
 /* report an invalid linking code */
 "LINK_DEVICE_INVALID_CODE_TITLE" = "Det gick inte att länka enhet";
@@ -3551,7 +3596,7 @@
 "MULTIDEVICE_PAIRING_MAX_DESC" = "Du kan inte länka fler enheter.";
 
 /* alert body: cannot link - reached max linked devices */
-"MULTIDEVICE_PAIRING_MAX_RECOVERY" = "Du har nått det högsta antalet enheter som du för närvarande kan länka till med ditt konto. Vänligen ta bort en enhet och försök igen.";
+"MULTIDEVICE_PAIRING_MAX_RECOVERY" = "Du har nått det högsta antalet enheter som du för närvarande kan länka till med ditt konto. Ta bort en enhet och försök igen.";
 
 /* Badge indicating that the user is muted. */
 "MUTED_BADGE" = "Tystad";
@@ -3563,7 +3608,7 @@
 "NAVIGATION_ITEM_SKIP_BUTTON" = "Hoppa över";
 
 /* No comment provided by engineer. */
-"NETWORK_ERROR_RECOVERY" = "Vänligen kontrollera att du är ansluten och försök igen.";
+"NETWORK_ERROR_RECOVERY" = "Kontrollera att du är ansluten och försök igen.";
 
 /* String representing only the cellular interface */
 "NETWORK_INTERFACE_SET_CELLULAR" = "Endast mobildata";
@@ -3800,7 +3845,7 @@
 "ONBOARDING_PHONE_NUMBER_PLACEHOLDER" = "Ditt telefonnummer";
 
 /* Label indicating that registration has been ratelimited. Embeds {{remaining time string}}. */
-"ONBOARDING_PHONE_NUMBER_RATE_LIMIT_WARNING_FORMAT" = "Vänligen vänta några minuter innan du försöker igen. (%@)";
+"ONBOARDING_PHONE_NUMBER_RATE_LIMIT_WARNING_FORMAT" = "Vänta några minuter innan du försöker igen. (%@)";
 
 /* Title of the 'onboarding phone number' view. */
 "ONBOARDING_PHONE_NUMBER_TITLE" = "Ange ditt telefonnummer";
@@ -3809,7 +3854,7 @@
 "ONBOARDING_PHONE_NUMBER_TITLE_REREGISTERING" = "Ditt telefonnummer";
 
 /* Label indicating that the phone number is invalid in the 'onboarding phone number' view. */
-"ONBOARDING_PHONE_NUMBER_VALIDATION_WARNING" = "Ogiltigt telefonnummer. Vänligen ange ett giltigt telefonnummer för att registrera dig.";
+"ONBOARDING_PHONE_NUMBER_VALIDATION_WARNING" = "Ogiltigt telefonnummer. Ange ett giltigt telefonnummer för att registrera dig.";
 
 /* Explanation of the 'onboarding pin attempts exhausted' view when reglock is disabled. */
 "ONBOARDING_PIN_ATTEMPTS_EXHAUSTED_EXPLANATION" = "Du har slut på gissningar av PIN-koden men du kan fortfarande komma åt ditt Signal-konto genom att skapa en ny PIN-kod. För din integritet och säkerhet kommer ditt konto kommer att återställas utan några sparade profilinformation eller inställningar.";
@@ -4277,13 +4322,13 @@
 "PHOTO_PICKER_UNNAMED_COLLECTION" = "Namnlösa album";
 
 /* Pressing this button pins a thread */
-"PIN_ACTION" = "Fäst";
+"PIN_ACTION" = "Nåla";
 
 /* Error body indicating that the attempt to change a PIN failed. */
-"PIN_CHANGE_ERROR_MESSAGE" = "Couldn't create your new PIN. Your existing PIN has been disabled. Check your connection and try again.";
+"PIN_CHANGE_ERROR_MESSAGE" = "Det gick inte att skapa din nya PIN-kod. Din befintliga PIN-kod har inaktiverats. Kontrollera din anslutning och försök igen.";
 
 /* Error title indicating that the attempt to change a PIN failed. */
-"PIN_CHANGE_ERROR_TITLE" = "PIN Change Failed";
+"PIN_CHANGE_ERROR_TITLE" = "Ändring av PIN-kod misslyckades";
 
 /* Label indicating the user must use at least 4 characters */
 "PIN_CREATION_ALPHANUMERIC_HINT" = "PIN-koden måste vara minst fyra tecken";
@@ -4328,10 +4373,10 @@
 "PIN_CREATION_MISMATCH_ERROR" = "PIN-koder matchar inte. Försök igen.";
 
 /* Error body indicating that the attempt to create a PIN failed due to network issues. */
-"PIN_CREATION_NO_NETWORK_ERROR_MESSAGE" = "Check your connection and try again.";
+"PIN_CREATION_NO_NETWORK_ERROR_MESSAGE" = "Kontrollera din anslutning och försök igen.";
 
 /* Error title indicating that the attempt to create a PIN failed due to network issues. */
-"PIN_CREATION_NO_NETWORK_ERROR_TITLE" = "No Network Connection";
+"PIN_CREATION_NO_NETWORK_ERROR_TITLE" = "Ingen nätverksanslutning";
 
 /* Label indicating the user must use at least 4 digits */
 "PIN_CREATION_NUMERIC_HINT" = "PIN-koden måste vara minst 4 siffror";
@@ -4345,9 +4390,6 @@
 /* The re-creation explanation in the 'pin creation' view. */
 "PIN_CREATION_RECREATION_EXPLANATION" = "Du kan ändra din PIN-kod så länge denna enhet är registrerad.";
 
-/* Title of the 'pin creation' recreation view. */
-"PIN_CREATION_RECREATION_TITLE" = "Ändra din PIN-kod";
-
 /* Action of the 'pin disable' reglock action sheet. */
 "PIN_CREATION_REGLOCK_CONFIRMATION_ACTION" = "Slå av";
 
@@ -4358,10 +4400,10 @@
 "PIN_CREATION_REGLOCK_CONFIRMATION_TITLE" = "Slå av registreringslås?";
 
 /* Error body indicating that the attempt to create a PIN succeeded but enabling reglock failed. */
-"PIN_CREATION_REGLOCK_ERROR_MESSAGE" = "PIN creation succeeded, but registration lock could not be enabled. Check your connection and try again.";
+"PIN_CREATION_REGLOCK_ERROR_MESSAGE" = "PIN-koden kunde skapas, men registreringslåset kunde inte aktiveras. Kontrollera din anslutning och försök igen.";
 
 /* Error title indicating that the attempt to create a PIN succeeded but enabling reglock failed. */
-"PIN_CREATION_REGLOCK_ERROR_TITLE" = "Enable Registration Lock Failed";
+"PIN_CREATION_REGLOCK_ERROR_TITLE" = "Aktivera registreringslås misslyckades";
 
 /* Skip action on the pin creation view */
 "PIN_CREATION_SKIP" = "Inaktivera PIN-koden";
@@ -4382,7 +4424,7 @@
 "PIN_RECREATION_ERROR_TITLE" = "Det gick inte att skapa PIN-kod";
 
 /* Error body indicating that the attempt to recreate a PIN failed. */
-"PIN_RECRETION_ERROR_MESSAGE" = "Couldn’t create your PIN. Check your connection and try again.";
+"PIN_RECRETION_ERROR_MESSAGE" = "Det gick inte att skapa din PIN-kod. Kontrollera din anslutning och försök igen.";
 
 /* The explanation for the 'pin reminder' dialog. */
 "PIN_REMINDER_EXPLANATION" = "För att hjälpa dig att memorera din PIN-kod ber vi dig att skriva in den regelbundet. Vi frågar mindre med tiden.";
@@ -4421,16 +4463,16 @@
 "PIN_REMINDER_TOO_SHORT_ERROR" = "PIN-koden måste vara minst 4 siffror.";
 
 /* An explanation that you have already pinned the maximum number of conversations. */
-"PINNED_CONVERSATION_LIMIT" = "Du kan bara fästa upp till fyra chattar.";
+"PINNED_CONVERSATION_LIMIT" = "Du kan bara nåla upp till fyra chattar.";
 
 /* The title for pinned conversation section on the conversation list */
-"PINNED_SECTION_TITLE" = "Fastnålade";
+"PINNED_SECTION_TITLE" = "Nålade";
 
 /* Action text for PIN megaphone when user doesn't have a PIN */
 "PINS_MEGAPHONE_ACTION" = "Skapa PIN-kod";
 
 /* Body for PIN megaphone when user doesn't have a PIN */
-"PINS_MEGAPHONE_BODY" = "Finish creating your Signal PIN.";
+"PINS_MEGAPHONE_BODY" = "Slutför skapande av din Signal-PIN-kod.";
 
 /* Toast indication that the user will be reminded later to setup their PIN. Embeds {{time until mandatory}} */
 "PINS_MEGAPHONE_SNOOZE_TOAST_FORMAT" = "Vi påminner dig senare. Att skapa en PIN-kod blir obligatoriskt om %ld dagar.";
@@ -4597,6 +4639,15 @@
 /* Toast alert text shown when tapping on a quoted message which we cannot scroll to because the local copy of the message didn't exist when the quote was received. */
 "QUOTED_REPLY_ORIGINAL_MESSAGE_REMOTELY_SOURCED" = "Hittade inte originalmeddelandet.";
 
+/* Header label that appears above quoted messages when the quoted content was includes a reaction to your own story. */
+"QUOTED_REPLY_REACTION_TO_OWN_STORY" = "Reagerade på din berättelse";
+
+/* Header label that appears above quoted messages when the quoted content was includes a reaction to a story. Embeds {{ story author name }} */
+"QUOTED_REPLY_REACTION_TO_STORY_FORMAT" = "Reacted to %@’s story";
+
+/* Message header when you are quoting a story. Embeds {{ story author name }} */
+"QUOTED_REPLY_STORY_AUTHOR_INDICATOR_FORMAT" = "%@ · Story";
+
 /* Indicates this message is a quoted reply to an attachment of unknown type. */
 "QUOTED_REPLY_TYPE_ATTACHMENT" = "Bilaga";
 
@@ -4706,10 +4757,10 @@
 "REGISTER_CONTACTS_WELCOME" = "Välkommen!";
 
 /* action sheet body */
-"REGISTER_RATE_LIMITING_BODY" = "Du har provat för ofta. Vänligen vänta en minut innan du provar igen.";
+"REGISTER_RATE_LIMITING_BODY" = "Du har provat för ofta. Vänta en minut innan du provar igen.";
 
 /* No comment provided by engineer. */
-"REGISTER_RATE_LIMITING_ERROR" = "Du har provat för ofta. Vänligen vänta en minut innan du provar igen.";
+"REGISTER_RATE_LIMITING_ERROR" = "Du har provat för ofta. Vänta en minut innan du provar igen.";
 
 /* Title of alert shown when push tokens sync job fails. */
 "REGISTRATION_BODY" = "Det gick inte att omregistrera för pushnotiser.";
@@ -4733,7 +4784,7 @@
 "REGISTRATION_ERROR_NETWORK_FAILURE_ALERT_TITLE" = "Kontrollera anslutningen";
 
 /* No comment provided by engineer. */
-"REGISTRATION_NON_VALID_NUMBER" = "Formatet på telefonnumret stöds inte, vänligen kontaktar supporten.";
+"REGISTRATION_NON_VALID_NUMBER" = "Formatet på telefonnumret stöds inte, kontaktar supporten.";
 
 /* Label for the phone number textfield */
 "REGISTRATION_PHONENUMBER_BUTTON" = "Telefonnummer";
@@ -4754,13 +4805,13 @@
 "REGISTRATION_VERIFICATION_FAILED_WRONG_PIN" = "Felaktig PIN-kod för registreringslåset.";
 
 /* Message of alert indicating that users needs to enter a valid phone number to register. */
-"REGISTRATION_VIEW_INVALID_PHONE_NUMBER_ALERT_MESSAGE" = "Vänligen ange ett giltigt telefonnummer för att registrera dig.";
+"REGISTRATION_VIEW_INVALID_PHONE_NUMBER_ALERT_MESSAGE" = "Ange ett giltigt telefonnummer för att registrera dig.";
 
 /* Title of alert indicating that users needs to enter a valid phone number to register. */
 "REGISTRATION_VIEW_INVALID_PHONE_NUMBER_ALERT_TITLE" = "Ogiltigt telefonnummer";
 
 /* Message of alert indicating that users needs to enter a phone number to register. */
-"REGISTRATION_VIEW_NO_PHONE_NUMBER_ALERT_MESSAGE" = "Vänligen ange ett telefonnummer för att registrera dig.";
+"REGISTRATION_VIEW_NO_PHONE_NUMBER_ALERT_MESSAGE" = "Ange ett telefonnummer för att registrera dig.";
 
 /* Title of alert indicating that users needs to enter a phone number to register. */
 "REGISTRATION_VIEW_NO_PHONE_NUMBER_ALERT_TITLE" = "Inget telefonnummer";
@@ -4781,7 +4832,7 @@
 "REJECT_CALL_BUTTON_TITLE" = "Avvisa";
 
 /* No comment provided by engineer. */
-"RELAY_REGISTERED_ERROR_RECOVERY" = "Telefonnumret som du försöker registrera finns redan på en annan server, vänligen avregistrera dig därifrån och försök igen.";
+"RELAY_REGISTERED_ERROR_RECOVERY" = "Telefonnumret som du försöker registrera finns redan på en annan server, avregistrera dig därifrån och försök igen.";
 
 /* Accessibility label for a button that removes the preview from a drafted message. */
 "REMOVE_PREVIEW" = "Ta bort förhandsgranskning";
@@ -4844,7 +4895,7 @@
 "SCREEN_LOCK_ERROR_LOCAL_AUTHENTICATION_FAILED" = "Autentisering misslyckades.";
 
 /* Indicates that Touch ID/Face ID/Phone Passcode is 'locked out' on this device due to authentication failures. */
-"SCREEN_LOCK_ERROR_LOCAL_AUTHENTICATION_LOCKOUT" = "För många misslyckade autentiseringsförsök. Vänligen försök igen senare.";
+"SCREEN_LOCK_ERROR_LOCAL_AUTHENTICATION_LOCKOUT" = "För många misslyckade autentiseringsförsök. Försök igen senare.";
 
 /* Indicates that Touch ID/Face ID/Phone Passcode are not available on this device. */
 "SCREEN_LOCK_ERROR_LOCAL_AUTHENTICATION_NOT_AVAILABLE" = "Du måste aktivera en lösenkod i dina iOS-inställningar för att använda Skärmlås.";
@@ -5039,7 +5090,7 @@
 "SECONDARY_LINKING_ERROR_OBSOLETE_LINKED_DEVICE_TITLE" = "Versionen stöds inte";
 
 /* alert message for outdated linking device */
-"SECONDARY_LINKING_ERROR_OLD_VERSION_MESSAGE" = "Din andra enhet kör en äldre version av Signal som inte stöder skanning av iPad-QR-koder. Vänligen installera den senaste utgåvan av Signal och försök igen.";
+"SECONDARY_LINKING_ERROR_OLD_VERSION_MESSAGE" = "Din andra enhet kör en äldre version av Signal som inte stöder skanning av iPad-QR-koder. Installera den senaste utgåvan av Signal och försök igen.";
 
 /* alert title for outdated linking device */
 "SECONDARY_LINKING_ERROR_OLD_VERSION_TITLE" = "Uppdatera skanningsenhet";
@@ -5099,7 +5150,7 @@
 "SEND_FAILED_NOTIFICATION_BODY" = "Det gick inte att skicka ditt meddelande.";
 
 /* Alert body after invite failed */
-"SEND_INVITE_FAILURE" = "Det gick inte att skicka inbjudan, vänligen försök igen senare.";
+"SEND_INVITE_FAILURE" = "Det gick inte att skicka inbjudan, försök igen senare.";
 
 /* Alert body after invite succeeded */
 "SEND_INVITE_SUCCESS" = "Du bjöd in din vän att använda Signal!";
@@ -5109,9 +5160,6 @@
 
 /* alert action when the user decides not to cancel the media flow after all. */
 "SEND_MEDIA_RETURN_TO_CAMERA" = "Återgå till kameran";
-
-/* alert action when the user decides not to cancel the media flow after all. */
-"SEND_MEDIA_RETURN_TO_MEDIA_LIBRARY" = "Återgå till mediebiblioteket";
 
 /* No comment provided by engineer. */
 "SEND_SMS_CONFIRM_TITLE" = "Bjud in en vän via osäkert SMS?";
@@ -5353,9 +5401,6 @@
 /* Settings table view cell label */
 "SETTINGS_INVITE_TITLE" = "Bjud in dina vänner";
 
-/* content of tweet when inviting via twitter - please do not translate URL */
-"SETTINGS_INVITE_TWITTER_TEXT" = "Du kan nå mig med @signalapp. Skaffa appen nu: https://signal.org/download/";
-
 /* Label for settings view that allows user to change the chat color and wallpaper. */
 "SETTINGS_ITEM_COLOR_AND_WALLPAPER" = "Chattfärg och -bakgrund";
 
@@ -5421,6 +5466,9 @@
 
 /* The title for the notification settings. */
 "SETTINGS_NOTIFICATIONS" = "Notiser";
+
+/* Title for the 'one-time donation' link in settings. */
+"SETTINGS_ONE_TIME_DONATION" = "One-time Donation";
 
 /* Label for the 'agree to payments terms' button in the 'activate payments confirmation' UI in the payment settings. */
 "SETTINGS_PAYMENTS_ACTIVATE_PAYMENTS_CONFIRM_AGREE" = "Aktivera";
@@ -5696,7 +5744,7 @@
 "SETTINGS_PAYMENTS_RESTORE_WALLET_PASTE_TITLE" = "Klistra in återställningsfras";
 
 /* Explanation of the 'restore payments wallet' process payments settings. */
-"SETTINGS_PAYMENTS_RESTORE_WALLET_SPLASH_EXPLANATION" = "Your recovery phrase is a 24-word phrase unique to you. Use it to restore your payments account.";
+"SETTINGS_PAYMENTS_RESTORE_WALLET_SPLASH_EXPLANATION" = "Din återställningsfras är en fras på 24 ord som är unik för dig. Använd den för att återställa ditt betalningskonto.";
 
 /* Title for the first step of the 'restore payments wallet' views. */
 "SETTINGS_PAYMENTS_RESTORE_WALLET_SPLASH_TITLE" = "Ange återställningsfras";
@@ -5935,11 +5983,8 @@
 /* Footer for setting for enabling & disabling contact and notification sharing with iOS. */
 "SETTINGS_SHARING_SUGGESTIONS_NOTIFICATIONS_FOOTER" = "Tillåt iOS åtkomst till Signal-kontakter och chattar för funktioner som delningsförslag och aviseringar.";
 
-/* Title for the 'signal boost' link in settings. */
-"SETTINGS_SIGNAL_BOOST" = "Signal Boost";
-
-/* Title for the 'become a sustainer' link in settings. */
-"SETTINGS_SUBSCRIPTION" = "Bli en Signal-upprätthållare";
+/* Title for the 'monthly donation' link in settings. */
+"SETTINGS_SUBSCRIPTION" = "Monthly Donation";
 
 /* Label for the 'enable registration lock' switch of the privacy settings. */
 "SETTINGS_TWO_FACTOR_AUTH_SWITCH_LABEL" = "Registreringslås";
@@ -5973,9 +6018,6 @@
 
 /* action sheet item to open native messages app */
 "SHARE_ACTION_MESSAGE" = "Meddelande";
-
-/* action sheet item */
-"SHARE_ACTION_TWEET" = "Twitter";
 
 /* alert body when sharing file failed because of untrusted/changed identity keys */
 "SHARE_EXTENSION_FAILED_SENDING_BECAUSE_UNTRUSTED_IDENTITY_FORMAT" = "Ditt säkerhetsnummer med %@ har nyligen ändrats. Du vill nog verifiera det i appen innan du skickar igen.";
@@ -6038,7 +6080,7 @@
 "SPAM_CAPTCHA_DISMISS_CONFIRMATION_TITLE" = "Fortsätt utan att verifiera?";
 
 /* Body for action sheet explaining captcha requirement. */
-"SPAM_CAPTCHA_SHEET_BODY" = "För att förhindra skräppost på Signal, vänligen slutför verifieringen. \n\nEfter verifiering kan du fortsätta skicka meddelanden. Alla pausade meddelanden skickas automatiskt.";
+"SPAM_CAPTCHA_SHEET_BODY" = "För att förhindra skräppost på Signal, slutför verifieringen. \n\nEfter verifiering kan du fortsätta skicka meddelanden. Alla pausade meddelanden skickas automatiskt.";
 
 /* Title for action sheet explaining captcha requirement. */
 "SPAM_CAPTCHA_SHEET_TITLE" = "Verifiera för att fortsätta skicka meddelanden";
@@ -6091,6 +6133,60 @@
 /* Label for the 'uninstall sticker pack' button. */
 "STICKERS_UNINSTALL_BUTTON" = "Avinstallera";
 
+/* Text indication a story caption can be tapped to read more. */
+"STORIES_CAPTION_READ_MORE" = "Läs mer";
+
+/* Context menu action to copy the selected story reply */
+"STORIES_COPY_REPLY_ACTION" = "Kopiera";
+
+/* Context menu action to delete the selected story reply */
+"STORIES_DELETE_REPLY_ACTION" = "Ta bort";
+
+/* Context menu action to forward the selected story */
+"STORIES_FORWARD_STORY_ACTION" = "Vidarebefordra";
+
+/* Context menu action to open the chat associated with the selected story */
+"STORIES_GO_TO_CHAT_ACTION" = "Go to Chat";
+
+/* Context menu action to hide the selected story */
+"STORIES_HIDE_STORY_ACTION" = "Hide Story";
+
+/* Indicates that there are no recent stories to render */
+"STORIES_NO_RECENT_MESSAGES" = "Inga nya uppdateringar att visa just nu.";
+
+/* Indicates that this story has no replies yet */
+"STORIES_NO_REPLIES_YET" = "Inga svar ännu";
+
+/* Context menu action to share the selected story */
+"STORIES_SHARE_STORY_ACTION" = "Dela";
+
+/* Title for the stories view. */
+"STORIES_TITLE" = "Berättelser";
+
+/* Tooltip prompting the user to visit a story link. */
+"STORY_LINK_PREVIEW_VISIT_LINK_TOOLTIP" = "Besök länk";
+
+/* Text indicating a story that was replied to is no longer available. */
+"STORY_NO_LONGER_AVAILABLE" = "Inte längre tillgänglig";
+
+/* Button for replying to a story with a single existing reply. */
+"STORY_REPLY_BUTTON_WITH_1_REPLY" = "<bold>1</bold> reply";
+
+/* Button for replying to a story with N existing replies. {embeds the number of replies} */
+"STORY_REPLY_BUTTON_WITH_N_REPLIES_FORMAT" = "<bold>%@</bold> replies";
+
+/* Button for replying to a story with no existing replies. */
+"STORY_REPLY_BUTTON_WITH_NO_REPLIES" = "Svara";
+
+/* Text indicating a story has been reacted to */
+"STORY_REPLY_REACTION" = "Reagerade på berättelsen";
+
+/* placeholder text for replying to a story */
+"STORY_REPLY_TEXT_FIELD_PLACEHOLDER" = "Svara";
+
+/* Author text when the local user author's a story reply */
+"STORY_REPLY_YOU_AUTHOR" = "Du";
+
 /* Title for the 'Badges' button in sustainer view. */
 "SUBSCRIBER_BADGES" = "Märken";
 
@@ -6101,13 +6197,13 @@
 "SUBSCRIBER_SUBSCRIPTION_FAQ" = "Vanliga frågor om abonnemang";
 
 /* Action text for subscription megaphone */
-"SUBSCRIPTION_MEGAPHONE_ACTION" = "Bidra";
+"SUBSCRIPTION_MEGAPHONE_ACTION" = "Donera";
 
 /* Body for subscription megaphone */
-"SUBSCRIPTION_MEGAPHONE_BODY" = "Signal drivs av människor som du. Bidra och få ett märke.";
+"SUBSCRIPTION_MEGAPHONE_BODY" = "Signal is powered by people like you. Donate and receive a badge.";
 
 /* Cancel text for subscription megaphone */
-"SUBSCRIPTION_MEGAPHONE_CANCEL" = "Nej tack";
+"SUBSCRIPTION_MEGAPHONE_CANCEL" = "Inte nu";
 
 /* Title for subscription megaphone */
 "SUBSCRIPTION_MEGAPHONE_TITLE" = "Bli en upprätthållare";
@@ -6128,7 +6224,7 @@
 "SUPPORT_EMAIL_DEFAULT_DESCRIPTION" = "Beskriv problemet för oss: ";
 
 /* Message for alert dialog presented when a support email failed to send */
-"SUPPORT_EMAIL_ERROR_ALERT_DESCRIPTION" = "Vänligen skicka din supportförfrågan via e-post till support@signal.org";
+"SUPPORT_EMAIL_ERROR_ALERT_DESCRIPTION" = "Skicka din supportförfrågan via e-post till support@signal.org";
 
 /* Localized label for support request email filter string. Embeds {{filter text}}. */
 "SUPPORT_EMAIL_FILTER_LABEL_FORMAT" = "Filter: %@";
@@ -6170,16 +6266,16 @@
 "SUPPORT_LOG_UPLOAD_IN_PROGRESS" = "Läser in";
 
 /* First block of description text in read more sheet */
-"SUSTAINER_READ_MORE_DESCRIPTION_BLOCK_ONE" = "Signal är en ideell organisation utan annonsörer eller investerare, som endast upprätthålls av de personer som använder och värdesätter den. Ge ett återkommande månadsbidrag och få ett profilmärke för att dela ditt stöd.";
+"SUSTAINER_READ_MORE_DESCRIPTION_BLOCK_ONE" = "Signal is a nonprofit with no advertisers or investors, sustained only by the people who use and value it. Make a recurring monthly donation and receive a profile badge to share your support.";
 
 /* Second block of description text in read more sheet */
-"SUSTAINER_READ_MORE_DESCRIPTION_BLOCK_TWO" = "Signal är engagerad i att utveckla integritetsteknologi med öppen källkod som skyddar yttrandefriheten och möjliggör säker global kommunikation.\n\nDitt bidrag driver denna rättsfråga och betalar för utvecklingen och driften av en app som används av miljoner för privat kommunikation. Inga annonser. Inga spårare. Inget påhitt.";
+"SUSTAINER_READ_MORE_DESCRIPTION_BLOCK_TWO" = "Signal is committed to developing open source privacy technology that protects free expression and enables secure global communication.\n\nYour donation fuels this cause and pays for the development and operations of an app used by millions for private communication. No ads. No trackers. No kidding.";
 
 /* Title for the signal sustainer read more view */
-"SUSTAINER_READ_MORE_TITLE" = "Stöd teknik som är byggd för dig - inte för din data - genom att gå med i gemenskapen som upprätthåller den.";
+"SUSTAINER_READ_MORE_TITLE" = "Support technology that is built for you—not for your data—by joining the community that sustains it.";
 
 /* Why Contribute title for the signal sustainer read more view */
-"SUSTAINER_READ_MORE_WHY_CONTRIBUTE" = "Varför bidra?";
+"SUSTAINER_READ_MORE_WHY_CONTRIBUTE" = "Varför donera?";
 
 /* Action sheet title for Still Processing Badge sheet */
 "SUSTAINER_STILL_PROCESSING_BADGE_TITLE" = "Bearbetar fortfarande";
@@ -6206,13 +6302,13 @@
 "SUSTAINER_VIEW_CANT_ADD_BADGE" = "Det gick inte att lägga till märket. %@";
 
 /* Action sheet message for Couldn't Add Badge sheet */
-"SUSTAINER_VIEW_CANT_ADD_BADGE_MESSAGE" = "Ditt märke kunde inte läggas till ditt konto. Vänligen kontakta supporten.";
+"SUSTAINER_VIEW_CANT_ADD_BADGE_MESSAGE" = "Ditt märke kunde inte läggas till ditt konto. Kontakta supporten.";
 
 /* Action sheet title for Couldn't Add Badge sheet */
 "SUSTAINER_VIEW_CANT_ADD_BADGE_TITLE" = "Det gick inte att lägga till märke";
 
 /* Contact support link */
-"SUSTAINER_VIEW_CONTACT_SUPPORT" = "Vänligen kontakta supporten.";
+"SUSTAINER_VIEW_CONTACT_SUPPORT" = "Kontakta supporten.";
 
 /* Set currency label in sustainer view */
 "SUSTAINER_VIEW_CURRENCY" = "Ställ in valuta";
@@ -6223,7 +6319,7 @@
 /* Existing subscriber support header */
 "SUSTAINER_VIEW_MY_SUPPORT" = "Mitt stöd";
 
-/* Payment error occured text, embeds {{link to contact support}} */
+/* Payment error occurred text, embeds {{link to contact support}} */
 "SUSTAINER_VIEW_PAYMENT_ERROR" = "Fel vid bearbetning av betalningen. %@";
 
 /* Pricing text for sustainer view badges, embeds {{price}} */
@@ -6242,7 +6338,7 @@
 "SUSTAINER_VIEW_PROCESSING_TRANSACTION" = "Bearbetar transaktion...";
 
 /* Read More tappable text in sustainer view body */
-"SUSTAINER_VIEW_READ_MORE" = "Läs mer.";
+"SUSTAINER_VIEW_READ_MORE" = "Read more.";
 
 /* Renewal date text for sustainer view level, embeds {{renewal date}} */
 "SUSTAINER_VIEW_RENEWAL" = "Förnyar %@";
@@ -6269,7 +6365,7 @@
 "SUSTAINER_VIEW_UPDATE_SUBSCRIPTION_CONFIRMATION_UPDATE" = "Uppdatera";
 
 /* The body text for the signal sustainer view */
-"SUSTAINER_VIEW_WHY_DONATE_BODY" = "Stöd teknik som är byggd för dig - inte för din data - genom att gå med i gemenskapen av människor som upprätthåller den.";
+"SUSTAINER_VIEW_WHY_DONATE_BODY" = "Make a recurring monthly donation to Signal to support technology built for you, not your data.";
 
 /* Label for 'off' state of a switch control. */
 "SWITCH_OFF" = "Av";
@@ -6466,12 +6562,6 @@
 /* Error indicating that a group could not be updated due to network connectivity problems. */
 "UPDATE_GROUP_FAILED_DUE_TO_NETWORK" = "Gruppen kunde inte uppdateras. Kontrollera din internetanslutning och försök igen.";
 
-/* Message for the alert indicating that user should upgrade iOS. */
-"UPGRADE_IOS_ALERT_MESSAGE" = "Signal kommer snart att kräva iOS 11 eller senare. Vänligen uppgradera i appen Inställningar >> Allmänt >> Programuppdatering.";
-
-/* Title for the alert indicating that user should upgrade iOS. */
-"UPGRADE_IOS_ALERT_TITLE" = "Uppgradera iOS";
-
 /* An explanation of how usernames work on the username view. */
 "USERNAME_DESCRIPTION" = "Användarnamn på Signal är valfritt. Om du väljer att skapa ett användarnamn kommer andra Signal-användare att kunna hitta dig genom detta användarnamn och kontakta dig utan att veta ditt telefonnummer.";
 
@@ -6479,7 +6569,7 @@
 "USERNAME_INVALID_CHARACTERS_ERROR" = "Användarnamn får endast innehålla a-z, 0-9 och _";
 
 /* A message indicating that username lookup failed. */
-"USERNAME_LOOKUP_ERROR" = "Ett fel uppstod när användarnamnet letades upp. Vänligen försök igen senare.";
+"USERNAME_LOOKUP_ERROR" = "Ett fel uppstod när användarnamnet letades upp. Försök igen senare.";
 
 /* A message indicating that the given username is not a registered signal account. Embeds {{username}} */
 "USERNAME_NOT_FOUND_FORMAT" = "%@ är inte en Signal-användare. Se till att du har angett det fullständiga användarnamnet.";
@@ -6596,10 +6686,10 @@
 "WALLPAPER_SETTINGS_DIM_WALLPAPER" = "Mörkt tema dämpar bakgrunden";
 
 /* An error indicating to the user that we failed to clear the wallpaper. */
-"WALLPAPER_SETTINGS_FAILED_TO_CLEAR" = "Bakgrunden kunde inte rensas, vänligen försök igen senare eller kontakta support om felet kvarstår.";
+"WALLPAPER_SETTINGS_FAILED_TO_CLEAR" = "Bakgrunden kunde inte rensas, försök igen senare eller kontakta support om felet kvarstår.";
 
 /* An error indicating to the user that we failed to reset all wallpapers. */
-"WALLPAPER_SETTINGS_FAILED_TO_RESET" = "Alla bakgrunder kunde inte återställa, vänligen försök igen senare eller kontakta support om felet kvarstår.";
+"WALLPAPER_SETTINGS_FAILED_TO_RESET" = "Alla bakgrunder kunde inte återställa, försök igen senare eller kontakta support om felet kvarstår.";
 
 /* Label for 'reset all chat colors' action in the global wallpaper settings. */
 "WALLPAPER_SETTINGS_RESET_ALL_CHAT_COLORS" = "Återställ alla färger";

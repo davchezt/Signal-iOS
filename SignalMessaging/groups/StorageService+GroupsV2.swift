@@ -1,10 +1,10 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
 import SignalServiceKit
-import SignalClient
+import LibSignalClient
 
 public struct GroupsV2Request {
     let urlString: String
@@ -69,9 +69,7 @@ public extension StorageService {
                                                     requireSnapshotForFirstChange: Bool,
                                                     authCredential: AuthCredential) throws -> GroupsV2Request {
 
-        // GroupsV2 TODO: Apply GroupManager.changeProtoEpoch.
-        // GroupsV2 TODO: Apply requireSnapshotForFirstChange.
-        let urlPath = "/v1/groups/logs/\(fromRevision)"
+        let urlPath = "/v1/groups/logs/\(fromRevision)?includeFirstState=\(requireSnapshotForFirstChange)&maxSupportedChangeEpoch=\(GroupManager.changeProtoEpoch)"
         return try buildGroupV2Request(protoData: nil,
                                        urlString: urlPath,
                                        method: .get,

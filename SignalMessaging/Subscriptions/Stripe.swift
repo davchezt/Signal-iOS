@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -82,7 +82,7 @@ public struct Stripe: Dependencies {
 // MARK: - API
 fileprivate extension Stripe {
 
-    static let publishableKey: String = FeatureFlags.isUsingProductionService
+    static let publishableKey: String = TSConstants.isUsingProductionService
         ? "pk_live_6cmGZopuTsV8novGgJJW9JpC00vLIgtQ1D"
         : "pk_test_sngOd8FnXNkpce9nPXawKrJD00kIDngZkD"
 
@@ -222,7 +222,7 @@ fileprivate extension Stripe {
             parameters["pk_token_payment_network"] = payment.token.paymentMethod.network.map { $0.rawValue }
 
             if payment.token.transactionIdentifier == "Simulated Identifier" {
-                owsAssertDebug(!FeatureFlags.isUsingProductionService, "Simulated ApplePay only works in staging")
+                owsAssertDebug(!TSConstants.isUsingProductionService, "Simulated ApplePay only works in staging")
                 // Generate a fake transaction identifier
                 parameters["pk_token_transaction_id"] = "ApplePayStubs~4242424242424242~0~USD~\(UUID().uuidString)"
             } else {
@@ -429,11 +429,11 @@ public extension Stripe {
         "ZAR",
         "ZMW"
     ]
-    public static let supportedCurrencyInfos: [Currency.Info] = {
+    static let supportedCurrencyInfos: [Currency.Info] = {
         Currency.infos(for: supportedCurrencyCodes, ignoreMissingNames: false, shouldSort: true)
     }()
 
-    public static let preferredCurrencyCodes: [Currency.Code] = [
+    static let preferredCurrencyCodes: [Currency.Code] = [
         "USD",
         "AUD",
         "BRL",
@@ -449,11 +449,11 @@ public extension Stripe {
         "SEK",
         "CHF"
     ]
-    public static let preferredCurrencyInfos: [Currency.Info] = {
+    static let preferredCurrencyInfos: [Currency.Info] = {
         Currency.infos(for: preferredCurrencyCodes, ignoreMissingNames: true, shouldSort: false)
     }()
 
-    public static let zeroDecimalCurrencyCodes: [Currency.Code] = [
+    static let zeroDecimalCurrencyCodes: [Currency.Code] = [
         "BIF",
         "CLP",
         "DJF",
@@ -472,7 +472,7 @@ public extension Stripe {
         "XPF"
     ]
 
-    public static let minimumIntegralChargePerCurrencyCode: [Currency.Code: UInt] = [
+    static let minimumIntegralChargePerCurrencyCode: [Currency.Code: UInt] = [
         "USD": 50,
         "AED": 200,
         "AUD": 50,
@@ -498,7 +498,7 @@ public extension Stripe {
         "SGD": 50
     ]
 
-    public static let defaultCurrencyCode: Currency.Code = {
+    static let defaultCurrencyCode: Currency.Code = {
         if let localeCurrencyCode = Locale.current.currencyCode?.uppercased(), supportedCurrencyCodes.contains(localeCurrencyCode) {
             return localeCurrencyCode
         }

@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -22,7 +22,7 @@ import MessageUI
 //   * long press - show phone number + call PSTN / facetime audio / facetime video / send messages / add to contacts / copy
 // * email
 //   * tap - open in default mail app
-//   * long press - show email adress + new email message / facetime audio / facetime video / send message / add to contacts / copy email.
+//   * long press - show email address + new email message / facetime audio / facetime video / send message / add to contacts / copy email.
 extension ConversationViewController {
 
     public func didTapBodyTextItem(_ item: CVBodyTextLabel.ItemObject) {
@@ -197,23 +197,22 @@ extension ConversationViewController {
         }
 
         let actionSheet = ActionSheetController(title: e164)
+        let isBlocked = databaseStorage.read { blockingManager.isAddressBlocked(address, transaction: $0) }
 
-        if address.isLocalAddress {
-            // Show no options.
-        } else if blockingManager.isAddressBlocked(address) {
-            actionSheet.addAction(ActionSheetAction(title: NSLocalizedString(
-                "BLOCK_LIST_UNBLOCK_BUTTON",
-                comment: "Button label for the 'unblock' button"
-            ),
-                                                    accessibilityIdentifier: "phone_number_unblock",
-                                                    style: .default) { [weak self] _ in
-                guard let self = self else { return }
-                BlockListUIUtils.showUnblockAddressActionSheet(
-                    address,
-                    from: self,
-                    completionBlock: nil
-                )
-            })
+        if isBlocked {
+            actionSheet.addAction(
+                ActionSheetAction(
+                    title: NSLocalizedString("BLOCK_LIST_UNBLOCK_BUTTON", comment: "Button label for the 'unblock' button"),
+                    accessibilityIdentifier: "phone_number_unblock",
+                    style: .default
+                ) { [weak self] _ in
+                    guard let self = self else { return }
+                    BlockListUIUtils.showUnblockAddressActionSheet(
+                        address,
+                        from: self,
+                        completionBlock: nil)
+                })
+
         } else {
             // https://developer.apple.com/library/archive/featuredarticles/iPhoneURLScheme_Reference/PhoneLinks/PhoneLinks.html
             actionSheet.addAction(ActionSheetAction(title: NSLocalizedString("MESSAGE_ACTION_PHONE_NUMBER_CALL",

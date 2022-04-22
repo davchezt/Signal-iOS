@@ -1,2 +1,2 @@
-• We spruced up the chat list a bit to make unread chats clearer to see
-• Fixes for some issues with search and zooming in on photos
+• We’ve tightened things up a bit to make the size of the Signal app 25% smaller.
+• More improvements to make opening group chats super snappy.

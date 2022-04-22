@@ -1,61 +1,81 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
 
 // We generate 100 one-time prekeys at a time.  We should replenish
 // whenever ~2/3 of them have been consumed.
-let kEphemeralPreKeysMinimumCount: UInt = 35
+private let kEphemeralPreKeysMinimumCount: UInt = 35
 
 @objc(SSKRefreshPreKeysOperation)
 public class RefreshPreKeysOperation: OWSOperation {
+    private let identity: OWSIdentity
+
+    @objc(initForIdentity:)
+    public init(for identity: OWSIdentity) {
+        self.identity = identity
+    }
 
     public override func run() {
         Logger.debug("")
 
         guard tsAccountManager.isRegistered else {
             Logger.debug("skipping - not registered")
+            self.reportCancelled()
+            return
+        }
+
+        guard let identityKeyPair = identityManager.identityKeyPair(for: identity) else {
+            Logger.debug("skipping - no \(self.identity) identity key")
+            owsAssertDebug(identity != .aci)
+            self.reportCancelled()
             return
         }
 
         firstly(on: .global()) { () -> Promise<Void> in
             self.messageProcessor.fetchingAndProcessingCompletePromise()
         }.then(on: .global()) { () -> Promise<Int> in
-            self.accountServiceClient.getPreKeysCount()
+            self.accountServiceClient.getPreKeysCount(for: self.identity)
         }.then(on: .global()) { (preKeysCount: Int) -> Promise<Void> in
-            Logger.info("preKeysCount: \(preKeysCount)")
-            guard preKeysCount < kEphemeralPreKeysMinimumCount || self.signedPreKeyStore.currentSignedPrekeyId() == nil else {
-                Logger.debug("Available keys sufficient: \(preKeysCount)")
+            Logger.info("\(self.identity) preKeysCount: \(preKeysCount)")
+            let signalProtocolStore = self.signalProtocolStore(for: self.identity)
+
+            guard preKeysCount < kEphemeralPreKeysMinimumCount ||
+                    signalProtocolStore.signedPreKeyStore.currentSignedPrekeyId() == nil else {
+                Logger.debug("Available \(self.identity) keys sufficient: \(preKeysCount)")
                 return Promise.value(())
             }
 
-            let identityKey: Data = self.identityManager.identityKeyPair()!.publicKey
-            let signedPreKeyRecord: SignedPreKeyRecord = self.signedPreKeyStore.generateRandomSignedRecord()
-            let preKeyRecords: [PreKeyRecord] = self.preKeyStore.generatePreKeyRecords()
+            let signedPreKeyRecord = signalProtocolStore.signedPreKeyStore.generateRandomSignedRecord()
+            let preKeyRecords: [PreKeyRecord] = signalProtocolStore.preKeyStore.generatePreKeyRecords()
 
             self.databaseStorage.write { transaction in
-                self.signedPreKeyStore.storeSignedPreKey(signedPreKeyRecord.id,
-                                                         signedPreKeyRecord: signedPreKeyRecord,
-                                                         transaction: transaction)
+                signalProtocolStore.signedPreKeyStore.storeSignedPreKey(signedPreKeyRecord.id,
+                                                                        signedPreKeyRecord: signedPreKeyRecord,
+                                                                        transaction: transaction)
+                signalProtocolStore.preKeyStore.storePreKeyRecords(preKeyRecords, transaction: transaction)
             }
-            self.preKeyStore.storePreKeyRecords(preKeyRecords)
 
             return firstly(on: .global()) { () -> Promise<Void> in
-                self.accountServiceClient.setPreKeys(identityKey: identityKey, signedPreKeyRecord: signedPreKeyRecord, preKeyRecords: preKeyRecords)
+                self.accountServiceClient.setPreKeys(for: self.identity,
+                                                     identityKey: identityKeyPair.publicKey,
+                                                     signedPreKeyRecord: signedPreKeyRecord,
+                                                     preKeyRecords: preKeyRecords)
             }.done(on: .global()) { () in
                 signedPreKeyRecord.markAsAcceptedByService()
 
                 self.databaseStorage.write { transaction in
-                    self.signedPreKeyStore.storeSignedPreKey(signedPreKeyRecord.id,
-                                                             signedPreKeyRecord: signedPreKeyRecord,
-                                                             transaction: transaction)
-                }
-                self.signedPreKeyStore.setCurrentSignedPrekeyId(signedPreKeyRecord.id)
+                    signalProtocolStore.signedPreKeyStore.storeSignedPreKey(signedPreKeyRecord.id,
+                                                                            signedPreKeyRecord: signedPreKeyRecord,
+                                                                            transaction: transaction)
+                    signalProtocolStore.signedPreKeyStore.setCurrentSignedPrekeyId(signedPreKeyRecord.id,
+                                                                                   transaction: transaction)
+                    signalProtocolStore.signedPreKeyStore.cullSignedPreKeyRecords(transaction: transaction)
+                    signalProtocolStore.signedPreKeyStore.clearPrekeyUpdateFailureCount(transaction: transaction)
 
-                TSPreKeyManager.clearPreKeyUpdateFailureCount()
-                TSPreKeyManager.clearSignedPreKeyRecords()
-                TSPreKeyManager.cullPreKeyRecords()
+                    signalProtocolStore.preKeyStore.cullPreKeyRecords(transaction: transaction)
+                }
             }
         }.done(on: .global()) {
             Logger.info("done")
@@ -83,6 +103,9 @@ public class RefreshPreKeysOperation: OWSOperation {
             return
         }
 
-        TSPreKeyManager.incrementPreKeyUpdateFailureCount()
+        let signalProtocolStore = self.signalProtocolStore(for: identity)
+        self.databaseStorage.write { transaction in
+            signalProtocolStore.signedPreKeyStore.incrementPrekeyUpdateFailureCount(transaction: transaction)
+        }
     }
 }

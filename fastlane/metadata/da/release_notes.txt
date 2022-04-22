@@ -1,6 +1,2 @@
-• Med en ny funktion til at vælge flere samtaler på én gang fra samtalelisten kan du vælge flere samtaler på én gang og markere dem som læste, arkivere eller slette dem. Tryk på dit profilbillede øverst til venstre for at prøve det.
-• Der er nu hurtigere adgang til arkiverede samtaler. Du skal blot trykke på dit profilbillede øverst til venstre for at få adgang til dem.
-• Der er så mange reaktioner at vælge imellem og så lidt tid. Nu kan du nemt søge efter din yndlingsreaktion.
-• Tilpas dine standardreaktioner, så du kan bære dine yndlingsfølelser ude på tøjet.
-• Løbet træt i notifikationer? Du skal bare stryge til venstre på en samtale fra samtalelisten for hurtigt at ignorere den eller slå notifikationer til igen.
-• Har rettet en fejl, der betød, at dele af lange tekstbeskeder blev usynlige i indtastningsfeltet.
+• Vi har strammet tingene en smule op for at gøre Signal-appen 25 % mindre.
+• Flere forbedringer for at gøre det superhurtigt at åbne gruppesamtaler.

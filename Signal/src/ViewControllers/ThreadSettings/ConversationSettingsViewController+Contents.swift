@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -174,7 +174,7 @@ extension ConversationSettingsViewController {
                     let cell = OWSTableItem.newCell()
                     guard let self = self else { return cell }
                     let collectionView = BadgeCollectionView(dataSource: self)
-                    collectionView.badgeSelctionMode = .detailsSheet(owner: .remote(shortName: shortName))
+                    collectionView.badgeSelectionMode = .detailsSheet(owner: .remote(shortName: shortName))
 
                     cell.contentView.addSubview(collectionView)
                     collectionView.autoPinEdgesToSuperviewMargins()
@@ -329,7 +329,7 @@ extension ConversationSettingsViewController {
                 ) { configuration in
                     self?.disappearingMessagesConfiguration = configuration
                     self?.updateTableContents()
-                    NotificationCenter.default.post(name: HomeViewController.clearSearch, object: nil)
+                    NotificationCenter.default.post(name: ChatListViewController.clearSearch, object: nil)
                 }
                 self?.presentFormSheet(OWSNavigationController(rootViewController: vc), animated: true)
             }
@@ -363,8 +363,6 @@ extension ConversationSettingsViewController {
             }))
         }
 
-        let isCurrentlyBlocked = blockingManager.isThreadBlocked(thread)
-
         section.add(OWSTableItem(customCellBlock: { [weak self] in
             guard let self = self else {
                 owsFailDebug("Missing self")
@@ -373,7 +371,7 @@ extension ConversationSettingsViewController {
 
             let cellTitle: String
             var customColor: UIColor?
-            if isCurrentlyBlocked {
+            if self.threadViewModel.isBlocked {
                 cellTitle =
                     (self.thread.isGroupThread
                         ? NSLocalizedString("CONVERSATION_SETTINGS_UNBLOCK_GROUP",
@@ -396,7 +394,7 @@ extension ConversationSettingsViewController {
             return cell
         },
         actionBlock: { [weak self] in
-            if isCurrentlyBlocked {
+            if self?.threadViewModel.isBlocked == true {
                 self?.didTapUnblockThread()
             } else {
                 self?.didTapBlockThread()
@@ -449,7 +447,6 @@ extension ConversationSettingsViewController {
         let section = OWSTableSection()
         section.separatorInsetLeading = NSNumber(value: Float(Self.cellHInnerMargin + CGFloat(AvatarBuilder.smallAvatarSizePoints) + ContactCellView.avatarTextHSpacing))
 
-        let helper = contactsViewHelper
         let groupMembership = groupModel.groupMembership
 
         // "Add Members" cell.
@@ -531,7 +528,7 @@ extension ConversationSettingsViewController {
                     let isGroupAdmin = groupMembership.isFullMemberAndAdministrator(memberAddress)
                     let isVerified = verificationState == .verified
                     let isNoLongerVerified = verificationState == .noLongerVerified
-                    let isBlocked = helper.isSignalServiceAddressBlocked(memberAddress)
+                    let isBlocked = self.blockingManager.isAddressBlocked(memberAddress, transaction: transaction)
                     if isGroupAdmin {
                         configuration.accessoryMessage = NSLocalizedString("GROUP_MEMBER_ADMIN_INDICATOR",
                                                                            comment: "Label indicating that a group member is an admin.")

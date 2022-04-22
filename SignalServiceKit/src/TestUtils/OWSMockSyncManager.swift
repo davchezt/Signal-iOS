@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -44,7 +44,15 @@ public class OWSMockSyncManager: NSObject, SyncManagerProtocol {
         Logger.info("")
     }
 
+    public func sendPniIdentitySyncRequestMessage() {
+        Logger.info("")
+    }
+
     public func sendKeysSyncMessage() {
+        Logger.info("")
+    }
+
+    public func sendPniIdentitySyncMessage() {
         Logger.info("")
     }
 

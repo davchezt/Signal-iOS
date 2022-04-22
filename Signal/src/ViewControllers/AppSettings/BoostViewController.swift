@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -90,7 +90,6 @@ class BoostViewController: OWSTableViewController2 {
 
     private lazy var dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
-        formatter.locale = .current
         formatter.dateStyle = .long
         return formatter
     }()
@@ -337,7 +336,7 @@ class BoostViewController: OWSTableViewController2 {
     }
 
     private func openDonateWebsite() {
-        UIApplication.shared.open(URL(string: "https://signal.org/donate")!, options: [:], completionHandler: nil)
+        UIApplication.shared.open(TSConstants.donateUrl, options: [:], completionHandler: nil)
     }
 }
 
@@ -548,7 +547,7 @@ extension BoostViewController: PKPaymentAuthorizationControllerDelegate {
                     paymentButtonType: .donate,
                     paymentButtonStyle: Theme.isDarkThemeEnabled ? .white : .black
                 )
-                if #available(iOS 12, *) { donateButton.cornerRadius = 12 }
+                donateButton.cornerRadius = 12
                 donateButton.addTarget(self, action: #selector(self.requestApplePayDonation), for: .touchUpInside)
                 cell.contentView.addSubview(donateButton)
                 donateButton.autoPinEdgesToSuperviewMargins()
@@ -655,7 +654,9 @@ extension BoostViewController: PKPaymentAuthorizationControllerDelegate {
             SubscriptionManager.terminateTransactionIfPossible = false
 
             do {
-                try SubscriptionManager.createAndRedeemBoostReceipt(for: intentId)
+                try SubscriptionManager.createAndRedeemBoostReceipt(for: intentId,
+                                                                    amount: donationAmount as Decimal,
+                                                                    currencyCode: self.currencyCode)
             } catch {
 
             }

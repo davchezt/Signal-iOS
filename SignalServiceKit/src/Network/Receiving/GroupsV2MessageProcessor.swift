@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -377,14 +377,15 @@ internal class GroupsMessageProcessor: MessageProcessingPipelineStage, Dependenc
     }
 
     private static func jobInfo(forJob job: IncomingGroupsV2MessageJob,
-                         transaction: SDSAnyReadTransaction) -> IncomingGroupsV2MessageJobInfo {
+                                transaction: SDSAnyReadTransaction) -> IncomingGroupsV2MessageJobInfo {
         var jobInfo = IncomingGroupsV2MessageJobInfo(job: job)
         guard let envelope = job.envelope else {
             owsFailDebug("Missing envelope.")
             return jobInfo
         }
         jobInfo.envelope = envelope
-        guard let groupContext = GroupsV2MessageProcessor.groupContextV2(forEnvelope: envelope, plaintextData: job.plaintextData) else {
+        guard let plaintextData = job.plaintextData,
+              let groupContext = GroupsV2MessageProcessor.groupContextV2(fromPlaintextData: plaintextData) else {
             owsFailDebug("Missing group context.")
             return jobInfo
         }
@@ -399,12 +400,14 @@ internal class GroupsMessageProcessor: MessageProcessingPipelineStage, Dependenc
         return jobInfo
     }
 
-    public static func discardMode(envelopeData: Data,
-                                   plaintextData: Data?,
+    public static func discardMode(forMessageFrom sourceAddress: SignalServiceAddress,
                                    groupContext: SSKProtoGroupContextV2,
-                                   wasReceivedByUD: Bool,
-                                   serverDeliveryTimestamp: UInt64,
                                    transaction: SDSAnyReadTransaction) -> DiscardMode {
+        guard groupContext.hasRevision else {
+            Logger.info("Missing revision in group context")
+            return .discard
+        }
+
         let groupContextInfo: GroupV2ContextInfo
         do {
             groupContextInfo = try groupsV2.groupV2ContextInfo(forMasterKeyData: groupContext.masterKey)
@@ -412,16 +415,11 @@ internal class GroupsMessageProcessor: MessageProcessingPipelineStage, Dependenc
             owsFailDebug("Invalid group context: \(error).")
             return .discard
         }
-        let groupId = groupContextInfo.groupId
-        let job = IncomingGroupsV2MessageJob(envelopeData: envelopeData,
-                                             plaintextData: plaintextData,
-                                             groupId: groupId,
-                                             wasReceivedByUD: wasReceivedByUD,
-                                             serverDeliveryTimestamp: serverDeliveryTimestamp)
-        let jobInfo = self.jobInfo(forJob: job, transaction: transaction)
-        return self.discardMode(forJobInfo: jobInfo,
-                                 hasGroupBeenUpdated: true,
-                                 transaction: transaction)
+
+        return self.discardMode(forMessageFrom: sourceAddress,
+                                groupContextInfo: groupContextInfo,
+                                hasGroupBeenUpdated: true,
+                                transaction: transaction)
     }
 
     public enum DiscardMode {
@@ -437,32 +435,33 @@ internal class GroupsMessageProcessor: MessageProcessingPipelineStage, Dependenc
     private static func discardMode(forJobInfo jobInfo: IncomingGroupsV2MessageJobInfo,
                                     hasGroupBeenUpdated: Bool,
                                     transaction: SDSAnyReadTransaction) -> DiscardMode {
-
-        // We want to discard asap to avoid problems with batching.
         guard let envelope = jobInfo.envelope else {
             owsFailDebug("Missing envelope.")
-            return .discard
-        }
-        guard let groupContext = jobInfo.groupContext else {
-            owsFailDebug("Missing groupContext.")
             return .discard
         }
         guard let groupContextInfo = jobInfo.groupContextInfo else {
             owsFailDebug("Missing groupContextInfo.")
             return .discard
         }
-        guard let sourceAddress = envelope.sourceAddress,
-            sourceAddress.isValid else {
-                owsFailDebug("Invalid source address.")
+        guard let sourceAddress = envelope.sourceAddress, sourceAddress.isValid else {
+            owsFailDebug("Invalid source address.")
             return .discard
         }
-        guard !blockingManager.isAddressBlocked(sourceAddress) &&
-            !blockingManager.isGroupIdBlocked(groupContextInfo.groupId) else {
+        return discardMode(forMessageFrom: sourceAddress,
+                           groupContextInfo: groupContextInfo,
+                           hasGroupBeenUpdated: hasGroupBeenUpdated,
+                           transaction: transaction)
+    }
+
+    private static func discardMode(forMessageFrom sourceAddress: SignalServiceAddress,
+                                    groupContextInfo: GroupV2ContextInfo,
+                                    hasGroupBeenUpdated: Bool,
+                                    transaction: SDSAnyReadTransaction) -> DiscardMode {
+        // We want to discard asap to avoid problems with batching.
+
+        guard !blockingManager.isAddressBlocked(sourceAddress, transaction: transaction) &&
+            !blockingManager.isGroupIdBlocked(groupContextInfo.groupId, transaction: transaction) else {
                 Logger.info("Discarding blocked envelope.")
-            return .discard
-        }
-        guard groupContext.hasRevision else {
-            Logger.info("Missing revision.")
             return .discard
         }
 
@@ -786,9 +785,6 @@ internal class GroupsMessageProcessor: MessageProcessingPipelineStage, Dependenc
                 // one revision.
                 return future.resolve(.failureShouldFailoverToService)
             }
-            guard FeatureFlags.groupsV2processProtosInGroupUpdates else {
-                return future.resolve(.failureShouldFailoverToService)
-            }
             guard let changeActionsProtoData = groupContext.groupChange else {
                 // No embedded group change.
                 return future.resolve(.failureShouldFailoverToService)
@@ -919,17 +915,16 @@ public class GroupsV2MessageProcessor: NSObject {
 
     @objc
     public func enqueue(envelopeData: Data,
-                        plaintextData: Data?,
-                        envelope: SSKProtoEnvelope,
+                        plaintextData: Data,
                         wasReceivedByUD: Bool,
                         serverDeliveryTimestamp: UInt64,
                         transaction: SDSAnyWriteTransaction) {
-        guard envelopeData.count > 0 else {
+        guard !envelopeData.isEmpty else {
             owsFailDebug("Empty envelope.")
             return
         }
 
-        guard let groupId = groupId(forEnvelope: envelope, plaintextData: plaintextData) else {
+        guard let groupId = groupId(fromPlaintextData: plaintextData) else {
             owsFailDebug("Missing or invalid group id")
             return
         }
@@ -954,12 +949,10 @@ public class GroupsV2MessageProcessor: NSObject {
         }
     }
 
-    private func groupId(forEnvelope envelope: SSKProtoEnvelope,
-                         plaintextData: Data?) -> Data? {
-        guard let groupContext = GroupsV2MessageProcessor.groupContextV2(forEnvelope: envelope,
-                                                                         plaintextData: plaintextData) else {
-                                                                            owsFailDebug("Invalid envelope.")
-                                                                            return nil
+    private func groupId(fromPlaintextData plaintextData: Data) -> Data? {
+        guard let groupContext = GroupsV2MessageProcessor.groupContextV2(fromPlaintextData: plaintextData) else {
+            owsFailDebug("Invalid content.")
+            return nil
         }
         do {
             let groupContextInfo = try groupsV2.groupV2ContextInfo(forMasterKeyData: groupContext.masterKey)
@@ -971,10 +964,8 @@ public class GroupsV2MessageProcessor: NSObject {
     }
 
     @objc
-    public class func isGroupsV2Message(envelope: SSKProtoEnvelope?,
-                                        plaintextData: Data?) -> Bool {
-        return groupContextV2(forEnvelope: envelope,
-                              plaintextData: plaintextData) != nil
+    public class func isGroupsV2Message(plaintextData: Data) -> Bool {
+        return groupContextV2(fromPlaintextData: plaintextData) != nil
     }
 
     @objc
@@ -1031,16 +1022,8 @@ public class GroupsV2MessageProcessor: NSObject {
     }
 
     @objc
-    public class func groupContextV2(forEnvelope envelope: SSKProtoEnvelope?,
-                                     plaintextData: Data?) -> SSKProtoGroupContextV2? {
-        guard let envelope = envelope else {
-            return nil
-        }
-        guard let plaintextData = plaintextData,
-            plaintextData.count > 0 else {
-                return nil
-        }
-        guard envelope.content != nil else {
+    public class func groupContextV2(fromPlaintextData plaintextData: Data) -> SSKProtoGroupContextV2? {
+        guard !plaintextData.isEmpty else {
             return nil
         }
 

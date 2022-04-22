@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 #import "OWSSyncManager.h"
@@ -9,7 +9,6 @@
 #import "OWSProfileManager.h"
 #import <Contacts/Contacts.h>
 #import <SignalCoreKit/Cryptography.h>
-#import <SignalCoreKit/SignalCoreKit-Swift.h>
 #import <SignalMessaging/SignalMessaging-Swift.h>
 #import <SignalServiceKit/AppReadiness.h>
 #import <SignalServiceKit/DataSource.h>
@@ -39,6 +38,11 @@ NSString *const kSyncManagerLastContactSyncKey = @"kTSStorageManagerOWSSyncManag
 
 @property (nonatomic) BOOL isRequestInFlight;
 
+@end
+
+@interface OWSSyncManager (SwiftPrivate)
+- (void)sendSyncRequestMessage:(SSKProtoSyncMessageRequestType)requestType
+                   transaction:(SDSAnyWriteTransaction *)transaction;
 @end
 
 #pragma mark -
@@ -377,7 +381,7 @@ NSString *const kSyncManagerLastContactSyncKey = @"kTSStorageManagerOWSSyncManag
                     syncFileUrl = [syncContactsMessage buildPlainTextAttachmentFileWithTransaction:transaction];
                     lastMessageHash = [OWSSyncManager.keyValueStore getData:kSyncManagerLastContactSyncKey
                                                                 transaction:transaction];
-                }];
+                } file:__FILE__ function:__FUNCTION__ line:__LINE__];
 
                 if (!syncFileUrl) {
                     OWSFailDebug(@"Failed to serialize contacts sync message.");
@@ -510,6 +514,13 @@ NSString *const kSyncManagerLastContactSyncKey = @"kTSStorageManagerOWSSyncManag
             [[OWSSyncFetchLatestMessage alloc] initWithThread:thread fetchType:fetchType];
 
         [self.messageSenderJobQueue addMessage:syncFetchLatestMessage.asPreparer transaction:transaction];
+    });
+}
+
+- (void)sendPniIdentitySyncRequestMessage
+{
+    DatabaseStorageAsyncWrite(self.databaseStorage, ^(SDSAnyWriteTransaction *transaction) {
+        [self sendSyncRequestMessage:SSKProtoSyncMessageRequestTypePniIdentity transaction:transaction];
     });
 }
 

@@ -1,9 +1,10 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
 import CommonCrypto
+import SignalServiceKit
 
 @objc
 public enum LocalUserDisplayMode: UInt {
@@ -131,7 +132,19 @@ public class AvatarBuilder: NSObject {
                             diameterPoints: UInt,
                             localUserDisplayMode: LocalUserDisplayMode,
                             transaction: SDSAnyReadTransaction) -> UIImage? {
-        let diameterPixels = CGFloat(diameterPoints).pointsAsPixels
+        return avatarImage(
+            forThread: thread,
+            diameterPixels: CGFloat(diameterPoints).pointsAsPixels,
+            localUserDisplayMode: localUserDisplayMode,
+            transaction: transaction
+        )
+    }
+
+    @objc
+    public func avatarImage(forThread thread: TSThread,
+                            diameterPixels: CGFloat,
+                            localUserDisplayMode: LocalUserDisplayMode,
+                            transaction: SDSAnyReadTransaction) -> UIImage? {
         guard let request = buildRequest(forThread: thread,
                                          diameterPixels: diameterPixels,
                                          localUserDisplayMode: localUserDisplayMode,
@@ -154,10 +167,9 @@ public class AvatarBuilder: NSObject {
     }
 
     private func request(forAddress address: SignalServiceAddress,
-                         diameterPoints: UInt,
+                         diameterPixels: CGFloat,
                          localUserDisplayMode: LocalUserDisplayMode,
                          transaction: SDSAnyReadTransaction) -> Request {
-        let diameterPixels = CGFloat(diameterPoints).pointsAsPixels
         let shouldBlurAvatar = contactsManagerImpl.shouldBlurContactAvatar(address: address,
                                                                            transaction: transaction)
         let requestType: RequestType = .contactAddress(address: address,
@@ -173,7 +185,19 @@ public class AvatarBuilder: NSObject {
                             localUserDisplayMode: LocalUserDisplayMode,
                             transaction: SDSAnyReadTransaction) -> UIImage? {
         let request = request(forAddress: address,
-                              diameterPoints: diameterPoints,
+                              diameterPixels: CGFloat(diameterPoints).pointsAsPixels,
+                              localUserDisplayMode: localUserDisplayMode,
+                              transaction: transaction)
+        return avatarImage(forRequest: request, transaction: transaction)
+    }
+
+    @objc
+    public func avatarImage(forAddress address: SignalServiceAddress,
+                            diameterPixels: CGFloat,
+                            localUserDisplayMode: LocalUserDisplayMode,
+                            transaction: SDSAnyReadTransaction) -> UIImage? {
+        let request = request(forAddress: address,
+                              diameterPixels: diameterPixels,
                               localUserDisplayMode: localUserDisplayMode,
                               transaction: transaction)
         return avatarImage(forRequest: request, transaction: transaction)
@@ -187,7 +211,7 @@ public class AvatarBuilder: NSObject {
                                      localUserDisplayMode: LocalUserDisplayMode,
                                      transaction: SDSAnyReadTransaction) -> UIImage? {
         let request = request(forAddress: address,
-                              diameterPoints: diameterPoints,
+                              diameterPixels: CGFloat(diameterPoints).pointsAsPixels,
                               localUserDisplayMode: localUserDisplayMode,
                               transaction: transaction)
         guard let requestCacheKey = request.cacheKey else {
@@ -314,7 +338,7 @@ public class AvatarBuilder: NSObject {
                                           failoverContentType: nil,
                                           diameterPixels: request.diameterPixels,
                                           shouldBlurAvatar: request.shouldBlurAvatar)
-        return avatarImage(forAvatarContent: avatarContent)
+        return avatarImage(forAvatarContent: avatarContent, transaction: nil)
     }
 
     public func defaultAvatarImageForLocalUser(
@@ -386,7 +410,7 @@ public class AvatarBuilder: NSObject {
             shouldBlurAvatar: request.shouldBlurAvatar
         )
 
-        return avatarImage(forAvatarContent: avatarContent)
+        return avatarImage(forAvatarContent: avatarContent, transaction: nil)
     }
 
     // MARK: - Requests
@@ -485,9 +509,9 @@ public class AvatarBuilder: NSObject {
                                   diameterPixels: CGFloat,
                                   transaction: SDSAnyReadTransaction) -> RequestType {
         func requestTypeForGroup(groupThread: TSGroupThread) -> RequestType {
-            if let avatarData = groupThread.groupModel.groupAvatarData,
+            if let avatarData = groupThread.groupModel.avatarData,
                avatarData.ows_isValidImage {
-                let digestString = avatarData.sha1Base64DigestString
+                let digestString = avatarData.sha1HexadecimalDigestString
                 return .group(groupId: groupThread.groupId, avatarData: avatarData, digestString: digestString)
             } else {
                 return .groupDefaultIcon(groupId: groupThread.groupId)
@@ -532,6 +556,7 @@ public class AvatarBuilder: NSObject {
         case text(text: String, theme: AvatarTheme)
         case tintedImage(name: String, theme: AvatarTheme)
         case avatarIcon(icon: AvatarIcon, theme: AvatarTheme)
+        case cachedContact(address: SignalServiceAddress, cacheKey: String)
 
         static func noteToSelf(theme: AvatarTheme) -> Self {
             return .tintedImage(name: "note-resizable", theme: theme)
@@ -557,6 +582,8 @@ public class AvatarBuilder: NSObject {
                 return "tintedImage.\(name).\(theme.rawValue)"
             case .avatarIcon(let icon, let theme):
                 return "avatarIcon.\(icon.rawValue).\(theme.rawValue)"
+            case .cachedContact(_, let cacheKey):
+                return cacheKey
             }
         }
     }
@@ -591,7 +618,7 @@ public class AvatarBuilder: NSObject {
 
     private func avatarImage(forRequest request: Request, transaction: SDSAnyReadTransaction) -> UIImage? {
         let avatarContent = avatarContent(forRequest: request, transaction: transaction)
-        return avatarImage(forAvatarContent: avatarContent)
+        return avatarImage(forAvatarContent: avatarContent, transaction: transaction)
     }
 
     // This cache needs to be evacuated whenever anything that
@@ -605,7 +632,7 @@ public class AvatarBuilder: NSObject {
             return avatarContent
         }
 
-        let avatarContent = Self.buildAvatarContent(forRequest: request, transaction: transaction)
+        let avatarContent = buildAvatarContent(forRequest: request, transaction: transaction)
 
         if DebugFlags.internalLogging {
             switch request.requestType {
@@ -627,42 +654,88 @@ public class AvatarBuilder: NSObject {
     // This cache never needs to be evacuated. The cache keys will change
     // whenever state in the content changes that would affect the image.
     private let contentToImageCache = LRUCache<String, UIImage>(maxSize: 128, nseMaxSize: 0)
+    private static let avatarCacheDirectory = URL(
+        fileURLWithPath: "Library/Caches/AvatarBuilder",
+        isDirectory: true,
+        relativeTo: URL(
+            fileURLWithPath: CurrentAppContext().appSharedDataDirectoryPath(),
+            isDirectory: true
+        )
+    )
 
-    private func avatarImage(forAvatarContent avatarContent: AvatarContent) -> UIImage? {
+    private static let contactCacheKeys = SDSKeyValueStore(collection: "AvatarBuilder.contactCacheKeys")
+
+    private func avatarImage(forAvatarContent avatarContent: AvatarContent,
+                             transaction: SDSAnyReadTransaction?) -> UIImage? {
         let cacheKey = avatarContent.cacheKey
 
         if let image = contentToImageCache.object(forKey: cacheKey) {
-            if !DebugFlags.reduceLogChatter {
-                Logger.verbose("---- Cache hit.")
-            }
             return image
         }
 
-        if !DebugFlags.reduceLogChatter {
-            Logger.verbose("---- Cache miss.")
+        func saveCacheKeyForNSE() {
+            if case .contactAddress(address: let address, localUserDisplayMode: _) = avatarContent.request.requestType,
+               let uuidString = address.uuidString,
+               let transaction = transaction {
+                let contentCacheKey = avatarContent.contentType.cacheKey
+                if contentCacheKey != Self.contactCacheKeys.getString(uuidString, transaction: transaction) {
+                    self.databaseStorage.asyncWrite { writeTransaction in
+                        Self.contactCacheKeys.setString(contentCacheKey, key: uuidString, transaction: writeTransaction)
+                    }
+                }
+            }
         }
 
-        guard let image = Self.buildOrLoadImage(forAvatarContent: avatarContent) else {
+        // We use the digest of the cache key for the filename, to ensure it's safe
+        // for use in the filename (it's a hexadecimal string so only 0-9a-f).
+        let cachedImageUrl = URL(fileURLWithPath: cacheKey.sha1HexadecimalDigestString + ".png", relativeTo: Self.avatarCacheDirectory)
+
+        if let image = UIImage(contentsOfFile: cachedImageUrl.path) {
+            memoryCacheAvatarImageIfEligible(image, cacheKey: cacheKey)
+            saveCacheKeyForNSE()
+            return image
+        }
+
+        // We never build avatars in the NSE, as it's a very expensive operation.
+        guard !CurrentAppContext().isNSE else { return nil }
+
+        guard let image = Self.buildOrLoadImage(forAvatarContent: avatarContent, transaction: transaction) else {
             return nil
         }
 
-        // The avatars in our hot code paths which are 36-56pt.  At 3x scale,
-        // a threshold of 200 will include these avatars.
-        let maxCacheSizePixels = 200
-        let canCacheAvatarImage = (image.pixelWidth <= maxCacheSizePixels &&
-                                    image.pixelHeight <= maxCacheSizePixels)
+        memoryCacheAvatarImageIfEligible(image, cacheKey: cacheKey)
+        saveCacheKeyForNSE()
 
-        if canCacheAvatarImage {
-            contentToImageCache.setObject(image, forKey: cacheKey)
+        // Always cache the avatar image to disk.
+        OWSFileSystem.ensureDirectoryExists(Self.avatarCacheDirectory.path)
+
+        if let pngData = image.pngData() {
+            do {
+                try pngData.write(to: cachedImageUrl)
+            } catch {
+                owsFailDebug("Failed to cache avatar image to disk \(error)")
+            }
+        } else {
+            owsFailDebug("Failed to determine png data for avatar")
         }
 
         return image
     }
 
+    private func memoryCacheAvatarImageIfEligible(_ image: UIImage, cacheKey: String) {
+        // The avatars in our hot code paths which are 36-56pt.  At 3x scale,
+        // a threshold of 200 will include these avatars.
+        let maxCacheSizePixels = 200
+        let canCacheAvatarImage = (image.pixelWidth <= maxCacheSizePixels &&
+                                    image.pixelHeight <= maxCacheSizePixels)
+        guard canCacheAvatarImage else { return }
+        contentToImageCache.setObject(image, forKey: cacheKey)
+    }
+
     // MARK: - Building Content
 
-    private static func buildAvatarContent(forRequest request: Request,
-                                           transaction: SDSAnyReadTransaction) -> AvatarContent {
+    private func buildAvatarContent(forRequest request: Request,
+                                    transaction: SDSAnyReadTransaction) -> AvatarContent {
         struct AvatarContentTypes {
             let contentType: AvatarContentType
             let failoverContentType: AvatarContentType?
@@ -682,31 +755,46 @@ public class AvatarBuilder: NSObject {
                    localUserDisplayMode == .noteToSelf {
                     return AvatarContentTypes(contentType: .noteToSelf(theme: theme),
                                               failoverContentType: .contactDefaultIcon(theme: theme))
-                } else if let imageData = Self.contactsManagerImpl.avatarImageData(forAddress: address,
-                                                                                   shouldValidate: true,
-                                                                                   transaction: transaction) {
-                    let digestString = imageData.sha1Base64DigestString
-                    if DebugFlags.internalLogging {
-                        Logger.info("Returning avatar image data for address")
-                    }
-                    return AvatarContentTypes(contentType: .data(imageData: imageData,
-                                                                 digestString: digestString,
-                                                                 shouldValidate: false),
-                                              failoverContentType: .contactDefaultIcon(theme: theme))
-                } else if let nameComponents = Self.contactsManager.nameComponents(for: address, transaction: transaction),
-                          let contactInitials = Self.contactInitials(forPersonNameComponents: nameComponents) {
-                    if DebugFlags.internalLogging {
-                        Logger.info("Returning avatar initials image data for address")
-                    }
-                    return AvatarContentTypes(contentType: .text(text: contactInitials, theme: theme),
-                                              failoverContentType: .contactDefaultIcon(theme: theme))
-                } else {
-                    if DebugFlags.internalLogging {
-                        Logger.info("Failed to generate avatar data or initials, returning failover avatar image")
-                    }
-                    return AvatarContentTypes(contentType: .contactDefaultIcon(theme: theme),
-                                              failoverContentType: nil)
                 }
+
+                if CurrentAppContext().isNSE {
+                    // We don't jump to using cached data outside the NSE because we don't want to use an *old* avatar
+                    // for someone who's updated theirs. (This is the code path where we discover it's been updated!)
+                    if let uuidString = address.uuidString,
+                       let cacheKey = Self.contactCacheKeys.getString(uuidString, transaction: transaction) {
+                        return AvatarContentTypes(contentType: .cachedContact(address: address, cacheKey: cacheKey),
+                                                  failoverContentType: .contactDefaultIcon(theme: theme))
+                    }
+                } else {
+                    if let imageData = Self.contactsManagerImpl.avatarImageData(forAddress: address,
+                                                                                shouldValidate: true,
+                                                                                transaction: transaction) {
+                        let digestString = imageData.sha1HexadecimalDigestString
+                        if DebugFlags.internalLogging {
+                            Logger.info("Returning avatar image data for address")
+                        }
+                        return AvatarContentTypes(contentType: .data(imageData: imageData,
+                                                                     digestString: digestString,
+                                                                     shouldValidate: false),
+                                                  failoverContentType: .contactDefaultIcon(theme: theme))
+                    }
+
+                    if let nameComponents = Self.contactsManager.nameComponents(for: address,
+                                                                                transaction: transaction),
+                       let contactInitials = Self.contactInitials(forPersonNameComponents: nameComponents) {
+                        if DebugFlags.internalLogging {
+                            Logger.info("Returning avatar initials image data for address")
+                        }
+                        return AvatarContentTypes(contentType: .text(text: contactInitials, theme: theme),
+                                                  failoverContentType: .contactDefaultIcon(theme: theme))
+                    }
+                }
+
+                if DebugFlags.internalLogging {
+                    Logger.info("Failed to generate avatar data or initials, returning failover avatar image")
+                }
+                return AvatarContentTypes(contentType: .contactDefaultIcon(theme: theme),
+                                          failoverContentType: nil)
             case .text(let text, let theme):
                 return AvatarContentTypes(contentType: .text(text: text, theme: theme),
                                           failoverContentType: .contactDefaultIcon(theme: theme))
@@ -755,7 +843,8 @@ public class AvatarBuilder: NSObject {
 
     // TODO: We could modify this method to always return some kind of
     //       default avatar.
-    private static func buildOrLoadImage(forAvatarContent avatarContent: AvatarContent) -> UIImage? {
+    private static func buildOrLoadImage(forAvatarContent avatarContent: AvatarContent,
+                                         transaction: SDSAnyReadTransaction?) -> UIImage? {
         func buildOrLoadWithContentType(_ contentType: AvatarContentType) -> UIImage? {
             switch contentType {
             case .file(let fileUrl, let shouldValidate):
@@ -770,6 +859,19 @@ public class AvatarBuilder: NSObject {
                     imageData: imageData,
                     shouldValidate: shouldValidate
                 )
+            case .cachedContact(let contactAddress, _):
+                guard let transaction = transaction else {
+                    owsFailDebug("tried to build a contact avatar without a transaction")
+                    return nil
+                }
+                guard let imageData = Self.contactsManagerImpl.avatarImageData(forAddress: contactAddress,
+                                                                               shouldValidate: true,
+                                                                               transaction: transaction) else {
+                    return nil
+                }
+                return loadAndResizeAvatarImageData(avatarContent: avatarContent,
+                                                    imageData: imageData,
+                                                    shouldValidate: false)
             case .text(let text, let theme):
                 return buildAvatar(avatarContent: avatarContent, text: text, theme: theme)
             case .tintedImage(let name, let theme):
@@ -1032,7 +1134,7 @@ public class AvatarBuilder: NSObject {
         // the height of the avatar. By sizing it to half the dimater, it
         // will always be at least big enough to scale down to fit within
         // the avatar.
-        return UIFont(name: "Inter", size: diameter * (isEmojiOnly ? 0.6 : 0.45))!
+        return UIFont(name: "Inter-Regular_Medium", size: diameter * (isEmojiOnly ? 0.6 : 0.45))!
     }
 
     public static func avatarImageMargins(diameter: CGFloat) -> UIEdgeInsets {
@@ -1161,13 +1263,19 @@ public class AvatarBuilder: NSObject {
 // MARK: -
 
 fileprivate extension Data {
-    var sha1Base64DigestString: String {
+    var sha1HexadecimalDigestString: String {
         var digest = [UInt8](repeating: 0, count: Int(CC_SHA1_DIGEST_LENGTH))
         self.withUnsafeBytes { dataBytes in
             let buffer: UnsafePointer<UInt8> = dataBytes.baseAddress!.assumingMemoryBound(to: UInt8.self)
             _ = CC_SHA1(buffer, CC_LONG(self.count), &digest)
         }
-        return Data(digest).base64EncodedString()
+        return Data(digest).hexadecimalString
+    }
+}
+
+fileprivate extension String {
+    var sha1HexadecimalDigestString: String {
+        data(using: .utf8)!.sha1HexadecimalDigestString
     }
 }
 

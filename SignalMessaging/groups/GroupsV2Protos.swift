@@ -4,8 +4,7 @@
 
 import Foundation
 import SignalServiceKit
-import SignalMetadataKit
-import SignalClient
+import LibSignalClient
 
 public class GroupsV2Protos {
 
@@ -111,7 +110,7 @@ public class GroupsV2Protos {
         groupBuilder.setTitle(groupTitleEncrypted)
 
         let hasAvatarUrl = groupModel.avatarUrlPath != nil
-        let hasAvatarData = groupModel.groupAvatarData != nil
+        let hasAvatarData = groupModel.avatarData != nil
         guard hasAvatarData == hasAvatarUrl else {
             throw OWSAssertionError("hasAvatarData: (\(hasAvatarData)) != hasAvatarUrl: (\(hasAvatarUrl))")
         }
@@ -491,19 +490,27 @@ public class GroupsV2Protos {
         var result = [GroupV2Change]()
         for changeStateData in groupChangesProto.groupChanges {
             let changeStateProto = try GroupsProtoGroupChangesGroupChangeState(serializedData: changeStateData)
+
             var snapshot: GroupV2Snapshot?
             if let snapshotProto = changeStateProto.groupState {
                 snapshot = try parse(groupProto: snapshotProto,
                                      downloadedAvatars: downloadedAvatars,
                                      groupV2Params: groupV2Params)
             }
-            guard let changeProto = changeStateProto.groupChange else {
-                throw OWSAssertionError("Missing groupChange proto.")
+
+            var changeActionsProto: GroupsProtoGroupChangeActions?
+            if let changeProto = changeStateProto.groupChange {
+                // We can ignoreSignature because these protos came from the service.
+                changeActionsProto = try parseAndVerifyChangeActionsProto(changeProto, ignoreSignature: true)
             }
-            // We can ignoreSignature because these protos came from the service.
-            let changeActionsProto: GroupsProtoGroupChangeActions = try parseAndVerifyChangeActionsProto(changeProto, ignoreSignature: true)
-            let diff = GroupV2Diff(changeActionsProto: changeActionsProto, downloadedAvatars: downloadedAvatars)
-            result.append(GroupV2Change(snapshot: snapshot, diff: diff))
+
+            guard snapshot != nil || changeActionsProto != nil else {
+                throw OWSAssertionError("both groupState and groupChange are absent")
+            }
+
+            result.append(GroupV2Change(snapshot: snapshot,
+                                        changeActionsProto: changeActionsProto,
+                                        downloadedAvatars: downloadedAvatars))
         }
         return result
     }
@@ -538,18 +545,15 @@ public class GroupsV2Protos {
         var avatarUrlPaths = [String]()
         for changeStateData in groupChangesProto.groupChanges {
             let changeStateProto = try GroupsProtoGroupChangesGroupChangeState(serializedData: changeStateData)
-            guard let groupState = changeStateProto.groupState else {
-                throw OWSAssertionError("Missing groupState proto.")
+            if let groupState = changeStateProto.groupState {
+                avatarUrlPaths += collectAvatarUrlPaths(groupProto: groupState)
             }
-            avatarUrlPaths += collectAvatarUrlPaths(groupProto: groupState)
 
-            guard let changeProto = changeStateProto.groupChange else {
-                owsFailDebug("Missing groupChange proto.")
-                throw GroupsV2Error.missingGroupChangeProtos
+            if let changeProto = changeStateProto.groupChange {
+                // We can ignoreSignature because these protos came from the service.
+                let changeActionsProto = try parseAndVerifyChangeActionsProto(changeProto, ignoreSignature: ignoreSignature)
+                avatarUrlPaths += self.collectAvatarUrlPaths(changeActionsProto: changeActionsProto)
             }
-            // We can ignoreSignature because these protos came from the service.
-            let changeActionsProto = try parseAndVerifyChangeActionsProto(changeProto, ignoreSignature: ignoreSignature)
-            avatarUrlPaths += self.collectAvatarUrlPaths(changeActionsProto: changeActionsProto)
         }
         return avatarUrlPaths
     }

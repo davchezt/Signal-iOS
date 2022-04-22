@@ -1,11 +1,10 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
 import SignalServiceKit
-import SignalMetadataKit
-import SignalClient
+import LibSignalClient
 
 public extension UUID {
     var data: Data {

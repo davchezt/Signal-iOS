@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -199,11 +199,9 @@ import CallKit
         // IFF one of the following things is true, we can handle inbound call offers
         // * The thread is in our profile whitelist
         // * The thread belongs to someone in our system contacts
-        // * The thread existed before messages requests
         return (self.profileManager.isThread(inProfileWhitelist: thread, transaction: transaction)
                 || self.contactsManager.isSystemContact(address: thread.contactAddress,
-                                                        transaction: transaction)
-                || GRDBThreadFinder.isPreMessageRequestsThread(thread, transaction: transaction.unwrapGrdbRead))
+                                                        transaction: transaction))
     }
 
     private struct CallIdentityKeys {
@@ -218,7 +216,8 @@ import CallKit
     }
 
     private func getIdentityKeys(thread: TSContactThread, transaction: SDSAnyReadTransaction) -> CallIdentityKeys? {
-        guard let localIdentityKey = self.identityManager.identityKeyPair(with: transaction)?.publicKey else {
+        guard let localIdentityKey = self.identityManager.identityKeyPair(for: .aci,
+                                                                          transaction: transaction)?.publicKey else {
             owsFailDebug("missing localIdentityKey")
             return nil
         }
@@ -550,7 +549,7 @@ import CallKit
             Logger.info("Configuring call for \(useLowBandwidth ? "low" : "standard") bandwidth")
 
             // Tell the Call Manager to proceed with its active call.
-            try self.callManager.proceed(callId: callId, iceServers: iceServers, hideIp: useTurnOnly, videoCaptureController: call.videoCaptureController, bandwidthMode: useLowBandwidth ? .low : .normal)
+            try self.callManager.proceed(callId: callId, iceServers: iceServers, hideIp: useTurnOnly, videoCaptureController: call.videoCaptureController, bandwidthMode: useLowBandwidth ? .low : .normal, audioLevelsIntervalMillis: nil)
         }.catch { error in
             owsFailDebug("\(error)")
             guard call === self.callService.currentCall else {
@@ -720,7 +719,7 @@ import CallKit
 
             callService.terminate(call: call)
 
-        case .endedRemoteGlare:
+        case .endedRemoteGlare, .endedRemoteReCall:
             guard call === callService.currentCall else {
                 callService.cleanupStaleCall(call)
                 return
@@ -769,7 +768,7 @@ import CallKit
 
             handleFailedCall(failedCall: call, error: SignalCall.CallError.timeout(description: description), shouldResetUI: true, shouldResetRingRTC: false)
 
-        case .endedSignalingFailure:
+        case .endedSignalingFailure, .endedGlareHandlingFailure:
             handleFailedCall(failedCall: call, error: SignalCall.CallError.signaling, shouldResetUI: true, shouldResetRingRTC: false)
 
         case .endedInternalFailure:

@@ -1,60 +1,27 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
-
-private protocol TSConstantsProtocol: AnyObject {
-    var mainServiceWebSocketAPI_identified: String { get }
-    var mainServiceWebSocketAPI_unidentified: String { get }
-    var mainServiceURL: String { get }
-    var textSecureCDN0ServerURL: String { get }
-    var textSecureCDN2ServerURL: String { get }
-    var contactDiscoveryURL: String { get }
-    var keyBackupURL: String { get }
-    var storageServiceURL: String { get }
-    var sfuURL: String { get }
-    var sfuTestURL: String { get }
-    var kUDTrustRoot: String { get }
-    var updatesURL: String { get }
-    var updates2URL: String { get }
-
-    var censorshipReflectorHost: String { get }
-
-    var serviceCensorshipPrefix: String { get }
-    var cdn0CensorshipPrefix: String { get }
-    var cdn2CensorshipPrefix: String { get }
-    var contactDiscoveryCensorshipPrefix: String { get }
-    var keyBackupCensorshipPrefix: String { get }
-    var storageServiceCensorshipPrefix: String { get }
-
-    var contactDiscoveryEnclaveName: String { get }
-    var contactDiscoveryMrEnclave: String { get }
-
-    var keyBackupEnclave: KeyBackupEnclave { get }
-    var keyBackupPreviousEnclaves: [KeyBackupEnclave] { get }
-
-    var applicationGroup: String { get }
-
-    var serverPublicParamsBase64: String { get }
-}
-
-public struct KeyBackupEnclave: Equatable {
-    let name: String
-    let mrenclave: String
-    let serviceId: String
-}
 
 // MARK: -
 
 @objc
 public class TSConstants: NSObject {
 
+    private enum Environment {
+        case production, staging
+    }
+    private static var environment: Environment = .production
+
     @objc
-    public static let EnvironmentDidChange = Notification.Name("EnvironmentDidChange")
+    public static var isUsingProductionService: Bool {
+        return environment == .production
+    }
 
     // Never instantiate this class.
     private override init() {}
 
     public static let legalTermsUrl = URL(string: "https://signal.org/legal/")!
+    public static let donateUrl = URL(string: "https://signal.org/donate/")!
 
     @objc
     public static var mainServiceWebSocketAPI_identified: String { shared.mainServiceWebSocketAPI_identified }
@@ -67,7 +34,9 @@ public class TSConstants: NSObject {
     @objc
     public static var textSecureCDN2ServerURL: String { shared.textSecureCDN2ServerURL }
     @objc
-    public static var contactDiscoveryURL: String { shared.contactDiscoveryURL }
+    public static var contactDiscoverySGXURL: String { shared.contactDiscoverySGXURL }
+    @objc
+    public static var contactDiscoveryHSMURL: String { shared.contactDiscoveryHSMURL }
     @objc
     public static var keyBackupURL: String { shared.keyBackupURL }
     @objc
@@ -76,6 +45,10 @@ public class TSConstants: NSObject {
     public static var sfuURL: String { shared.sfuURL }
     @objc
     public static var sfuTestURL: String { shared.sfuTestURL }
+    @objc
+    public static var registrationCaptchaURL: String { shared.registrationCaptchaURL }
+    @objc
+    public static var challengeCaptchaURL: String { shared.challengeCaptchaURL }
     @objc
     public static var kUDTrustRoot: String { shared.kUDTrustRoot }
     @objc
@@ -103,6 +76,10 @@ public class TSConstants: NSObject {
     public static var contactDiscoveryEnclaveName: String { shared.contactDiscoveryEnclaveName }
     @objc
     public static var contactDiscoveryMrEnclave: String { shared.contactDiscoveryMrEnclave }
+    @objc
+    public static var contactDiscoveryPublicKey: String { shared.contactDiscoveryPublicKey }
+    @objc
+    public static var contactDiscoveryCodeHashes: [String] { shared.contactDiscoveryCodeHashes }
 
     static var keyBackupEnclave: KeyBackupEnclave { shared.keyBackupEnclave }
     static var keyBackupPreviousEnclaves: [KeyBackupEnclave] { shared.keyBackupPreviousEnclaves }
@@ -112,47 +89,6 @@ public class TSConstants: NSObject {
 
     @objc
     public static var serverPublicParamsBase64: String { shared.serverPublicParamsBase64 }
-
-    @objc
-    public static var isUsingProductionService: Bool {
-        return environment == .production
-    }
-
-    private enum Environment {
-        case production, staging
-    }
-
-    private static let serialQueue = DispatchQueue(label: "TSConstants")
-    private static var _forceEnvironment: Environment?
-    private static var forceEnvironment: Environment? {
-        get {
-            return serialQueue.sync {
-                return _forceEnvironment
-            }
-        }
-        set {
-            serialQueue.sync {
-                _forceEnvironment = newValue
-            }
-        }
-    }
-
-    private static var environment: Environment {
-        if let environment = forceEnvironment {
-            return environment
-        }
-        return FeatureFlags.isUsingProductionService ? .production : .staging
-    }
-
-    @objc
-    public class func forceStaging() {
-        forceEnvironment = .staging
-    }
-
-    @objc
-    public class func forceProduction() {
-        forceEnvironment = .production
-    }
 
     private static var shared: TSConstantsProtocol {
         switch environment {
@@ -166,6 +102,57 @@ public class TSConstants: NSObject {
 
 // MARK: -
 
+private protocol TSConstantsProtocol: AnyObject {
+    var mainServiceWebSocketAPI_identified: String { get }
+    var mainServiceWebSocketAPI_unidentified: String { get }
+    var mainServiceURL: String { get }
+    var textSecureCDN0ServerURL: String { get }
+    var textSecureCDN2ServerURL: String { get }
+    var contactDiscoverySGXURL: String { get }
+    var contactDiscoveryHSMURL: String { get }
+    var keyBackupURL: String { get }
+    var storageServiceURL: String { get }
+    var sfuURL: String { get }
+    var sfuTestURL: String { get }
+    var registrationCaptchaURL: String { get }
+    var challengeCaptchaURL: String { get }
+    var kUDTrustRoot: String { get }
+    var updatesURL: String { get }
+    var updates2URL: String { get }
+
+    var censorshipReflectorHost: String { get }
+
+    var serviceCensorshipPrefix: String { get }
+    var cdn0CensorshipPrefix: String { get }
+    var cdn2CensorshipPrefix: String { get }
+    var contactDiscoveryCensorshipPrefix: String { get }
+    var keyBackupCensorshipPrefix: String { get }
+    var storageServiceCensorshipPrefix: String { get }
+
+    // SGX Backed Contact Discovery
+    var contactDiscoveryEnclaveName: String { get }
+    var contactDiscoveryMrEnclave: String { get }
+
+    // HSM Backed Contact Discovery
+    var contactDiscoveryPublicKey: String { get }
+    var contactDiscoveryCodeHashes: [String] { get }
+
+    var keyBackupEnclave: KeyBackupEnclave { get }
+    var keyBackupPreviousEnclaves: [KeyBackupEnclave] { get }
+
+    var applicationGroup: String { get }
+
+    var serverPublicParamsBase64: String { get }
+}
+
+public struct KeyBackupEnclave: Equatable {
+    let name: String
+    let mrenclave: String
+    let serviceId: String
+}
+
+// MARK: - Production
+
 private class TSConstantsProduction: TSConstantsProtocol {
 
     public let mainServiceWebSocketAPI_identified = "wss://chat.signal.org/v1/websocket/"
@@ -173,11 +160,14 @@ private class TSConstantsProduction: TSConstantsProtocol {
     public let mainServiceURL = "https://chat.signal.org/"
     public let textSecureCDN0ServerURL = "https://cdn.signal.org"
     public let textSecureCDN2ServerURL = "https://cdn2.signal.org"
-    public let contactDiscoveryURL = "https://api.directory.signal.org"
+    public let contactDiscoverySGXURL = "https://api.directory.signal.org"
+    public let contactDiscoveryHSMURL = "wss://cdsh.signal.org/discovery/"
     public let keyBackupURL = "https://api.backup.signal.org"
     public let storageServiceURL = "https://storage.signal.org"
     public let sfuURL = "https://sfu.voip.signal.org"
     public let sfuTestURL = "https://sfu.test.voip.signal.org"
+    public let registrationCaptchaURL = "https://signalcaptchas.org/registration/generate.html"
+    public let challengeCaptchaURL = "https://signalcaptchas.org/challenge/generate.html"
     public let kUDTrustRoot = "BXu6QIKVz5MA8gstzfOgRQGqyLqOwNKHL6INkv3IHWMF"
     public let updatesURL = "https://updates.signal.org"
     public let updates2URL = "https://updates2.signal.org"
@@ -196,17 +186,32 @@ private class TSConstantsProduction: TSConstantsProtocol {
         return contactDiscoveryEnclaveName
     }
 
+    public var contactDiscoveryPublicKey: String {
+        owsFailDebug("CDSH unsupported in production")
+        return ""
+    }
+    public var contactDiscoveryCodeHashes: [String] {
+        owsFailDebug("CDSH unsupported in production")
+        return []
+    }
+
     public let keyBackupEnclave = KeyBackupEnclave(
-        name: "fe7c1bfae98f9b073d220366ea31163ee82f6d04bead774f71ca8e5c40847bfe",
-        mrenclave: "a3baab19ef6ce6f34ab9ebb25ba722725ae44a8872dc0ff08ad6d83a9489de87",
-        serviceId: "fe7c1bfae98f9b073d220366ea31163ee82f6d04bead774f71ca8e5c40847bfe"
+        name: "0cedba03535b41b67729ce9924185f831d7767928a1d1689acb689bc079c375f",
+        mrenclave: "ee19f1965b1eefa3dc4204eb70c04f397755f771b8c1909d080c04dad2a6a9ba",
+        serviceId: "187d2739d22be65e74b65f0055e74d31310e4267e5fac2b1246cc8beba81af39"
     )
 
     // An array of previously used enclaves that we should try and restore
     // key material from during registration. These must be ordered from
     // newest to oldest, so we check the latest enclaves for backups before
     // checking earlier enclaves.
-    public let keyBackupPreviousEnclaves = [KeyBackupEnclave]()
+    public let keyBackupPreviousEnclaves = [
+        KeyBackupEnclave(
+            name: "fe7c1bfae98f9b073d220366ea31163ee82f6d04bead774f71ca8e5c40847bfe",
+            mrenclave: "a3baab19ef6ce6f34ab9ebb25ba722725ae44a8872dc0ff08ad6d83a9489de87",
+            serviceId: "fe7c1bfae98f9b073d220366ea31163ee82f6d04bead774f71ca8e5c40847bfe"
+        )
+    ]
 
     public let applicationGroup = "group.org.whispersystems.signal.group"
 
@@ -215,7 +220,7 @@ private class TSConstantsProduction: TSConstantsProtocol {
     public let serverPublicParamsBase64 = "AMhf5ywVwITZMsff/eCyudZx9JDmkkkbV6PInzG4p8x3VqVJSFiMvnvlEKWuRob/1eaIetR31IYeAbm0NdOuHH8Qi+Rexi1wLlpzIo1gstHWBfZzy1+qHRV5A4TqPp15YzBPm0WSggW6PbSn+F4lf57VCnHF7p8SvzAA2ZZJPYJURt8X7bbg+H3i+PEjH9DXItNEqs2sNcug37xZQDLm7X36nOoGPs54XsEGzPdEV+itQNGUFEjY6X9Uv+Acuks7NpyGvCoKxGwgKgE5XyJ+nNKlyHHOLb6N1NuHyBrZrgtY/JYJHRooo5CEqYKBqdFnmbTVGEkCvJKxLnjwKWf+fEPoWeQFj5ObDjcKMZf2Jm2Ae69x+ikU5gBXsRmoF94GXQ=="
 }
 
-// MARK: -
+// MARK: - Staging
 
 private class TSConstantsStaging: TSConstantsProtocol {
 
@@ -224,10 +229,13 @@ private class TSConstantsStaging: TSConstantsProtocol {
     public let mainServiceURL = "https://chat.staging.signal.org/"
     public let textSecureCDN0ServerURL = "https://cdn-staging.signal.org"
     public let textSecureCDN2ServerURL = "https://cdn2-staging.signal.org"
-    public let contactDiscoveryURL = "https://api-staging.directory.signal.org"
+    public let contactDiscoverySGXURL = "https://api-staging.directory.signal.org"
+    public let contactDiscoveryHSMURL = "wss://cdsh.staging.signal.org/discovery/"
     public let keyBackupURL = "https://api-staging.backup.signal.org"
     public let storageServiceURL = "https://storage-staging.signal.org"
     public let sfuURL = "https://sfu.staging.voip.signal.org"
+    public let registrationCaptchaURL = "https://signalcaptchas.org/staging/registration/generate.html"
+    public let challengeCaptchaURL = "https://signalcaptchas.org/staging/challenge/generate.html"
     // There's no separate test SFU for staging.
     public let sfuTestURL = "https://sfu.test.voip.signal.org"
     public let kUDTrustRoot = "BbqY1DzohE4NUZoVF+L18oUPrK3kILllLEJh2UnPSsEx"
@@ -250,10 +258,15 @@ private class TSConstantsStaging: TSConstantsProtocol {
         return contactDiscoveryEnclaveName
     }
 
+    public let contactDiscoveryPublicKey = "2fe57da347cd62431528daac5fbb290730fff684afc4cfc2ed90995f58cb3b74"
+    public let contactDiscoveryCodeHashes = [
+        "2f79dc6c1599b71c70fc2d14f3ea2e3bc65134436eb87011c88845b137af673a"
+    ]
+
     public let keyBackupEnclave = KeyBackupEnclave(
-        name: "dcd2f0b7b581068569f19e9ccb6a7ab1a96912d09dde12ed1464e832c63fa948",
-        mrenclave: "9db0568656c53ad65bb1c4e1b54ee09198828699419ec0f63cf326e79827ab23",
-        serviceId: "446a6e51956e0eed502c6d9626476cea5b7278829098c34ca0cdce329753a8ee"
+        name: "dd6f66d397d9e8cf6ec6db238e59a7be078dd50e9715427b9c89b409ffe53f99",
+        mrenclave: "ee19f1965b1eefa3dc4204eb70c04f397755f771b8c1909d080c04dad2a6a9ba",
+        serviceId: "4200003414528c151e2dccafbc87aa6d3d66a5eb8f8c05979a6e97cb33cd493a"
     )
 
     // An array of previously used enclaves that we should try and restore
@@ -261,6 +274,11 @@ private class TSConstantsStaging: TSConstantsProtocol {
     // newest to oldest, so we check the latest enclaves for backups before
     // checking earlier enclaves.
     public let keyBackupPreviousEnclaves = [
+        KeyBackupEnclave(
+            name: "dcd2f0b7b581068569f19e9ccb6a7ab1a96912d09dde12ed1464e832c63fa948",
+            mrenclave: "9db0568656c53ad65bb1c4e1b54ee09198828699419ec0f63cf326e79827ab23",
+            serviceId: "446a6e51956e0eed502c6d9626476cea5b7278829098c34ca0cdce329753a8ee"
+        ),
         KeyBackupEnclave(
             name: "823a3b2c037ff0cbe305cc48928cfcc97c9ed4a8ca6d49af6f7d6981fb60a4e9",
             mrenclave: "a3baab19ef6ce6f34ab9ebb25ba722725ae44a8872dc0ff08ad6d83a9489de87",

@@ -1,12 +1,10 @@
-#!/usr/bin/env python2.7
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
 
 import os
 import sys
 import subprocess
 import datetime
 import argparse
-import commands
 import re
 import json
 import sds_common
@@ -14,7 +12,9 @@ from sds_common import fail
 import tempfile
 import shutil
 
-git_repo_path = os.path.abspath(subprocess.check_output(['git', 'rev-parse', '--show-toplevel']).strip())
+git_repo_path = os.path.abspath(
+    subprocess.check_output(["git", "rev-parse", "--show-toplevel"], text=True).strip()
+)
 
 
 def ows_getoutput(cmd):
@@ -28,7 +28,7 @@ def ows_getoutput(cmd):
 
 
 def process_file(file_path):
-    print 'Scanning:', file_path
+    print('Scanning:', file_path)
 
     with open(file_path, 'rt') as f:
         src_text = f.read()
@@ -46,7 +46,7 @@ def process_file(file_path):
             # Ignore this framework.
             continue
 
-        print '\t', 'Fixing:', import_name
+        print('\t', 'Fixing:', import_name)
         new_import = '#import <%s/%s.h>' % ( import_name, import_name, )
         text = text[:match.start(1)] + new_import + text[match.end(1):]
 

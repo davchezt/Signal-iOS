@@ -1,8 +1,6 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
-
-#import <SignalServiceKit/RemoteAttestation.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -15,7 +13,12 @@ NS_ASSUME_NONNULL_BEGIN
 @class SignedPreKeyRecord;
 @class TSRequest;
 
-typedef NS_ENUM(NSUInteger, TSVerificationTransport) { TSVerificationTransportVoice = 1, TSVerificationTransportSMS };
+typedef NS_ENUM(NSUInteger, TSVerificationTransport) {
+    TSVerificationTransportVoice = 1,
+    TSVerificationTransportSMS
+};
+
+typedef NS_ENUM(uint8_t, OWSIdentity);
 
 @interface OWSRequestFactory : NSObject
 
@@ -115,7 +118,7 @@ typedef NS_ENUM(NSUInteger, TSVerificationTransport) { TSVerificationTransportVo
 
 #pragma mark - Prekeys
 
-+ (TSRequest *)availablePreKeysCountRequest;
++ (TSRequest *)availablePreKeysCountRequestForIdentity:(OWSIdentity)identity;
 
 + (TSRequest *)currentSignedPreKeyRequest;
 
@@ -123,11 +126,13 @@ typedef NS_ENUM(NSUInteger, TSVerificationTransport) { TSVerificationTransportVo
                                         deviceId:(NSString *)deviceId
                                      udAccessKey:(nullable SMKUDAccessKey *)udAccessKey;
 
-+ (TSRequest *)registerSignedPrekeyRequestWithSignedPreKeyRecord:(SignedPreKeyRecord *)signedPreKey;
++ (TSRequest *)registerSignedPrekeyRequestForIdentity:(OWSIdentity)identity
+                                         signedPreKey:(SignedPreKeyRecord *)signedPreKey;
 
-+ (TSRequest *)registerPrekeysRequestWithPrekeyArray:(NSArray *)prekeys
-                                         identityKey:(NSData *)identityKeyPublic
-                                        signedPreKey:(SignedPreKeyRecord *)signedPreKey;
++ (TSRequest *)registerPrekeysRequestForIdentity:(OWSIdentity)identity
+                                     prekeyArray:(NSArray *)prekeys
+                                     identityKey:(NSData *)identityKeyPublic
+                                    signedPreKey:(SignedPreKeyRecord *)signedPreKey;
 
 #pragma mark - Storage Service
 
@@ -135,12 +140,15 @@ typedef NS_ENUM(NSUInteger, TSVerificationTransport) { TSVerificationTransportVo
 
 #pragma mark - Remote Attestation
 
-+ (TSRequest *)remoteAttestationAuthRequestForService:(RemoteAttestationService)service;
++ (TSRequest *)remoteAttestationAuthRequestForKeyBackup;
++ (TSRequest *)remoteAttestationAuthRequestForContactDiscovery;
 
 #pragma mark - CDS
 
 + (TSRequest *)cdsFeedbackRequestWithStatus:(NSString *)status
                                      reason:(nullable NSString *)reason NS_SWIFT_NAME(cdsFeedbackRequest(status:reason:));
+
++ (TSRequest *)hsmDirectoryAuthRequest;
 
 #pragma mark - KBS
 
@@ -219,7 +227,7 @@ typedef NS_ENUM(NSUInteger, TSVerificationTransport) { TSVerificationTransportVo
 + (TSRequest *)pushChallengeRequest;
 + (TSRequest *)pushChallengeResponseWithToken:(NSString *)challengeToken;
 + (TSRequest *)recaptchChallengeResponseWithToken:(NSString *)serverToken captchaToken:(NSString *)captchaToken;
-+ (TSRequest *)reportSpamFromPhoneNumber:(NSString *)phoneNumber withServerGuid:(NSString *)serverGuid;
++ (TSRequest *)reportSpamFromUuid:(NSUUID *)senderUuid withServerGuid:(NSString *)serverGuid;
 
 #pragma mark - Donations
 

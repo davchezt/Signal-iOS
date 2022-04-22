@@ -1,9 +1,10 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
 import MultipeerConnectivity
+import SignalServiceKit
 
 protocol DeviceTransferServiceObserver: AnyObject {
     func deviceTransferServiceDiscoveredNewDevice(peerId: MCPeerID, discoveryInfo: [String: String]?)
@@ -43,7 +44,7 @@ protocol DeviceTransferServiceObserver: AnyObject {
 ///      b. Validate the certificate for the connection exactly matches the certificate scanned from the ND
 ///      c. Start locally behaving as if it is unregistered, without actually unregistering from the
 ///         service (to prevent two devices registered with the same number)
-///      d. Send a manifest to the ND that outlines a list of all the files it shuld expect, including:
+///      d. Send a manifest to the ND that outlines a list of all the files it should expect, including:
 ///          i. The SQLCipher DB key
 ///          ii. The sqlite database file (with no additional encryption beyond SQLCipher)
 ///          iii. All attachment files stored on the device
@@ -315,7 +316,7 @@ class DeviceTransferService: NSObject {
         }
 
         Promise.when(fulfilled: promises).done {
-            if !FeatureFlags.deviceTransferThrowAway {
+            if !DebugFlags.deviceTransferThrowAway {
                 self.tsAccountManager.wasTransferred = true
             }
             try self.sendDoneMessage(to: newDevicePeerId)

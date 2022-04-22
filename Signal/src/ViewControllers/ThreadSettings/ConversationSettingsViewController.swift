@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -94,6 +94,10 @@ class ConversationSettingsViewController: OWSTableViewController2, BadgeCollecti
         NotificationCenter.default.addObserver(self,
                                                selector: #selector(profileWhitelistDidChange(notification:)),
                                                name: .profileWhitelistDidChange,
+                                               object: nil)
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(blocklistDidChange(notification:)),
+                                               name: BlockingManager.blockListDidChange,
                                                object: nil)
         NotificationCenter.default.addObserver(self,
                                                selector: #selector(updateTableContents),
@@ -263,7 +267,7 @@ class ConversationSettingsViewController: OWSTableViewController2, BadgeCollecti
                 return false
             }
             let newThreadViewModel = ThreadViewModel(thread: newThread,
-                                                     forHomeView: false,
+                                                     forChatList: false,
                                                      transaction: transaction)
             self.threadViewModel = newThreadViewModel
             self.groupViewHelper = GroupViewHelper(threadViewModel: newThreadViewModel)
@@ -339,7 +343,13 @@ class ConversationSettingsViewController: OWSTableViewController2, BadgeCollecti
 
     func didTapAvatar() {
         guard avatarView != nil else { return }
-        presentAvatarViewController()
+
+        if threadViewModel.storyState == .none {
+            presentAvatarViewController()
+        } else {
+            let vc = StoryPageViewController(context: thread.storyContext)
+            presentFullScreen(vc, animated: true)
+        }
     }
 
     func didTapBadge() {
@@ -653,29 +663,19 @@ class ConversationSettingsViewController: OWSTableViewController2, BadgeCollecti
     }
 
     func didTapUnblockThread(completion: @escaping () -> Void = {}) {
-        let isCurrentlyBlocked = blockingManager.isThreadBlocked(thread)
-        if !isCurrentlyBlocked {
-            owsFailDebug("Not blocked.")
-            return
-        }
         BlockListUIUtils.showUnblockThreadActionSheet(thread, from: self) { [weak self] _ in
-            self?.updateTableContents()
+            self?.reloadThreadAndUpdateContent()
             completion()
         }
     }
 
     func didTapBlockThread() {
-        let isCurrentlyBlocked = blockingManager.isThreadBlocked(thread)
-        if isCurrentlyBlocked {
-            owsFailDebug("Already blocked.")
-            return
-        }
         guard canLocalUserLeaveThreadWithoutChoosingNewAdmin else {
             showReplaceAdminAlert()
             return
         }
         BlockListUIUtils.showBlockThreadActionSheet(thread, from: self) { [weak self] _ in
-            self?.updateTableContents()
+            self?.reloadThreadAndUpdateContent()
         }
     }
 
@@ -893,6 +893,12 @@ class ConversationSettingsViewController: OWSTableViewController2, BadgeCollecti
     }
 
     // MARK: - Notifications
+
+    @objc
+    private func blocklistDidChange(notification: Notification) {
+        AssertIsOnMainThread()
+        reloadThreadAndUpdateContent()
+    }
 
     @objc
     private func identityStateDidChange(notification: Notification) {

@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 #import "TSAccountManager.h"
@@ -9,7 +9,6 @@
 #import "OWSError.h"
 #import "OWSRequestFactory.h"
 #import "ProfileManagerProtocol.h"
-#import "RemoteAttestation.h"
 #import "SSKEnvironment.h"
 #import "TSPreKeyManager.h"
 #import <SignalCoreKit/NSData+OWS.h>
@@ -25,6 +24,7 @@ NSNotificationName const NSNotificationNameLocalNumberDidChange = @"NSNotificati
 NSString *const TSAccountManager_RegisteredNumberKey = @"TSStorageRegisteredNumberKey";
 NSString *const TSAccountManager_RegistrationDateKey = @"TSAccountManager_RegistrationDateKey";
 NSString *const TSAccountManager_RegisteredUUIDKey = @"TSStorageRegisteredUUIDKey";
+NSString *const TSAccountManager_RegisteredPNIKey = @"TSAccountManager_RegisteredPNIKey";
 NSString *const TSAccountManager_IsDeregisteredKey = @"TSAccountManager_IsDeregisteredKey";
 NSString *const TSAccountManager_ReregisteringPhoneNumberKey = @"TSAccountManager_ReregisteringPhoneNumberKey";
 NSString *const TSAccountManager_ReregisteringUUIDKey = @"TSAccountManager_ReregisteringUUIDKey";
@@ -72,6 +72,7 @@ NSString *NSStringForOWSRegistrationState(OWSRegistrationState value)
 
 @property (nonatomic, readonly, nullable) NSString *localNumber;
 @property (nonatomic, readonly, nullable) NSUUID *localUuid;
+@property (nonatomic, readonly, nullable) NSUUID *localPni;
 @property (nonatomic, readonly, nullable) NSString *reregistrationPhoneNumber;
 @property (nonatomic, readonly, nullable) NSUUID *reregistrationUUID;
 
@@ -114,6 +115,10 @@ NSString *NSStringForOWSRegistrationState(OWSRegistrationState value)
     NSString *_Nullable uuidString = [keyValueStore getString:TSAccountManager_RegisteredUUIDKey
                                                   transaction:transaction];
     _localUuid = (uuidString != nil ? [[NSUUID alloc] initWithUUIDString:uuidString] : nil);
+
+    NSString *_Nullable pniString = [keyValueStore getString:TSAccountManager_RegisteredPNIKey transaction:transaction];
+    _localPni = (pniString != nil ? [[NSUUID alloc] initWithUUIDString:pniString] : nil);
+
     _reregistrationPhoneNumber = [keyValueStore getString:TSAccountManager_ReregisteringPhoneNumberKey
                                               transaction:transaction];
     NSString *_Nullable reregistrationUUIDString = [keyValueStore getString:TSAccountManager_ReregisteringUUIDKey
@@ -135,7 +140,7 @@ NSString *NSStringForOWSRegistrationState(OWSRegistrationState value)
 
     // When we enable the ability to change whether you're discoverable
     // by phone number, new registrations must not be discoverable by
-    // default. In order to accomodate this, the default "isDiscoverable"
+    // default. In order to accommodate this, the default "isDiscoverable"
     // flag will be NO until you have successfully registered (aka defined
     // a local phone number).
     BOOL isDiscoverableByDefault = YES;
@@ -211,6 +216,7 @@ NSString *NSStringForOWSRegistrationState(OWSRegistrationState value)
 
 @synthesize phoneNumberAwaitingVerification = _phoneNumberAwaitingVerification;
 @synthesize uuidAwaitingVerification = _uuidAwaitingVerification;
+@synthesize pniAwaitingVerification = _pniAwaitingVerification;
 
 - (instancetype)init
 {
@@ -268,6 +274,13 @@ NSString *NSStringForOWSRegistrationState(OWSRegistrationState value)
     }
 }
 
+- (nullable NSUUID *)pniAwaitingVerification
+{
+    @synchronized(self) {
+        return _pniAwaitingVerification;
+    }
+}
+
 - (void)setPhoneNumberAwaitingVerification:(NSString *_Nullable)phoneNumberAwaitingVerification
 {
     @synchronized(self) {
@@ -286,15 +299,23 @@ NSString *NSStringForOWSRegistrationState(OWSRegistrationState value)
     }
 }
 
+- (void)setPniAwaitingVerification:(NSUUID *_Nullable)pniAwaitingVerification
+{
+    @synchronized(self) {
+        _pniAwaitingVerification = pniAwaitingVerification;
+    }
+}
+
 - (void)updateLocalPhoneNumber:(NSString *)phoneNumber
-                          uuid:(NSUUID *)uuid
+                           aci:(NSUUID *)uuid
+                           pni:(NSUUID *_Nullable)pni
     shouldUpdateStorageService:(BOOL)shouldUpdateStorageService
                    transaction:(SDSAnyWriteTransaction *)transaction
 {
     OWSAssertDebug([PhoneNumber resemblesE164:phoneNumber]);
     OWSAssertDebug([NSObject isNullableObject:self.localUuid equalTo:uuid]);
 
-    [self storeLocalNumber:phoneNumber uuid:uuid transaction:transaction];
+    [self storeLocalNumber:phoneNumber aci:uuid pni:pni transaction:transaction];
 
     [transaction addAsyncCompletionOffMain:^{
         [self updateAccountAttributes].catch(^(NSError *error) { OWSLogError(@"Error: %@.", error); });
@@ -358,7 +379,7 @@ NSString *NSStringForOWSRegistrationState(OWSRegistrationState value)
         @synchronized(self) {
             accountState = [self loadAccountStateWithTransaction:transaction];
         }
-    }];
+    } file:__FILE__ function:__FUNCTION__ line:__LINE__];
 
     OWSAssertDebug(accountState != nil);
     return accountState;
@@ -398,22 +419,26 @@ NSString *NSStringForOWSRegistrationState(OWSRegistrationState value)
 {
     OWSLogInfo(@"");
     NSString *phoneNumber;
-    NSUUID *uuid;
+    NSUUID *aci;
+    NSUUID *pni;
     @synchronized(self) {
         phoneNumber = self.phoneNumberAwaitingVerification;
-        uuid = self.uuidAwaitingVerification;
+        aci = self.uuidAwaitingVerification;
+        pni = self.pniAwaitingVerification;
     }
 
     if (!phoneNumber) {
         OWSFail(@"phoneNumber was unexpectedly nil");
     }
 
-    if (!uuid) {
+    if (!aci) {
         OWSFail(@"uuid was unexpectedly nil");
     }
 
+    // Allow the PNI to be nil.
+
     DatabaseStorageWrite(self.databaseStorage, ^(SDSAnyWriteTransaction *transaction) {
-        [self storeLocalNumber:phoneNumber uuid:uuid transaction:transaction];
+        [self storeLocalNumber:phoneNumber aci:aci pni:pni transaction:transaction];
     });
 
     // Clear this flag so we don't show the "dropped ydb" ui during future re-registrations.
@@ -487,6 +512,28 @@ NSString *NSStringForOWSRegistrationState(OWSRegistrationState value)
     return accountState.localUuid;
 }
 
+- (nullable NSUUID *)localPni
+{
+    return [self localPniWithAccountState:[self getOrLoadAccountStateWithSneakyTransaction]];
+}
+
+- (nullable NSUUID *)localPniWithTransaction:(SDSAnyReadTransaction *)transaction
+{
+    return [self localPniWithAccountState:[self getOrLoadAccountStateWithTransaction:transaction]];
+}
+
+- (nullable NSUUID *)localPniWithAccountState:(TSAccountState *)accountState
+{
+    @synchronized(self) {
+        NSUUID *awaitingVerif = self.pniAwaitingVerification;
+        if (awaitingVerif) {
+            return awaitingVerif;
+        }
+    }
+
+    return accountState.localPni;
+}
+
 + (nullable SignalServiceAddress *)localAddressWithTransaction:(SDSAnyReadTransaction *)transaction
 {
     return [self.shared localAddressWithTransaction:transaction];
@@ -520,12 +567,13 @@ NSString *NSStringForOWSRegistrationState(OWSRegistrationState value)
     if (localUuid == nil && localNumber == nil) {
         return nil;
     } else {
-        return [[SignalServiceAddress alloc] initWithUuidString:localUuid.UUIDString phoneNumber:localNumber];
+        return [[SignalServiceAddress alloc] initWithUuid:localUuid phoneNumber:localNumber];
     }
 }
 
 - (void)storeLocalNumber:(NSString *)localNumber
-                    uuid:(NSUUID *)localUuid
+                     aci:(NSUUID *)localAci
+                     pni:(NSUUID *_Nullable)localPni
              transaction:(SDSAnyWriteTransaction *)transaction
 {
     @synchronized (self) {
@@ -538,22 +586,32 @@ NSString *NSStringForOWSRegistrationState(OWSRegistrationState value)
 
         [self.keyValueStore setDate:[NSDate new] key:TSAccountManager_RegistrationDateKey transaction:transaction];
 
-        if (localUuid == nil) {
-            OWSFail(@"Missing localUuid.");
+        if (localAci == nil) {
+            OWSFail(@"Missing localAci.");
         } else {
-            NSString *localUuidString = localUuid.UUIDString;
-            NSString *_Nullable localUuidStringOld = [self.keyValueStore getString:TSAccountManager_RegisteredUUIDKey
-                                                                       transaction:transaction];
-            if (![NSObject isNullableObject:localUuidString equalTo:localUuidStringOld]) {
-                OWSLogInfo(@"localUuid: %@ -> %@", localUuidStringOld, localUuidString);
+            NSString *localAciString = localAci.UUIDString;
+            NSString *_Nullable localAciStringOld = [self.keyValueStore getString:TSAccountManager_RegisteredUUIDKey
+                                                                      transaction:transaction];
+            if (![localAciString isEqual:localAciStringOld]) {
+                OWSLogInfo(@"localAci: %@ -> %@", localAciStringOld, localAciString);
             }
-            [self.keyValueStore setString:localUuidString
+            [self.keyValueStore setString:localAciString
                                       key:TSAccountManager_RegisteredUUIDKey
                               transaction:transaction];
         }
 
+        if (localPni) {
+            NSString *localPniString = localPni.UUIDString;
+            NSString *_Nullable localPniStringOld = [self.keyValueStore getString:TSAccountManager_RegisteredPNIKey
+                                                                      transaction:transaction];
+            if (![localPniString isEqual:localPniStringOld]) {
+                OWSLogInfo(@"localPni: %@ -> %@", localPniStringOld, localPniString);
+            }
+            [self.keyValueStore setString:localPniString key:TSAccountManager_RegisteredPNIKey transaction:transaction];
+        }
+
         // Update the address cache mapping for the local user.
-        [SSKEnvironment.shared.signalServiceAddressCache updateMappingWithUuid:localUuid phoneNumber:localNumber];
+        [SSKEnvironment.shared.signalServiceAddressCache updateMappingWithUuid:localAci phoneNumber:localNumber];
 
         [self.keyValueStore removeValueForKey:TSAccountManager_ReregisteringPhoneNumberKey transaction:transaction];
         [self.keyValueStore removeValueForKey:TSAccountManager_ReregisteringUUIDKey transaction:transaction];
@@ -569,9 +627,10 @@ NSString *NSStringForOWSRegistrationState(OWSRegistrationState value)
 
         self.phoneNumberAwaitingVerification = nil;
         self.uuidAwaitingVerification = nil;
+        self.pniAwaitingVerification = nil;
     }
 
-    SignalServiceAddress *address = [[SignalServiceAddress alloc] initWithUuid:localUuid phoneNumber:localNumber];
+    SignalServiceAddress *address = [[SignalServiceAddress alloc] initWithUuid:localAci phoneNumber:localNumber];
     [SignalRecipient markRecipientAsRegisteredAndGet:address
                                           trustLevel:SignalRecipientTrustLevelHigh
                                          transaction:transaction];
@@ -772,10 +831,12 @@ NSString *NSStringForOWSRegistrationState(OWSRegistrationState value)
         @synchronized(self) {
             self.phoneNumberAwaitingVerification = nil;
             self.uuidAwaitingVerification = nil;
+            self.pniAwaitingVerification = nil;
 
             [self.keyValueStore removeAllWithTransaction:transaction];
 
-            [self.sessionStore resetSessionStore:transaction];
+            [[self signalProtocolStoreForIdentity:OWSIdentityACI].sessionStore resetSessionStore:transaction];
+            [[self signalProtocolStoreForIdentity:OWSIdentityPNI].sessionStore resetSessionStore:transaction];
             [self.senderKeyStore resetSenderKeyStoreWithTransaction:transaction];
 
             [self.udManager removeSenderCertificatesWithTransaction:transaction];
@@ -894,13 +955,18 @@ NSString *NSStringForOWSRegistrationState(OWSRegistrationState value)
 
 - (void)registerForTestsWithLocalNumber:(NSString *)localNumber uuid:(NSUUID *)uuid
 {
+    [self registerForTestsWithLocalNumber:localNumber uuid:uuid pni:nil];
+}
+
+- (void)registerForTestsWithLocalNumber:(NSString *)localNumber uuid:(NSUUID *)uuid pni:(NSUUID *_Nullable)pni
+{
     OWSAssertDebug(SSKFeatureFlags.storageMode == StorageModeGrdbTests);
     OWSAssertDebug(CurrentAppContext().isRunningTests);
     OWSAssertDebug(localNumber.length > 0);
     OWSAssertDebug(uuid != nil);
 
     DatabaseStorageWrite(self.databaseStorage, ^(SDSAnyWriteTransaction *transaction) {
-        [self storeLocalNumber:localNumber uuid:uuid transaction:transaction];
+        [self storeLocalNumber:localNumber aci:uuid pni:pni transaction:transaction];
     });
 }
 

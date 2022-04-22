@@ -1,9 +1,10 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
 import SignalRingRTC
+import SignalServiceKit
 
 // All Observer methods will be invoked from the main thread.
 public protocol CallObserver: AnyObject {
@@ -149,6 +150,7 @@ public class SignalCall: NSObject, CallManagerCallReference {
             groupId: thread.groupModel.groupId,
             sfuUrl: sfuURL,
             hkdfExtraInfo: Data.init(),
+            audioLevelsIntervalMillis: nil,
             videoCaptureController: videoCaptureController
         ) else {
             owsFailDebug("Failed to create group call")
@@ -160,12 +162,12 @@ public class SignalCall: NSObject, CallManagerCallReference {
         return call
     }
 
-    public class func outgoingIndividualCall(localId: UUID, remoteAddress: SignalServiceAddress) -> SignalCall {
+    public class func outgoingIndividualCall(localId: UUID, thread: TSContactThread) -> SignalCall {
         let individualCall = IndividualCall(
             direction: .outgoing,
             localId: localId,
             state: .dialing,
-            remoteAddress: remoteAddress,
+            thread: thread,
             sentAtTimestamp: Date.ows_millisecondTimestamp(),
             callAdapterType: .default
         )
@@ -174,7 +176,7 @@ public class SignalCall: NSObject, CallManagerCallReference {
 
     public class func incomingIndividualCall(
         localId: UUID,
-        remoteAddress: SignalServiceAddress,
+        thread: TSContactThread,
         sentAtTimestamp: UInt64,
         offerMediaType: TSRecentCallOfferType
     ) -> SignalCall {
@@ -195,7 +197,7 @@ public class SignalCall: NSObject, CallManagerCallReference {
             direction: .incoming,
             localId: localId,
             state: .answering,
-            remoteAddress: remoteAddress,
+            thread: thread,
             sentAtTimestamp: sentAtTimestamp,
             callAdapterType: callAdapterType
         )

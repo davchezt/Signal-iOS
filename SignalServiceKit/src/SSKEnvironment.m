@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 #import "SSKEnvironment.h"
@@ -66,7 +66,10 @@ static SSKEnvironment *sharedSSKEnvironment;
 
 #pragma mark -
 
-@implementation SSKEnvironment
+@implementation SSKEnvironment {
+    SignalProtocolStore *_aciSignalProtocolStoreRef;
+    SignalProtocolStore *_pniSignalProtocolStoreRef;
+}
 
 @synthesize callMessageHandlerRef = _callMessageHandlerRef;
 @synthesize notificationsManagerRef = _notificationsManagerRef;
@@ -82,9 +85,8 @@ static SSKEnvironment *sharedSSKEnvironment;
                         blockingManager:(BlockingManager *)blockingManager
                         identityManager:(OWSIdentityManager *)identityManager
                     remoteConfigManager:(id<RemoteConfigManager>)remoteConfigManager
-                           sessionStore:(SSKSessionStore *)sessionStore
-                      signedPreKeyStore:(SSKSignedPreKeyStore *)signedPreKeyStore
-                            preKeyStore:(SSKPreKeyStore *)preKeyStore
+                 aciSignalProtocolStore:(SignalProtocolStore *)aciSignalProtocolStore
+                 pniSignalProtocolStore:(SignalProtocolStore *)pniSignalProtocolStore
                               udManager:(id<OWSUDManager>)udManager
                        messageDecrypter:(OWSMessageDecrypter *)messageDecrypter
                groupsV2MessageProcessor:(GroupsV2MessageProcessor *)groupsV2MessageProcessor
@@ -143,9 +145,8 @@ static SSKEnvironment *sharedSSKEnvironment;
     _blockingManagerRef = blockingManager;
     _identityManagerRef = identityManager;
     _remoteConfigManagerRef = remoteConfigManager;
-    _sessionStoreRef = sessionStore;
-    _signedPreKeyStoreRef = signedPreKeyStore;
-    _preKeyStoreRef = preKeyStore;
+    _aciSignalProtocolStoreRef = aciSignalProtocolStore;
+    _pniSignalProtocolStoreRef = pniSignalProtocolStore;
     _udManagerRef = udManager;
     _messageDecrypterRef = messageDecrypter;
     _groupsV2MessageProcessorRef = groupsV2MessageProcessor;
@@ -256,6 +257,16 @@ static SSKEnvironment *sharedSSKEnvironment;
     }
 }
 
+- (SignalProtocolStore *)signalProtocolStoreRefForIdentity:(OWSIdentity)identity
+{
+    switch (identity) {
+        case OWSIdentityACI:
+            return _aciSignalProtocolStoreRef;
+        case OWSIdentityPNI:
+            return _pniSignalProtocolStoreRef;
+    }
+}
+
 - (BOOL)isComplete
 {
     return (self.callMessageHandler != nil && self.notificationsManager != nil);
@@ -263,19 +274,39 @@ static SSKEnvironment *sharedSSKEnvironment;
 
 - (void)warmCaches
 {
-    [self.tsAccountManager warmCaches];
-    [self.signalServiceAddressCache warmCaches];
-    [self.remoteConfigManager warmCaches];
-    [self.udManager warmCaches];
-    [self.blockingManager warmCaches];
-    [self.profileManager warmCaches];
-    [self.receiptManager prepareCachedValues];
-    [OWSKeyBackupService warmCaches];
-    [PinnedThreadManager warmCaches];
-    [self.typingIndicatorsImpl warmCaches];
-    [self.paymentsHelper warmCaches];
-    [self.paymentsCurrencies warmCaches];
-    
+    NSArray *specs = @[
+        @"tsAccountManager",
+        ^{ [self.tsAccountManager warmCaches]; },
+        @"signalServiceAddressCache",
+        ^{ [self.signalServiceAddressCache warmCaches]; },
+        @"remoteConfigManager",
+        ^{ [self.remoteConfigManager warmCaches]; },
+        @"udManager",
+        ^{ [self.udManager warmCaches]; },
+        @"blockingManager",
+        ^{ [self.blockingManager warmCaches]; },
+        @"profileManager",
+        ^{ [self.profileManager warmCaches]; },
+        @"receiptManager",
+        ^{ [self.receiptManager prepareCachedValues]; },
+        @"OWSKeyBackupService",
+        ^{ [OWSKeyBackupService warmCaches]; },
+        @"PinnedThreadManager",
+        ^{ [PinnedThreadManager warmCaches]; },
+        @"typingIndicatorsImpl",
+        ^{ [self.typingIndicatorsImpl warmCaches]; },
+        @"paymentsHelper",
+        ^{ [self.paymentsHelper warmCaches]; },
+        @"paymentsCurrencies",
+        ^{ [self.paymentsCurrencies warmCaches]; }
+    ];
+
+    for (int i = 0; i < specs.count / 2; i++) {
+        [InstrumentsMonitor measureWithCategory:@"appstart"
+                                         parent:@"caches"
+                                           name:[specs objectAtIndex:2 * i]
+                                          block:[specs objectAtIndex:2 * i + 1]];
+    }
     [NSNotificationCenter.defaultCenter postNotificationName:WarmCachesNotification object:nil];
 }
 

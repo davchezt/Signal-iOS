@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -23,10 +23,16 @@ public class WebSocketFactoryHybrid: NSObject, WebSocketFactory {
     }
 
     public func statusCode(forError error: Error) -> Int {
-        if let starscreamError = error as? StarscreamError {
-            return starscreamError.code
+        switch error {
+        case let error as StarscreamError:
+            return error.code
+        case SSKWebSocketNativeError.failedToConnect(let statusCode):
+            return statusCode ?? 0
+        case SSKWebSocketNativeError.remoteClosed(let statusCode, _):
+            return statusCode
+        default:
+            return error.httpStatusCode ?? 0
         }
-        return error.httpStatusCode ?? 0
     }
 }
 
@@ -52,7 +58,7 @@ class SSKWebSocketStarScream: SSKWebSocket {
 
         socket.disableSSLCertValidation = true
         socket.socketSecurityLevel = StreamSocketSecurityLevel.tlSv1_2
-        let security = SSLSecurity(certs: [TextSecureCertificate()], usePublicKeys: false)
+        let security = SSLSecurity(certs: [TextSecureCertificate(), SignalMessengerCertificate()], usePublicKeys: false)
         security.validateEntireChain = false
         socket.security = security
 
@@ -136,12 +142,7 @@ extension SSKWebSocketStarScream: WebSocketDelegate {
 
     func websocketDidReceiveData(socket: WebSocketClient, data: Data) {
         assertOnQueue(callbackQueue)
-        do {
-            let message = try WebSocketProtoWebSocketMessage(serializedData: data)
-            delegate?.websocket(self, didReceiveMessage: message)
-        } catch {
-            owsFailDebug("error: \(error)")
-        }
+        delegate?.websocket(self, didReceiveData: data)
     }
 }
 
@@ -149,6 +150,11 @@ extension SSKWebSocketStarScream: WebSocketDelegate {
 
 private func TextSecureCertificate() -> SSLCert {
     let data = SSKTextSecureServiceCertificateData()
+    return SSLCert(data: data)
+}
+
+private func SignalMessengerCertificate() -> SSLCert {
+    let data = SSKSignalMessengerCertificateData()
     return SSLCert(data: data)
 }
 

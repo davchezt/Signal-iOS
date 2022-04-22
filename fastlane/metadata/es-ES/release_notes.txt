@@ -1,6 +1,2 @@
-• La nueva característica de selección múltiple te permite seleccionar más de un chat de la lista para marcar sus mensajes como leídos, archivar los chats o eliminarlos. Toca sobre tu foto de perfil arriba a la izquierda para probarla.
-• Ahora puedes acceder a chats archivados más fácilmente. Toca en tu foto de perfil arriba a la izquierda para encontrarlos.
-• ¡Demasiados emojis disponibles para reaccionar rápidamente a un mensaje! Ahora puedes buscar tu emoji favorito y encontrarlo rápidamente.
-• Personaliza tus reacciones por defecto para usar rápidamente ese emoji que te gusta tanto.
-• ¿Recibes demasiadas notificaciones? Arrastra un chat de la lista hacia la izquierda para silenciarlo rápidamente.
-• Fixed a bug that would cause parts of long text messages to become invisible in the input box.
+• Nos hemos apretado el cinturón para reducir el peso de la aplicación un 25 %.
+• Mejoras para que esos grupos con tantos mensajes se abran en un visto y no visto.

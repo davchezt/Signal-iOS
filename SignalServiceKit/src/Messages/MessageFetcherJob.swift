@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -238,6 +238,7 @@ public class MessageFetcherJob: NSObject {
         if shouldUseWebSocket {
             Logger.info("delegating message fetching to SocketManager since we're using normal transport.")
             socketManager.didReceivePush()
+            // Should we wait to resolve the future until we know the WebSocket is open? Wait until it empties?
             return future.resolve()
         } else if CurrentAppContext().shouldProcessIncomingMessages {
             // Main app should use REST if censorship circumvention is active.
@@ -288,7 +289,10 @@ public class MessageFetcherJob: NSObject {
 
     // MARK: -
 
-    typealias EnvelopeJob = MessageProcessor.EnvelopeJob
+    private struct EnvelopeJob {
+        let encryptedEnvelope: SSKProtoEnvelope
+        let completion: (Error?) -> Void
+    }
 
     private class func fetchMessagesViaRest() -> Promise<Void> {
         if DebugFlags.internalLogging {
@@ -304,23 +308,16 @@ public class MessageFetcherJob: NSObject {
                 Logger.info("REST fetched envelopes: \(batch.envelopes.count)")
             }
 
-            let envelopeJobs: [EnvelopeJob] = batch.envelopes.compactMap { envelope in
+            let envelopeJobs: [EnvelopeJob] = batch.envelopes.map { envelope in
                 let envelopeInfo = Self.buildEnvelopeInfo(envelope: envelope)
-                do {
-                    let envelopeData = try envelope.serializedData()
-                    return EnvelopeJob(encryptedEnvelopeData: envelopeData, encryptedEnvelope: envelope) { error in
-                        let ackBehavior = MessageProcessor.handleMessageProcessingOutcome(error: error)
-                        switch ackBehavior {
-                        case .shouldAck:
-                            Self.messageFetcherJob.acknowledgeDelivery(envelopeInfo: envelopeInfo)
-                        case .shouldNotAck(let error):
-                            Logger.info("Skipping ack of message with timestamp \(envelope.timestamp) because of error: \(error)")
-                        }
+                return EnvelopeJob(encryptedEnvelope: envelope) { error in
+                    let ackBehavior = MessageProcessor.handleMessageProcessingOutcome(error: error)
+                    switch ackBehavior {
+                    case .shouldAck:
+                        Self.messageFetcherJob.acknowledgeDelivery(envelopeInfo: envelopeInfo)
+                    case .shouldNotAck(let error):
+                        Logger.info("Skipping ack of message with timestamp \(envelopeInfo.timestamp) because of error: \(error)")
                     }
-                } catch {
-                    owsFailDebug("failed to serialize envelope")
-                    Self.messageFetcherJob.acknowledgeDelivery(envelopeInfo: envelopeInfo)
-                    return nil
                 }
             }
             return (envelopeJobs: envelopeJobs,
@@ -331,11 +328,13 @@ public class MessageFetcherJob: NSObject {
                                  hasMore: Bool) -> Promise<Void> in
 
             let queuedContentCountOld = Self.messageProcessor.queuedContentCount
-            Self.messageProcessor.processEncryptedEnvelopes(
-                envelopeJobs: envelopeJobs,
-                serverDeliveryTimestamp: serverDeliveryTimestamp,
-                envelopeSource: .rest
-            )
+            for job in envelopeJobs {
+                Self.messageProcessor.processEncryptedEnvelope(
+                    job.encryptedEnvelope,
+                    serverDeliveryTimestamp: serverDeliveryTimestamp,
+                    envelopeSource: .rest,
+                    completion: job.completion)
+            }
             let queuedContentCountNew = Self.messageProcessor.queuedContentCount
 
             if DebugFlags.internalLogging {
@@ -375,7 +374,7 @@ public class MessageFetcherJob: NSObject {
         // the queue has "some/enough" content.
         // However, the NSE needs to process messages with high
         // throughput.
-        // Therfore we need to identify a constant N small enough to
+        // Therefore we need to identify a constant N small enough to
         // place an acceptable upper bound on memory usage of the processor
         // (N + next fetched batch size, fetch size in practice is 100),
         // large enough to avoid introducing latency (e.g. the next fetch
@@ -480,6 +479,10 @@ public class MessageFetcherJob: NSObject {
 
             if let sourceDevice: UInt32 = try params.optional(key: "sourceDevice") {
                 builder.setSourceDevice(sourceDevice)
+            }
+
+            if let destinationUuid: String = try params.optional(key: "destinationUuid") {
+                builder.setDestinationUuid(destinationUuid)
             }
 
             if let legacyMessage = try params.optionalBase64EncodedData(key: "message") {

@@ -1,15 +1,15 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
 
 import os
 import sys
 import subprocess 
 import datetime
 import argparse
-import commands
 import re
 
-git_repo_path = os.path.abspath(subprocess.check_output(['git', 'rev-parse', '--show-toplevel']).strip())
+git_repo_path = os.path.abspath(
+    subprocess.check_output(["git", "rev-parse", "--show-toplevel"], text=True).strip()
+)
 
 string_h_functions = [
         "memchr",
@@ -80,12 +80,12 @@ def process_if_appropriate(file_path):
             continue
         if not has_match:
             has_match = True
-            print 'file_path', file_path, 'file_ext', file_ext
+            print('file_path', file_path, 'file_ext', file_ext)
         for match in matches:
             # print 'match', match, type(match)
-            print '\t', 'match:', match.group(0)
+            print('\t', 'match:', match.group(0))
     if has_match:
-        print
+        print()
     
     
 if __name__ == "__main__":

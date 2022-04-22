@@ -6,7 +6,7 @@ import Foundation
 import SignalUI
 
 protocol MessageReactionPickerDelegate: AnyObject {
-    func didSelectReaction(reaction: String, isRemoving: Bool)
+    func didSelectReaction(reaction: String, isRemoving: Bool, inPosition position: Int)
     func didSelectAnyEmoji()
 }
 
@@ -21,10 +21,10 @@ class MessageReactionPicker: UIStackView {
     var selectedBackgroundHeight: CGFloat { return pickerDiameter - 4 }
     let configureMode: Bool
 
-    private var buttonForEmoji = [String: OWSFlatButton]()
+    private var buttonForEmoji = [(emoji: String, button: OWSFlatButton)]()
     private var selectedEmoji: EmojiWithSkinTones?
     private var backgroundView: UIView?
-    init(selectedEmoji: String?, delegate: MessageReactionPickerDelegate?, configureMode: Bool = false) {
+    init(selectedEmoji: String?, delegate: MessageReactionPickerDelegate?, configureMode: Bool = false, forceDarkTheme: Bool = false) {
         self.configureMode = configureMode
 
         if let selectedEmoji = selectedEmoji {
@@ -38,7 +38,7 @@ class MessageReactionPicker: UIStackView {
         super.init(frame: .zero)
 
         backgroundView = addBackgroundView(
-            withBackgroundColor: Theme.actionSheetBackgroundColor,
+            withBackgroundColor: forceDarkTheme ? .ows_gray75 : Theme.actionSheetBackgroundColor,
             cornerRadius: pickerDiameter / 2
         )
         backgroundView?.layer.shadowColor = UIColor.ows_black.cgColor
@@ -47,7 +47,7 @@ class MessageReactionPicker: UIStackView {
         backgroundView?.layer.shadowOffset = .zero
 
         let shadowView = UIView()
-        shadowView.backgroundColor = Theme.actionSheetBackgroundColor
+        shadowView.backgroundColor = forceDarkTheme ? .ows_gray75 : Theme.actionSheetBackgroundColor
         shadowView.layer.cornerRadius = pickerDiameter / 2
         shadowView.layer.shadowColor = UIColor.ows_black.cgColor
         shadowView.layer.shadowRadius = 12
@@ -93,23 +93,23 @@ class MessageReactionPicker: UIStackView {
             }
         }
 
-        for emoji in emojiSet {
+        for (index, emoji) in emojiSet.enumerated() {
             let button = OWSFlatButton()
             button.autoSetDimensions(to: CGSize(square: reactionHeight))
-            button.setTitle(title: emoji.rawValue, font: .systemFont(ofSize: reactionFontSize), titleColor: Theme.primaryTextColor)
+            button.setTitle(title: emoji.rawValue, font: .systemFont(ofSize: reactionFontSize), titleColor: forceDarkTheme ? Theme.darkThemePrimaryColor : Theme.primaryTextColor)
             button.setPressedBlock { [weak self] in
                 // current title of button may have changed in the meantime
                 if let currentEmoji = button.button.title(for: .normal) {
-                    self?.delegate?.didSelectReaction(reaction: currentEmoji, isRemoving: currentEmoji == self?.selectedEmoji?.rawValue)
+                    self?.delegate?.didSelectReaction(reaction: currentEmoji, isRemoving: currentEmoji == self?.selectedEmoji?.rawValue, inPosition: index)
                 }
             }
-            buttonForEmoji[emoji.rawValue] = button
+            buttonForEmoji.append((emoji.rawValue, button))
             addArrangedSubview(button)
 
             // Add a circle behind the currently selected emoji
             if self.selectedEmoji == emoji {
                 let selectedBackgroundView = UIView()
-                selectedBackgroundView.backgroundColor = Theme.isDarkThemeEnabled ? .ows_gray60 : .ows_gray05
+                selectedBackgroundView.backgroundColor = Theme.isDarkThemeEnabled || forceDarkTheme ? .ows_gray60 : .ows_gray05
                 selectedBackgroundView.clipsToBounds = true
                 selectedBackgroundView.layer.cornerRadius = selectedBackgroundHeight / 2
                 backgroundView?.addSubview(selectedBackgroundView)
@@ -122,21 +122,20 @@ class MessageReactionPicker: UIStackView {
         if addAnyButton {
             let button = OWSFlatButton()
             button.autoSetDimensions(to: CGSize(square: reactionHeight))
-            button.setImage(Theme.isDarkThemeEnabled ? #imageLiteral(resourceName: "any-emoji-32-dark") : #imageLiteral(resourceName: "any-emoji-32-light"))
+            button.setImage(Theme.isDarkThemeEnabled || forceDarkTheme ? #imageLiteral(resourceName: "any-emoji-32-dark") : #imageLiteral(resourceName: "any-emoji-32-light"))
             button.setPressedBlock { [weak self] in
                 self?.delegate?.didSelectAnyEmoji()
             }
-            buttonForEmoji[MessageReactionPicker.anyEmojiName] = button
+            buttonForEmoji.append((MessageReactionPicker.anyEmojiName, button))
             addArrangedSubview(button)
         }
     }
 
-    public func replaceEmojiReaction(_ oldEmoji: String, newEmoji: String) {
-        let button = buttonForEmoji[oldEmoji]
-        if let button = button {
-            button.setTitle(title: newEmoji, font: .systemFont(ofSize: reactionFontSize), titleColor: Theme.primaryTextColor)
-            buttonForEmoji[newEmoji] = button
-        }
+    public func replaceEmojiReaction(_ oldEmoji: String, newEmoji: String, inPosition position: Int) {
+        let buttonTuple = buttonForEmoji[position]
+        let button = buttonTuple.button
+        button.setTitle(title: newEmoji, font: .systemFont(ofSize: reactionFontSize), titleColor: Theme.primaryTextColor)
+        buttonForEmoji.replaceSubrange(position...position, with: [(newEmoji, button)])
     }
 
     public func currentEmojiSet() -> [String] {
@@ -149,13 +148,13 @@ class MessageReactionPicker: UIStackView {
         return emojiSet
     }
 
-    public func startReplaceAnimation(focusedEmoji: String) {
+    public func startReplaceAnimation(focusedEmoji: String, inPosition position: Int) {
         var buttonToWiggle: OWSFlatButton?
         UIView.animate(withDuration: 0.3, delay: 0, options: .curveEaseInOut) {
-            for view in self.arrangedSubviews {
-                if let button = view as? OWSFlatButton, let emoji = button.button.title(for: .normal) {
+            for (index, view) in self.arrangedSubviews.enumerated() {
+                if let button = view as? OWSFlatButton {
                     // Shrink and fade
-                    if emoji != focusedEmoji {
+                    if index != position {
                         button.alpha = 0.3
                         button.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
                     } else { // Expand and wiggle
@@ -207,24 +206,8 @@ class MessageReactionPicker: UIStackView {
     }
 
     func playDismissalAnimation(duration: TimeInterval, completion: @escaping () -> Void) {
-        if !FeatureFlags.contextMenus {
-            UIView.animate(withDuration: duration) { self.backgroundView?.alpha = 0 }
-
-            var delay: TimeInterval = 0
-            for view in arrangedSubviews.reversed() {
-                UIView.animate(withDuration: duration, delay: delay, options: .curveEaseOut, animations: {
-                    view.alpha = 0
-                    view.transform = CGAffineTransform(translationX: 0, y: 24)
-                }, completion: { _ in
-                    guard view == self.arrangedSubviews.first else { return }
-                    completion()
-                })
-                delay += 0.01
-            }
-        } else {
-            UIView.animate(withDuration: duration) { self.alpha = 0 } completion: { _ in
-                completion()
-            }
+        UIView.animate(withDuration: duration) { self.alpha = 0 } completion: { _ in
+            completion()
         }
     }
 
@@ -233,7 +216,7 @@ class MessageReactionPicker: UIStackView {
         var previouslyFocusedButton: OWSFlatButton?
         var focusedButton: OWSFlatButton?
 
-        if let focusedEmoji = focusedEmoji, let focusedButton = buttonForEmoji[focusedEmoji] {
+        if let focusedEmoji = focusedEmoji, let focusedButton = buttonForEmoji.first(where: { $0.emoji == focusedEmoji})?.button {
             previouslyFocusedButton = focusedButton
         }
 
@@ -242,7 +225,7 @@ class MessageReactionPicker: UIStackView {
         for (emoji, button) in buttonForEmoji {
             guard focusArea(for: button).contains(position) else { continue }
             focusedEmoji = emoji
-            focusedButton = buttonForEmoji[emoji]
+            focusedButton = buttonForEmoji.first(where: { $0.emoji == emoji })?.button
             break
         }
 

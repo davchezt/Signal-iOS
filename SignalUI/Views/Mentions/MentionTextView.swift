@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -518,8 +518,7 @@ extension MentionTextView {
 
         let messageBody = MessageBody(attributedString: attributedString)
 
-        if messageBody.hasRanges {
-            let encodedMessageBody = NSKeyedArchiver.archivedData(withRootObject: messageBody)
+        if messageBody.hasRanges, let encodedMessageBody = try? NSKeyedArchiver.archivedData(withRootObject: messageBody, requiringSecureCoding: true) {
             UIPasteboard.general.setItems([[Self.pasteboardType: encodedMessageBody]], options: [.localOnly: true])
         } else {
             UIPasteboard.general.setItems([], options: [:])
@@ -600,13 +599,5 @@ extension MentionTextView: UITextViewDelegate {
 
     open func textView(_ textView: UITextView, shouldInteractWith textAttachment: NSTextAttachment, in characterRange: NSRange, interaction: UITextItemInteraction) -> Bool {
         return mentionDelegate?.textView?(textView, shouldInteractWith: textAttachment, in: characterRange, interaction: interaction) ?? true
-    }
-
-    open func textView(_ textView: UITextView, shouldInteractWith URL: URL, in characterRange: NSRange) -> Bool {
-        return mentionDelegate?.textView?(textView, shouldInteractWith: URL, in: characterRange) ?? true
-    }
-
-    open func textView(_ textView: UITextView, shouldInteractWith textAttachment: NSTextAttachment, in characterRange: NSRange) -> Bool {
-        return mentionDelegate?.textView?(textView, shouldInteractWith: textAttachment, in: characterRange) ?? true
     }
 }

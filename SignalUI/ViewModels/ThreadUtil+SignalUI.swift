@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -69,7 +69,8 @@ public extension ThreadUtil {
         )
         BenchManager.startEvent(
             title: "Send Message Milestone: Marked as Sent (\(message.timestamp))",
-            eventId: "sendMessageMarkedAsSent-\(message.timestamp)"
+            eventId: "sendMessageMarkedAsSent-\(message.timestamp)",
+            logInProduction: true
         )
         BenchManager.benchAsync(title: "Send Message Milestone: Enqueue \(message.timestamp)") { benchmarkCompletion in
             Self.enqueueSendAsyncWrite { writeTransaction in
@@ -87,7 +88,7 @@ public extension ThreadUtil {
         }
 
         if message.hasRenderableContent() {
-            thread.donateSendMessageIntent(transaction: readTransaction)
+            thread.donateSendMessageIntent(for: message, transaction: readTransaction)
         }
         return message
     }

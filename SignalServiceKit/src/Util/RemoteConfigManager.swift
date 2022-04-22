@@ -47,12 +47,6 @@ public class RemoteConfig: BaseFlags {
     }
 
     @objc
-    public static var profilesForAll: Bool {
-        if DebugFlags.forceProfilesForAll { return true }
-        return isEnabled(.profilesForAll)
-    }
-
-    @objc
     public static var groupsV2MaxGroupSizeRecommended: UInt {
         let defaultValue: UInt = 151
         guard AppReadiness.isAppReady else {
@@ -95,11 +89,6 @@ public class RemoteConfig: BaseFlags {
     }
 
     @objc
-    public static var usernames: Bool {
-        FeatureFlags.usernamesSupported
-    }
-
-    @objc
     public static var groupCalling: Bool {
         return DebugFlags.forceGroupCalling || !isEnabled(.groupCallingKillSwitch)
     }
@@ -138,16 +127,6 @@ public class RemoteConfig: BaseFlags {
     @objc
     public static var paymentsResetKillSwitch: Bool {
         isEnabled(.paymentsResetKillSwitch)
-    }
-
-    @objc
-    public static var giphySendAsMP4: Bool {
-        isEnabled(.giphySendAsMP4) || FeatureFlags.forceEnableGiphyMP4
-    }
-
-    @objc
-    public static var viewedReceiptSending: Bool {
-        DebugFlags.forceViewedReceiptSending || isEnabled(.viewedReceiptSending)
     }
 
     public static var standardMediaQualityLevel: ImageQualityLevel? {
@@ -221,11 +200,6 @@ public class RemoteConfig: BaseFlags {
     @objc
     public static var donorBadgeDisplay: Bool {
         DebugFlags.forceDonorBadgeDisplay || !isEnabled(.donorBadgeDisplayKillSwitch)
-    }
-
-    @objc
-    public static var donorBadgeAcquisition: Bool {
-        DebugFlags.forceDonorBadgeAcquisition || !isEnabled(.donorBadgeAcquisitionKillSwitch)
     }
 
     @objc
@@ -381,16 +355,10 @@ public class RemoteConfig: BaseFlags {
             logFlag("Config.StickyValues", flag.rawFlag, value)
         }
 
-        let flagMap = buildFlagMap()
+        let flagMap = allFlags()
         for key in Array(flagMap.keys).sorted() {
             let value = flagMap[key]
             logFlag("Flag", key, value)
-        }
-    }
-
-    public static func buildFlagMap() -> [String: Any] {
-        BaseFlags.buildFlagMap(for: RemoteConfig.self) { (key: String) -> Any? in
-            RemoteConfig.value(forKey: key)
         }
     }
 }
@@ -410,7 +378,8 @@ private struct Flags {
     // as soon as we fetch an update to the remote config. They will not
     // wait for an app restart.
     enum HotSwappableIsEnabledFlags: String, FlagType {
-        case donorBadgeAcquisitionKillSwitch
+        // This can't be empty, so we define a bogus case. Remove this if you add a flag here.
+        case __noHotSwappableIsEnabledFlags
     }
 
     // We filter the received config down to just the supported flags.
@@ -421,17 +390,12 @@ private struct Flags {
     enum SupportedIsEnabledFlags: String, FlagType {
         case kbs
         case uuidSafetyNumbers
-        case groupsV2InviteLinksV2
-        case profilesForAll
         case groupCallingKillSwitch
         case automaticSessionResetKillSwitch
         case paymentsResetKillSwitch
-        case giphySendAsMP4
-        case viewedReceiptSending
         case senderKeyKillSwitch
         case messageResendKillSwitch
         case donorBadgeDisplayKillSwitch
-        case donorBadgeAcquisitionKillSwitch
         case changePhoneNumberUI
     }
 
@@ -569,6 +533,8 @@ public class ServiceRemoteConfigManager: NSObject, RemoteConfigManager {
     // MARK: -
 
     @objc func registrationStateDidChange() {
+        AssertIsOnMainThread()
+
         guard tsAccountManager.isRegistered else { return }
         Logger.info("Refreshing and immediately applying new flags due to new registration.")
         refresh().done(on: .global()) {
@@ -610,28 +576,32 @@ public class ServiceRemoteConfigManager: NSObject, RemoteConfigManager {
 
     private static let refreshInterval = 2 * kHourInterval
     private var refreshTimer: Timer?
+
+    private var lastAttempt: Date = .distantPast
+    private var consecutiveFailures: UInt = 0
+    private var nextPermittedAttempt: Date {
+        AssertIsOnMainThread()
+        let backoffDelay = OWSOperation.retryIntervalForExponentialBackoff(failureCount: consecutiveFailures)
+        let earliestPermittedAttempt = lastAttempt.addingTimeInterval(backoffDelay)
+
+        let lastSuccess = databaseStorage.read { keyValueStore.getLastFetched(transaction: $0) }
+        let nextScheduledRefresh = (lastSuccess ?? .distantPast).addingTimeInterval(Self.refreshInterval)
+
+        return max(earliestPermittedAttempt, nextScheduledRefresh)
+    }
+
     private func scheduleNextRefresh() {
         AssertIsOnMainThread()
-
         refreshTimer?.invalidate()
         refreshTimer = nil
+        let nextAttempt = nextPermittedAttempt
 
-        guard let lastFetched = (databaseStorage.read { transaction in
-            self.keyValueStore.getLastFetched(transaction: transaction)
-        }) else {
-            refresh()
-            return
-        }
-
-        let timeSinceLastFetch = abs(lastFetched.timeIntervalSinceNow)
-
-        if timeSinceLastFetch >= Self.refreshInterval {
+        if nextAttempt.isBeforeNow {
             refresh()
         } else {
-            Logger.info("Scheduling remote config refresh in \(Self.refreshInterval - timeSinceLastFetch) seconds.")
-
+            Logger.info("Scheduling remote config refresh for \(nextAttempt).")
             refreshTimer = Timer.scheduledTimer(
-                withTimeInterval: Self.refreshInterval - timeSinceLastFetch,
+                withTimeInterval: nextAttempt.timeIntervalSinceNow,
                 repeats: false
             ) { [weak self] timer in
                 timer.invalidate()
@@ -652,7 +622,9 @@ public class ServiceRemoteConfigManager: NSObject, RemoteConfigManager {
 
     @discardableResult
     private func refresh() -> Promise<Void> {
+        AssertIsOnMainThread()
         Logger.info("Refreshing remote config.")
+        lastAttempt = Date()
 
         return firstly(on: .global()) {
             self.serviceClient.getRemoteConfig()
@@ -723,10 +695,12 @@ public class ServiceRemoteConfigManager: NSObject, RemoteConfigManager {
                 self.checkClientExpiration(valueFlags: valueFlags)
             }
 
+            self.consecutiveFailures = 0
             Logger.info("Stored new remoteConfig. isEnabledFlags: \(isEnabledFlags), valueFlags: \(valueFlags)")
-        }.catch { error in
+        }.catch(on: .main) { error in
             Logger.error("error: \(error)")
-        }.ensure {
+            self.consecutiveFailures += 1
+        }.ensure(on: .main) {
             self.scheduleNextRefresh()
         }
     }

@@ -1,6 +1,2 @@
-• Az új tömeges kijelölés funkcióval egyszerre több beszélgetést jelölhetsz ki, majd olvasottnak jelölheted, archiválhatod, vagy törölheted őket egyszerre. Koppints a profil fotódra a bal felső sarokban.
-• Az archivált beszélgetésekhez gyorsabb lett a hozzáférés. Csak koppints a profil fotódra a bal felső sarokban, hogy könnyebben elérd őket.
-• A reakciók oly bőségesek, az idő viszont szorít. Kedvenc reakció emojid nevére mostantól könnyen rákereshetsz.
-• Az alap reakció emoji készleted mostantól személyre szabhatod, hogy kedvenceid rögtön ott lapuljanak az ingujjadban, bevetésre készen.
-• Bosszantó értesítések? Csak suhints balra egy beszélgetésen, hogy gyorsan némíthatsd, vagy viszont.
-• Javítottunk egy hibát, ami hosszú begépelt szöveg esetén annak egy részét láthatatlanná tette.
+• Csökkentettük az alkalmazás méretét 25%-kal
+• A csoportos beszélgetések megnyitása még gördülékenyebb lett

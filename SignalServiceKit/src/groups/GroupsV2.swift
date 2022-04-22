@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -29,6 +29,7 @@ public enum GroupsV2Error: Error {
     case unexpectedRevision
     case groupBlocked
     case newMemberMissingAnnouncementOnlyCapability
+    case localUserBlockedFromJoining
 }
 
 // MARK: -
@@ -103,10 +104,6 @@ public protocol GroupsV2Swift: GroupsV2 {
     func fetchCurrentGroupV2Snapshot(groupModel: TSGroupModelV2) -> Promise<GroupV2Snapshot>
 
     func fetchCurrentGroupV2Snapshot(groupSecretParamsData: Data) -> Promise<GroupV2Snapshot>
-
-    func fetchGroupChangeActions(groupSecretParamsData: Data,
-                                 includeCurrentRevision: Bool,
-                                 firstKnownRevision: UInt32?) -> Promise<[GroupV2Change]>
 
     func buildChangeSet(oldGroupModel: TSGroupModelV2,
                         newGroupModel: TSGroupModelV2,
@@ -321,35 +318,22 @@ public protocol GroupV2Snapshot {
 
 // MARK: -
 
-public struct GroupV2Diff {
-    public let changeActionsProto: GroupsProtoGroupChangeActions
+public struct GroupV2Change {
+    public var snapshot: GroupV2Snapshot?
+    public var changeActionsProto: GroupsProtoGroupChangeActions?
     public let downloadedAvatars: GroupV2DownloadedAvatars
 
-    public init(changeActionsProto: GroupsProtoGroupChangeActions,
+    public init(snapshot: GroupV2Snapshot?,
+                changeActionsProto: GroupsProtoGroupChangeActions?,
                 downloadedAvatars: GroupV2DownloadedAvatars) {
+        owsAssert(snapshot != nil || changeActionsProto != nil)
+        self.snapshot = snapshot
         self.changeActionsProto = changeActionsProto
         self.downloadedAvatars = downloadedAvatars
     }
 
     public var revision: UInt32 {
-        return changeActionsProto.revision
-    }
-}
-
-// MARK: -
-
-public struct GroupV2Change {
-    public var snapshot: GroupV2Snapshot?
-    public var diff: GroupV2Diff
-
-    public init(snapshot: GroupV2Snapshot?,
-                diff: GroupV2Diff) {
-        self.snapshot = snapshot
-        self.diff = diff
-    }
-
-    public var revision: UInt32 {
-        return diff.revision
+        return changeActionsProto?.revision ?? snapshot!.revision
     }
 }
 
@@ -465,7 +449,7 @@ public struct GroupV2DownloadedAvatars {
     }
 
     public static func from(groupModel: TSGroupModelV2) -> GroupV2DownloadedAvatars {
-        return from(avatarData: groupModel.groupAvatarData, avatarUrlPath: groupModel.avatarUrlPath)
+        return from(avatarData: groupModel.avatarData, avatarUrlPath: groupModel.avatarUrlPath)
     }
 
     public static func from(changes: GroupsV2OutgoingChanges) -> GroupV2DownloadedAvatars {
@@ -551,7 +535,7 @@ public class MockGroupsV2: NSObject, GroupsV2Swift {
 
     public func tryToEnsureProfileKeyCredentials(for addresses: [SignalServiceAddress],
                                                  ignoreMissingProfiles: Bool) -> Promise<Void> {
-        owsFail("Not implemented.")
+        return Promise.value(())
     }
 
     public func fetchCurrentGroupV2Snapshot(groupModel: TSGroupModelV2) -> Promise<GroupV2Snapshot> {
@@ -559,12 +543,6 @@ public class MockGroupsV2: NSObject, GroupsV2Swift {
     }
 
     public func fetchCurrentGroupV2Snapshot(groupSecretParamsData: Data) -> Promise<GroupV2Snapshot> {
-        owsFail("Not implemented.")
-    }
-
-    public func fetchGroupChangeActions(groupSecretParamsData: Data,
-                                        includeCurrentRevision: Bool,
-                                        firstKnownRevision: UInt32?) -> Promise<[GroupV2Change]> {
         owsFail("Not implemented.")
     }
 
@@ -634,7 +612,7 @@ public class MockGroupsV2: NSObject, GroupsV2Swift {
 
     public func isGroupKnownToStorageService(groupModel: TSGroupModelV2,
                                              transaction: SDSAnyReadTransaction) -> Bool {
-        owsFail("Not implemented.")
+        return true
     }
 
     public func restoreGroupFromStorageServiceIfNecessary(masterKeyData: Data, transaction: SDSAnyWriteTransaction) {

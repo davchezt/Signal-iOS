@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -307,7 +307,7 @@ public extension TSPaymentRequestModel {
     //
     // We should generally use `anyUpdate` to ensure we're not unintentionally
     // clobbering other columns in the database when another concurrent update
-    // has occured.
+    // has occurred.
     //
     // There are cases when this doesn't make sense, e.g. when  we know we've
     // just loaded the model in the same transaction. In those cases it is
@@ -339,7 +339,7 @@ public extension TSPaymentRequestModel {
 // MARK: - TSPaymentRequestModelCursor
 
 @objc
-public class TSPaymentRequestModelCursor: NSObject {
+public class TSPaymentRequestModelCursor: NSObject, SDSCursor {
     private let transaction: GRDBReadTransaction
     private let cursor: RecordCursor<PaymentRequestModelRecord>?
 
@@ -518,7 +518,7 @@ public extension TSPaymentRequestModel {
             }
         }
 
-        if shouldBeIndexedForFTS {
+        if ftsIndexMode != .never {
             FullTextSearchFinder.allModelsWereRemoved(collection: collection(), transaction: transaction)
         }
     }
@@ -544,7 +544,7 @@ public extension TSPaymentRequestModel {
             instance.anyRemove(transaction: transaction)
         })
 
-        if shouldBeIndexedForFTS {
+        if ftsIndexMode != .never {
             FullTextSearchFinder.allModelsWereRemoved(collection: collection(), transaction: transaction)
         }
     }

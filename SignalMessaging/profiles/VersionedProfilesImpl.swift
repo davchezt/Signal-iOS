@@ -1,11 +1,10 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
 import SignalServiceKit
-import SignalMetadataKit
-import SignalClient
+import LibSignalClient
 
 public class VersionedProfileRequestImpl: NSObject, VersionedProfileRequest {
     public let request: TSRequest
@@ -44,7 +43,8 @@ public class VersionedProfilesImpl: NSObject, VersionedProfilesSwift {
                                      visibleBadgeIds: [String],
                                      unsavedRotatedProfileKey: OWSAES256Key?) -> Promise<VersionedProfileUpdate> {
 
-        firstly(on: .global()) {
+        let profileKeyToUse = unsavedRotatedProfileKey ?? self.profileManager.localProfileKey()
+        return firstly(on: .global()) {
             guard let localUuid = self.tsAccountManager.localUuid else {
                 throw OWSAssertionError("Missing localUuid.")
             }
@@ -52,11 +52,9 @@ public class VersionedProfilesImpl: NSObject, VersionedProfilesSwift {
             if unsavedRotatedProfileKey != nil {
                 Logger.info("Updating local profile with unsaved rotated profile key")
             }
-
-            let profileKey: OWSAES256Key = unsavedRotatedProfileKey ?? self.profileManager.localProfileKey()
-            return (localUuid, profileKey)
-        }.then(on: .global()) { (localUuid: UUID, profileKey: OWSAES256Key) -> Promise<HTTPResponse> in
-            let localProfileKey = try self.parseProfileKey(profileKey: profileKey)
+            return localUuid
+        }.then(on: .global()) { (localUuid: UUID) -> Promise<HTTPResponse> in
+            let localProfileKey = try self.parseProfileKey(profileKey: profileKeyToUse)
             let commitment = try localProfileKey.getCommitment(uuid: localUuid)
             let commitmentData = commitment.serialize().asData
             let hasAvatar = profileAvatarData != nil
@@ -88,7 +86,7 @@ public class VersionedProfilesImpl: NSObject, VersionedProfilesSwift {
                 nameComponents.familyName = profileFamilyName
 
                 guard let encryptedValue = OWSUserProfile.encrypt(profileNameComponents: nameComponents,
-                                                                  profileKey: profileKey) else {
+                                                                  profileKey: profileKeyToUse) else {
                     throw OWSAssertionError("Could not encrypt profile name.")
                 }
                 nameValue = encryptedValue
@@ -102,7 +100,7 @@ public class VersionedProfilesImpl: NSObject, VersionedProfilesSwift {
                     return nil
                 }
                 guard let encryptedValue = OWSUserProfile.encrypt(data: value,
-                                                                  profileKey: profileKey,
+                                                                  profileKey: profileKeyToUse,
                                                                   paddedLengths: paddedLengths,
                                                                   validBase64Lengths: validBase64Lengths) else {
                     throw OWSAssertionError("Could not encrypt profile value.")
@@ -153,9 +151,8 @@ public class VersionedProfilesImpl: NSObject, VersionedProfilesSwift {
             return self.networkManager.makePromise(request: request)
         }.then(on: .global()) { response -> Promise<VersionedProfileUpdate> in
             if let profileAvatarData = profileAvatarData {
-                let profileKey: OWSAES256Key = self.profileManager.localProfileKey()
                 guard let encryptedProfileAvatarData = OWSUserProfile.encrypt(profileData: profileAvatarData,
-                                                                              profileKey: profileKey) else {
+                                                                              profileKey: profileKeyToUse) else {
                     throw OWSAssertionError("Could not encrypt profile avatar.")
                 }
                 guard let json = response.responseBodyJson else {

@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -31,7 +31,7 @@ public class DisappearingTimerConfigurationView: UIView {
     private var pressGesture: UILongPressGestureRecognizer!
 
     public required init?(coder aDecoder: NSCoder) {
-        notImplemented()
+        fatalError("init(coder:) has not been implemented")
     }
 
     @objc
@@ -61,8 +61,8 @@ public class DisappearingTimerConfigurationView: UIView {
         pressGesture.isEnabled = false
 
         // Accessibility
-        self.accessibilityLabel = NSLocalizedString("DISAPPEARING_MESSAGES_LABEL", comment: "Accessibility label for disappearing messages")
-        let hintFormatString = NSLocalizedString("DISAPPEARING_MESSAGES_HINT", comment: "Accessibility hint that contains current timeout information")
+        self.accessibilityLabel = OWSLocalizedString("DISAPPEARING_MESSAGES_LABEL", comment: "Accessibility label for disappearing messages")
+        let hintFormatString = OWSLocalizedString("DISAPPEARING_MESSAGES_HINT", comment: "Accessibility hint that contains current timeout information")
         let durationString = String.formatDurationLossless(durationSeconds: durationSeconds)
         self.accessibilityHint = String(format: hintFormatString, durationString)
 

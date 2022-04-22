@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 #import "TSGroupModel.h"
@@ -21,7 +21,7 @@ const CGFloat kMaxAvatarDimension = 1024;
 const int32_t kGroupIdLengthV1 = 16;
 const int32_t kGroupIdLengthV2 = 32;
 
-NSUInteger const TSGroupModelSchemaVersion = 1;
+NSUInteger const TSGroupModelSchemaVersion = 2;
 
 @interface TSGroupModel ()
 
@@ -52,10 +52,15 @@ NSUInteger const TSGroupModelSchemaVersion = 1;
 
     _groupId = groupId;
     _groupName = name;
-    _groupAvatarData = avatarData;
     _groupMembers = members;
     _addedByAddress = addedByAddress;
     _groupModelSchemaVersion = TSGroupModelSchemaVersion;
+
+    NSError *error;
+    [self persistAvatarData:avatarData error:&error];
+    if (error) {
+        OWSFailDebug(@"Failed to persist group avatar data %@", error);
+    }
 
     OWSAssertDebug([GroupManager isValidGroupId:groupId groupsVersion:self.groupsVersion]);
 
@@ -84,14 +89,11 @@ NSUInteger const TSGroupModelSchemaVersion = 1;
         }
     }
 
-    _groupModelSchemaVersion = TSGroupModelSchemaVersion;
-
-    if (self.groupAvatarData == nil) {
-        UIImage *_Nullable groupImage = [coder decodeObjectForKey:@"groupImage"];
-        if ([groupImage isKindOfClass:[UIImage class]]) {
-            self.groupAvatarData = [TSGroupModel dataForGroupAvatar:groupImage];
-        }
+    if (_groupModelSchemaVersion < 2) {
+        _legacyAvatarData = [coder decodeObjectForKey:@"groupAvatarData"];
     }
+
+    _groupModelSchemaVersion = TSGroupModelSchemaVersion;
 
     return self;
 }
@@ -160,19 +162,6 @@ NSUInteger const TSGroupModelSchemaVersion = 1;
     return imageData;
 }
 
-- (nullable UIImage *)groupAvatarImage
-{
-    return [UIImage imageWithData:self.groupAvatarData];
-}
-
-- (void)setGroupAvatarData:(nullable NSData *)groupAvatarData {
-    if (_groupAvatarData.length > 0 && groupAvatarData.length < 1) {
-        OWSFailDebug(@"We should never remove an avatar from a group with an avatar.");
-        return;
-    }
-    _groupAvatarData = groupAvatarData;
-}
-
 - (BOOL)isEqual:(id)other {
     if (other == self) {
         return YES;
@@ -205,17 +194,35 @@ NSUInteger const TSGroupModelSchemaVersion = 1;
     if (![NSObject isNullableObject:self.groupName equalTo:other.groupName]) {
         return NO;
     }
-    if (![NSObject isNullableObject:self.groupAvatarData equalTo:other.groupAvatarData]) {
+    if (![NSObject isNullableObject:self.avatarHash equalTo:other.avatarHash]) {
         return NO;
     }
     if (![NSObject isNullableObject:self.addedByAddress equalTo:other.addedByAddress]) {
         return NO;
     }
-    NSSet<SignalServiceAddress *> *myGroupMembersSet = [NSSet setWithArray:_groupMembers];
-    NSSet<SignalServiceAddress *> *otherGroupMembersSet = [NSSet setWithArray:other.groupMembers];
-    if (![myGroupMembersSet isEqualToSet:otherGroupMembersSet]) {
+
+    // If both groups are V2 groups, this is redundant with checking the groupMembership property.
+    // But if a V1 group is being compared user-facing-only to a V2 group, we need to check this explicitly,
+    // and must use the property access to do it.
+    // (And of course two V1 groups must check their membership here regardless.)
+
+    // Check the count...
+    NSArray<SignalServiceAddress *> *myGroupMembers = self.groupMembers;
+    NSArray<SignalServiceAddress *> *otherGroupMembers = other.groupMembers;
+    if (myGroupMembers.count != otherGroupMembers.count) {
         return NO;
     }
+
+    // ...then check for mismatches.
+    NSSet<SignalServiceAddress *> *myGroupMembersSet = [NSSet setWithArray:myGroupMembers];
+    NSUInteger missingMemberIndex =
+        [otherGroupMembers indexOfObjectPassingTest:^BOOL(SignalServiceAddress *member, NSUInteger idx, BOOL *stop) {
+            return ![myGroupMembersSet containsObject:member];
+        }];
+    if (missingMemberIndex != NSNotFound) {
+        return NO;
+    }
+
     return YES;
 }
 
@@ -252,17 +259,11 @@ NSUInteger const TSGroupModelSchemaVersion = 1;
     [result appendFormat:@"groupModelSchemaVersion: %lu,\n", (unsigned long)self.groupModelSchemaVersion];
     [result appendFormat:@"groupsVersion: %lu,\n", (unsigned long)self.groupsVersion];
     [result appendFormat:@"groupName: %@,\n", self.groupName];
-    [result appendFormat:@"groupAvatarData: %@,\n", self.groupAvatarData];
+    [result appendFormat:@"avatarHash: %@,\n", self.avatarHash];
     [result appendFormat:@"groupMembers: %@,\n", [GroupMembership normalize:self.groupMembers]];
     [result appendFormat:@"addedByAddress: %@,\n", self.addedByAddress];
     [result appendString:@"]"];
     return [result copy];
-}
-
-// This method should only be used by the blocking manager.
-- (void)discardGroupAvatarForBlockingManager
-{
-    _groupAvatarData = nil;
 }
 
 @end

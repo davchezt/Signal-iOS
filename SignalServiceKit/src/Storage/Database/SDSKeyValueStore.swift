@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -61,6 +61,29 @@ public class SDSKeyValueStore: NSObject {
         """
         let statement = try database.makeUpdateStatement(sql: sql)
         try statement.execute()
+    }
+
+    @objc
+    public class func logCollectionStatistics() {
+        Logger.info("SDSKeyValueStore statistics:")
+        databaseStorage.read { transaction in
+            do {
+                let sql = """
+                    SELECT \(collectionColumn.columnName), COUNT(*)
+                    FROM \(table.tableName)
+                    GROUP BY \(collectionColumn.columnName)
+                    ORDER BY COUNT(*) DESC
+                    """
+                let cursor = try Row.fetchCursor(transaction.unwrapGrdbRead.database, sql: sql)
+                while let row = try cursor.next() {
+                    let collection: String = row[0]
+                    let count: UInt = row[1]
+                    Logger.info("- \(collection): \(count) items")
+                }
+            } catch {
+                Logger.error("\(error)")
+            }
+        }
     }
 
     // MARK: Class Helpers
@@ -683,7 +706,7 @@ public class SDSKeyValueStore: NSObject {
             return
         }
         // TODO: We could use setArgumentsWithValidation for more safety.
-        statement.unsafeSetArguments(statementArguments)
+        statement.setUncheckedArguments(statementArguments)
 
         do {
             try statement.execute()

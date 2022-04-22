@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 #import <SignalServiceKit/ProfileManagerProtocol.h>
@@ -7,7 +7,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 extern const NSUInteger kOWSProfileManager_MaxAvatarDiameterPixels;
-extern const NSString *kNSNotificationKey_UserProfileWriter;
+extern NSString *const kNSNotificationKey_UserProfileWriter;
 
 @class MessageSender;
 @class OWSAES256Key;
@@ -56,6 +56,8 @@ typedef void (^ProfileManagerFailureBlock)(NSError *error);
 - (instancetype)initWithDatabaseStorage:(SDSDatabaseStorage *)databaseStorage NS_DESIGNATED_INITIALIZER;
 
 #pragma mark - Local Profile
+
+- (nullable OWSUserProfile *)getLocalUserProfileWithTransaction:(SDSAnyReadTransaction *)transaction;
 
 // These two methods should only be called from the main thread.
 - (OWSAES256Key *)localProfileKey;

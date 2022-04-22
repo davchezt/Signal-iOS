@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 #import "Contact.h"
@@ -80,34 +80,34 @@ NS_ASSUME_NONNULL_BEGIN
             [userTextPhoneNumbers addObject:phoneNumber.stringValue];
             if ([phoneNumberField.label isEqualToString:CNLabelHome]) {
                 userTextPhoneNumberNameMap[phoneNumber.stringValue]
-                    = NSLocalizedString(@"PHONE_NUMBER_TYPE_HOME", @"Label for 'Home' phone numbers.");
+                    = OWSLocalizedString(@"PHONE_NUMBER_TYPE_HOME", @"Label for 'Home' phone numbers.");
             } else if ([phoneNumberField.label isEqualToString:CNLabelWork]) {
                 userTextPhoneNumberNameMap[phoneNumber.stringValue]
-                    = NSLocalizedString(@"PHONE_NUMBER_TYPE_WORK", @"Label for 'Work' phone numbers.");
+                    = OWSLocalizedString(@"PHONE_NUMBER_TYPE_WORK", @"Label for 'Work' phone numbers.");
             } else if ([phoneNumberField.label isEqualToString:CNLabelPhoneNumberiPhone]) {
                 userTextPhoneNumberNameMap[phoneNumber.stringValue]
-                    = NSLocalizedString(@"PHONE_NUMBER_TYPE_IPHONE", @"Label for 'iPhone' phone numbers.");
+                    = OWSLocalizedString(@"PHONE_NUMBER_TYPE_IPHONE", @"Label for 'iPhone' phone numbers.");
             } else if ([phoneNumberField.label isEqualToString:CNLabelPhoneNumberMobile]) {
                 userTextPhoneNumberNameMap[phoneNumber.stringValue]
-                    = NSLocalizedString(@"PHONE_NUMBER_TYPE_MOBILE", @"Label for 'Mobile' phone numbers.");
+                    = OWSLocalizedString(@"PHONE_NUMBER_TYPE_MOBILE", @"Label for 'Mobile' phone numbers.");
             } else if ([phoneNumberField.label isEqualToString:CNLabelPhoneNumberMain]) {
                 userTextPhoneNumberNameMap[phoneNumber.stringValue]
-                    = NSLocalizedString(@"PHONE_NUMBER_TYPE_MAIN", @"Label for 'Main' phone numbers.");
+                    = OWSLocalizedString(@"PHONE_NUMBER_TYPE_MAIN", @"Label for 'Main' phone numbers.");
             } else if ([phoneNumberField.label isEqualToString:CNLabelPhoneNumberHomeFax]) {
                 userTextPhoneNumberNameMap[phoneNumber.stringValue]
-                    = NSLocalizedString(@"PHONE_NUMBER_TYPE_HOME_FAX", @"Label for 'HomeFAX' phone numbers.");
+                    = OWSLocalizedString(@"PHONE_NUMBER_TYPE_HOME_FAX", @"Label for 'HomeFAX' phone numbers.");
             } else if ([phoneNumberField.label isEqualToString:CNLabelPhoneNumberWorkFax]) {
                 userTextPhoneNumberNameMap[phoneNumber.stringValue]
-                    = NSLocalizedString(@"PHONE_NUMBER_TYPE_WORK_FAX", @"Label for 'Work FAX' phone numbers.");
+                    = OWSLocalizedString(@"PHONE_NUMBER_TYPE_WORK_FAX", @"Label for 'Work FAX' phone numbers.");
             } else if ([phoneNumberField.label isEqualToString:CNLabelPhoneNumberOtherFax]) {
                 userTextPhoneNumberNameMap[phoneNumber.stringValue]
-                    = NSLocalizedString(@"PHONE_NUMBER_TYPE_OTHER_FAX", @"Label for 'Other FAX' phone numbers.");
+                    = OWSLocalizedString(@"PHONE_NUMBER_TYPE_OTHER_FAX", @"Label for 'Other FAX' phone numbers.");
             } else if ([phoneNumberField.label isEqualToString:CNLabelPhoneNumberPager]) {
                 userTextPhoneNumberNameMap[phoneNumber.stringValue]
-                    = NSLocalizedString(@"PHONE_NUMBER_TYPE_PAGER", @"Label for 'Pager' phone numbers.");
+                    = OWSLocalizedString(@"PHONE_NUMBER_TYPE_PAGER", @"Label for 'Pager' phone numbers.");
             } else if ([phoneNumberField.label isEqualToString:CNLabelOther]) {
                 userTextPhoneNumberNameMap[phoneNumber.stringValue]
-                    = NSLocalizedString(@"PHONE_NUMBER_TYPE_OTHER", @"Label for 'Other' phone numbers.");
+                    = OWSLocalizedString(@"PHONE_NUMBER_TYPE_OTHER", @"Label for 'Other' phone numbers.");
             } else if (phoneNumberField.label.length > 0 && ![phoneNumberField.label hasPrefix:@"_$"]) {
                 // We'll reach this case for:
                 //
@@ -273,7 +273,7 @@ NS_ASSUME_NONNULL_BEGIN
 
     NSString *value = self.phoneNumberNameMap[address.phoneNumber];
     if (!value) {
-        return NSLocalizedString(@"PHONE_NUMBER_TYPE_UNKNOWN",
+        return OWSLocalizedString(@"PHONE_NUMBER_TYPE_UNKNOWN",
             @"Label used when we don't what kind of phone number it is (e.g. mobile/work/home).");
     }
     return value;
@@ -281,14 +281,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (nullable NSData *)avatarDataForCNContact:(nullable CNContact *)cnContact
 {
-    if (cnContact.thumbnailImageData) {
-        return cnContact.thumbnailImageData.copy;
-    } else if (cnContact.imageData) {
-        // This only occurs when sharing a contact via the share extension
-        return cnContact.imageData.copy;
-    } else {
-        return nil;
+    NSData *imageData = cnContact.thumbnailImageData;
+    if (!imageData) {
+        // This only occurs when sharing a contact via the share extension.
+        imageData = cnContact.imageData;
     }
+    return [imageData copy];
 }
 
 - (NSArray<NSString *> *)e164PhoneNumbers

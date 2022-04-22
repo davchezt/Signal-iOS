@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -143,9 +143,6 @@ public class CVComponentGenericAttachment: CVComponentBase, CVComponent {
                 break
             case .failed, .pendingMessageRequest, .pendingManualDownload:
                 textComponents.append(NSLocalizedString("ACTION_TAP_TO_DOWNLOAD", comment: "A label for 'tap to download' buttons."))
-            @unknown default:
-                owsFailDebug("Invalid value.")
-                break
             }
 
             if !textComponents.isEmpty {
@@ -213,7 +210,7 @@ public class CVComponentGenericAttachment: CVComponentBase, CVComponent {
 
         return CVAttachmentProgressView(direction: direction,
                                         style: .withoutCircle(diameter: progressSize),
-                                        conversationStyle: conversationStyle,
+                                        isDarkThemeEnabled: conversationStyle.isDarkThemeEnabled,
                                         mediaCache: mediaCache)
     }
 

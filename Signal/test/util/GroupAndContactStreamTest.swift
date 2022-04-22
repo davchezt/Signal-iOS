@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -285,7 +285,8 @@ class GroupAndContactStreamTest: SignalBaseTest {
                                        contactsManager: contactsManager,
                                        disappearingMessagesConfiguration: nil,
                                        isArchived: false,
-                                       inboxPosition: nil)
+                                       inboxPosition: nil,
+                                       isBlocked: false)
         }
 
         dataOutputStream.close()
@@ -347,6 +348,12 @@ class TestContactsManager: NSObject, ContactsManagerProtocol {
 
     func displayName(for signalAccount: SignalAccount) -> String {
         signalAccount.recipientAddress.stringForDisplay
+    }
+
+    func displayNames(forAddresses addresses: [SignalServiceAddress], transaction: SDSAnyReadTransaction) -> [String] {
+        return addresses.map {
+            $0.stringForDisplay
+        }
     }
 
     func displayName(for thread: TSThread, transaction: SDSAnyReadTransaction) -> String {
@@ -412,6 +419,10 @@ class TestContactsManager: NSObject, ContactsManagerProtocol {
 
     func avatarImage(forCNContactId contactId: String?) -> UIImage? {
         nil
+    }
+
+    func leaseCacheSize(_ size: Int) -> ModelReadCacheSizeLease? {
+        return nil
     }
 
     var unknownUserLabel: String = "unknown"

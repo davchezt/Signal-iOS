@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -49,7 +49,7 @@ public extension ConversationViewController {
 
         bottomViewType = { () -> CVCBottomViewType in
             // The ordering of this method determines
-            // precendence of the bottom views.
+            // precedence of the bottom views.
 
             if !hasViewWillAppearEverBegun {
                 return .none
@@ -178,8 +178,12 @@ public extension ConversationViewController {
                                                 messageDraft: messageDraft,
                                                 voiceMemoDraft: voiceMemoDraft)
 
+        let hadFocus = self.inputToolbar?.isInputViewFirstResponder() ?? false
         self.inputToolbar = newInputToolbar
 
+        if hadFocus {
+            self.inputToolbar?.beginEditingMessage()
+        }
         newInputToolbar.updateFontSizes()
 
         updateBottomBar()

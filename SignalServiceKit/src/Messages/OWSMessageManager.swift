@@ -1,8 +1,8 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
-import SignalClient
+import LibSignalClient
 
 /// An ObjC wrapper around UnidentifiedSenderMessageContent.ContentHint
 @objc
@@ -71,11 +71,29 @@ extension OWSMessageManager {
     }
 
     @objc
-    func isValidEnvelope(_ envelope: SSKProtoEnvelope?) -> Bool {
-        guard let envelope = envelope else {
-            owsFailDebug("Missing envelope")
-            return false
+    public func updateApplicationBadgeCount() {
+        let readUnreadCount: (SDSAnyReadTransaction) -> UInt = { transaction in
+            InteractionFinder.unreadCountInAllThreads(transaction: transaction.unwrapGrdbRead)
         }
+
+        let fetchBadgeCount = { () -> Promise<UInt> in
+            // The main app gets to perform this synchronously
+            if CurrentAppContext().isMainApp {
+                return .value(self.databaseStorage.read(block: readUnreadCount))
+            } else {
+                return self.databaseStorage.read(.promise, readUnreadCount)
+            }
+        }
+
+        fetchBadgeCount().done {
+            CurrentAppContext().setMainAppBadgeNumber(Int($0))
+        }.catch { error in
+            owsFailDebug("Failed to update badge number: \(error)")
+        }
+    }
+
+    @objc
+    func isValidEnvelope(_ envelope: SSKProtoEnvelope) -> Bool {
         guard envelope.timestamp >= 1 else {
             owsFailDebug("Invalid timestamp")
             return false
@@ -192,6 +210,8 @@ extension OWSMessageManager {
             if let ratchetKey = errorMessage.ratchetKey {
                 // If a ratchet key is included, this was a 1:1 session message
                 // Archive the session if the current key matches.
+                // PNI TODO: We should never get a DEM for our PNI, but we should check that anyway.
+                let sessionStore = signalProtocolStore(for: .aci).sessionStore
                 let sessionRecord = try sessionStore.loadSession(for: protocolAddress, context: writeTx)
                 if try sessionRecord?.currentRatchetKeyMatches(ratchetKey) == true {
                     Logger.info("Decryption error included ratchet key. Archiving...")

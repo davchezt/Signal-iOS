@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 #import "OWSMessageHandler.h"
@@ -92,6 +92,8 @@ NSString *envelopeAddress(SSKProtoEnvelope *envelope)
         [message appendFormat:@"<TypingMessage: %@ />", content.typingMessage];
     } else if (content.decryptionErrorMessage) {
         [message appendFormat:@"<DecryptionErrorMessage: %@ />", content.decryptionErrorMessage];
+    } else if (content.storyMessage) {
+        [message appendFormat:@"<StoryMessage: %@ />", content.storyMessage];
     }
 
     // SKDM's are not mutually exclusive with other content types
@@ -210,12 +212,16 @@ NSString *envelopeAddress(SSKProtoEnvelope *envelope)
             return @"ConfigurationRequest";
         } else if (syncMessage.request.unwrappedType == SSKProtoSyncMessageRequestTypeKeys) {
             return @"KeysRequest";
+        } else if (syncMessage.request.unwrappedType == SSKProtoSyncMessageRequestTypePniIdentity) {
+            return @"PniIdentityRequest";
         } else {
             OWSFailDebug(@"Unknown sync message request type");
             return @"UnknownRequest";
         }
     } else if (syncMessage.blocked) {
         return @"Blocked";
+    } else if (syncMessage.pniIdentity) {
+        return @"PniIdentity";
     } else if (syncMessage.read.count > 0) {
         return @"ReadReceipt";
     } else if (syncMessage.verified) {

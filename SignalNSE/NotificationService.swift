@@ -206,11 +206,9 @@ class NotificationService: UNNotificationServiceExtension {
                 runningAndCompletedPromises.append(("MessageProcessorCompletion", promise))
                 return promise
             }.then(on: .global()) { () -> Promise<Void> in
-                // Wait until all async side effects of
-                // message processing are complete.
+                Logger.info("Initial message processing complete.")
+                // Wait until all async side effects of message processing are complete.
                 let completionPromises: [(String, Promise<Void>)] = [
-                    // Wait until all notifications are posted.
-                    ("Pending notification post", NotificationPresenter.pendingNotificationsPromise()),
                     // Wait until all ACKs are complete.
                     ("Pending messageFetch ack", Self.messageFetcherJob.pendingAcksPromise()),
                     // Wait until all outgoing receipt sends are complete.
@@ -220,9 +218,18 @@ class NotificationService: UNNotificationServiceExtension {
                     // Wait until all sync requests are fulfilled.
                     ("Pending sync request", OWSMessageManager.pendingTasksPromise())
                 ]
-                let joinedPromise = Promise.when(resolved: completionPromises.map { $0.1 })
+                let joinedPromise = Promise.when(resolved: completionPromises.map { (name, promise) in
+                    promise.done(on: .global()) {
+                        Logger.info("\(name) complete")
+                    }
+                })
                 completionPromises.forEach { runningAndCompletedPromises.append($0) }
                 return joinedPromise.asVoid()
+            }.then(on: .global()) { () -> Promise<Void> in
+                // Finally, wait for any notifications to finish posting
+                let promise = NotificationPresenter.pendingNotificationsPromise()
+                runningAndCompletedPromises.append(("Pending notification post", promise))
+                return promise
             }
             processingCompletePromise.timeout(seconds: 20, ticksWhileSuspended: true, description: "Message Processing Timeout.") {
                 runningAndCompletedPromises.get().filter { $0.1.isSealed == false }.forEach {

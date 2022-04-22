@@ -1,9 +1,10 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
 import SignalMessaging
+import SignalUI
 
 @objc
 public protocol ConversationHeaderViewDelegate {
@@ -109,16 +110,17 @@ public class ConversationHeaderView: UIStackView {
     }
 
     required public init(coder: NSCoder) {
-        notImplemented()
+        fatalError("init(coder:) has not been implemented")
     }
 
     required public override init(frame: CGRect) {
-        notImplemented()
+        fatalError("init(frame:) has not been implemented")
     }
 
-    public func configure(thread: TSThread) {
+    public func configure(threadViewModel: ThreadViewModel) {
         avatarView.updateWithSneakyTransactionIfNecessary { config in
-            config.dataSource = .thread(thread)
+            config.dataSource = .thread(threadViewModel.threadRecord)
+            config.storyState = threadViewModel.storyState
             config.applyConfigurationSynchronously()
         }
     }

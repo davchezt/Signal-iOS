@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 #import "ShareAppExtensionContext.h"
@@ -180,11 +180,6 @@ NS_ASSUME_NONNULL_BEGIN
     return isRTL;
 }
 
-- (void)setStatusBarHidden:(BOOL)isHidden animated:(BOOL)isAnimated
-{
-    OWSLogInfo(@"Ignoring request to show/hide status bar since we're in an app extension");
-}
-
 - (CGFloat)statusBarHeight
 {
     return 20;
@@ -231,6 +226,10 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)openSystemSettings
 {
     return;
+}
+
+- (void)openURL:(NSURL *)url completion:(void (^__nullable)(BOOL))completion
+{
 }
 
 - (BOOL)isRunningTests

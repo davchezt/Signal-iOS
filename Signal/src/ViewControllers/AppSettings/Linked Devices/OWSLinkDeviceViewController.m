@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 #import "OWSLinkDeviceViewController.h"
@@ -8,9 +8,9 @@
 #import <SignalCoreKit/Cryptography.h>
 #import <SignalMessaging/OWSProfileManager.h>
 #import <SignalServiceKit/OWSDevice.h>
-#import <SignalServiceKit/OWSDeviceProvisioner.h>
 #import <SignalServiceKit/OWSIdentityManager.h>
 #import <SignalServiceKit/OWSReceiptManager.h>
+#import <SignalServiceKit/SignalServiceKit-Swift.h>
 #import <SignalServiceKit/TSAccountManager.h>
 
 NS_ASSUME_NONNULL_BEGIN
@@ -193,21 +193,22 @@ NS_ASSUME_NONNULL_BEGIN
     // Optimistically set this flag.
     [OWSDeviceManager.shared setMayHaveLinkedDevices];
 
-    ECKeyPair *_Nullable identityKeyPair = [[OWSIdentityManager shared] identityKeyPair];
-    OWSAssertDebug(identityKeyPair);
-    NSData *myPublicKey = identityKeyPair.publicKey;
-    NSData *myPrivateKey = identityKeyPair.privateKey;
+    ECKeyPair *_Nullable aciIdentityKeyPair = [[OWSIdentityManager shared] identityKeyPairForIdentity:OWSIdentityACI];
+    OWSAssertDebug(aciIdentityKeyPair);
+    ECKeyPair *_Nullable pniIdentityKeyPair = [[OWSIdentityManager shared] identityKeyPairForIdentity:OWSIdentityPNI];
     SignalServiceAddress *accountAddress = [TSAccountManager localAddress];
+    NSUUID *_Nullable pni = [TSAccountManager shared].localPni;
     NSData *myProfileKeyData = self.profileManager.localProfileKey.keyData;
     BOOL areReadReceiptsEnabled = self.receiptManager.areReadReceiptsEnabled;
 
-    OWSDeviceProvisioner *provisioner = [[OWSDeviceProvisioner alloc] initWithMyPublicKey:myPublicKey
-                                                                             myPrivateKey:myPrivateKey
-                                                                           theirPublicKey:parser.publicKey
-                                                                   theirEphemeralDeviceId:parser.ephemeralDeviceId
-                                                                           accountAddress:accountAddress
-                                                                               profileKey:myProfileKeyData
-                                                                      readReceiptsEnabled:areReadReceiptsEnabled];
+    OWSDeviceProvisioner *provisioner = [[OWSDeviceProvisioner alloc] initWithMyAciIdentityKeyPair:aciIdentityKeyPair
+                                                                              myPniIdentityKeyPair:pniIdentityKeyPair
+                                                                                    theirPublicKey:parser.publicKey
+                                                                            theirEphemeralDeviceId:parser.ephemeralDeviceId
+                                                                                    accountAddress:accountAddress
+                                                                                               pni:pni
+                                                                                        profileKey:myProfileKeyData
+                                                                               readReceiptsEnabled:areReadReceiptsEnabled];
 
     [provisioner
         provisionWithSuccess:^{

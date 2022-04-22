@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -23,13 +23,13 @@ public class SignalServiceProfile: NSObject {
     public let paymentAddressEncrypted: Data?
     public let unidentifiedAccessVerifier: Data?
     public let hasUnrestrictedUnidentifiedAccess: Bool
-    public let supportsGroupsV2: Bool
     public let supportsGroupsV2Migration: Bool
     public let supportsAnnouncementOnlyGroups: Bool
     public let supportsSenderKey: Bool
     public let supportsChangeNumber: Bool
     public let credential: Data?
     public let badges: [(OWSUserProfileBadgeInfo, ProfileBadge)]
+    public let isStoriesCapable: Bool
 
     public init(address: SignalServiceAddress?, responseObject: Any?) throws {
         guard let params = ParamParser(responseObject: responseObject) else {
@@ -75,9 +75,6 @@ public class SignalServiceProfile: NSObject {
 
         self.hasUnrestrictedUnidentifiedAccess = try params.optional(key: "unrestrictedUnidentifiedAccess") ?? false
 
-        self.supportsGroupsV2 = Self.parseCapabilityFlag(capabilityKey: "gv2",
-                                                         params: params,
-                                                         requireCapability: true)
         self.supportsGroupsV2Migration = Self.parseCapabilityFlag(capabilityKey: "gv1-migration",
                                                                   params: params,
                                                                   requireCapability: true)
@@ -92,6 +89,8 @@ public class SignalServiceProfile: NSObject {
                                                              requireCapability: true)
 
         self.credential = try params.optionalBase64EncodedData(key: "credential")
+
+        self.isStoriesCapable = Self.parseCapabilityFlag(capabilityKey: "stories", params: params, requireCapability: true)
 
         if RemoteConfig.donorBadgeDisplay,
            let badgeArray: [[String: Any]] = try params.optional(key: "badges") {

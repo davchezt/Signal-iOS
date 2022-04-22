@@ -1,10 +1,14 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 #import <SignalServiceKit/TSAccountManager.h>
 
 NS_ASSUME_NONNULL_BEGIN
+
+@class SDSAnyWriteTransaction;
+
+typedef NS_CLOSED_ENUM(uint8_t, OWSIdentity);
 
 @interface TSPreKeyManager : NSObject
 
@@ -12,27 +16,25 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (BOOL)isAppLockedDueToPreKeyUpdateFailures;
 
-+ (void)incrementPreKeyUpdateFailureCount;
-
-+ (void)clearPreKeyUpdateFailureCount;
-
-+ (void)clearSignedPreKeyRecords;
-
-+ (void)cullPreKeyRecords;
-
 // This should only be called from the TSPreKeyManager.operationQueue
 + (void)refreshPreKeysDidSucceed;
 
 #pragma mark - Check/Request Initiation
 
-+ (void)rotateSignedPreKeyWithSuccess:(void (^)(void))successHandler failure:(void (^)(NSError *error))failureHandler;
++ (void)rotateSignedPreKeysWithSuccess:(void (^)(void))successHandler failure:(void (^)(NSError *error))failureHandler;
 
 + (void)createPreKeysWithSuccess:(void (^)(void))successHandler failure:(void (^)(NSError *error))failureHandler;
+
++ (void)createPreKeysForIdentity:(OWSIdentity)identity
+                         success:(void (^)(void))successHandler
+                         failure:(void (^)(NSError *error))failureHandler;
 
 + (void)checkPreKeysIfNecessary;
 
 #if TESTABLE_BUILD
 + (void)checkPreKeysImmediately;
+
++ (void)storeFakePreKeyUploadFailuresForIdentity:(OWSIdentity)identity;
 #endif
 
 @end

@@ -1,6 +1,2 @@
-• Nowa funkcja pozwoli Ci wybierać jednocześnie kilka rozmów z listy i oznaczyć je jako przeczytane, przenieść do archiwum lub usunąć. Stuknij swoje zdjęcie profilowe w lewym górnym rogu, aby ją wypróbować.
-• Masz teraz szybszy dostęp do zarchiwizowanych rozmów. Stuknij swoje zdjęcie profilowe w lewym górnym rogu, aby łatwo do nich dotrzeć.
-• Tyle reakcji do wyboru, a tak mało czasu. Teraz możesz łatwo wyszukać swoją ulubioną reakcję.
-• Spersonalizuj domyślne reakcje, aby mieć pod ręką swoje ulubione emotikony.
-• Męczą Cię ciągłe powiadomienia? Po prostu przesuń w lewo rozmowę na liście rozmów, aby szybko ją wyciszyć lub cofnąć wyciszenie.
-• Naprawiliśmy błąd, który sprawiał, że część długiej wiadomości tekstowej w polu nowej wiadomości stawała się niewidzialna.
+• Zmniejszyliśmy rozmiar aplikacji Signal o 25%.
+• Więcej poprawek sprawiających, że rozmowy grupowe otwierają się błyskawicznie.

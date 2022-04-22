@@ -1,11 +1,10 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 #import "ThreadUtil.h"
 #import "OWSProfileManager.h"
 #import <SignalCoreKit/NSDate+OWS.h>
-#import <SignalCoreKit/SignalCoreKit-Swift.h>
 #import <SignalMessaging/SignalMessaging-Swift.h>
 #import <SignalServiceKit/MessageSender.h>
 #import <SignalServiceKit/OWSDisappearingMessagesConfiguration.h>
@@ -116,7 +115,7 @@ NS_ASSUME_NONNULL_BEGIN
 
         [self.messageSenderJobQueue addMessage:message.asPreparer transaction:transaction];
 
-        [thread donateSendMessageIntentWithTransaction:transaction];
+        [thread donateSendMessageIntentForOutgoingMessage:message transaction:transaction];
     }];
 }
 
@@ -184,6 +183,15 @@ NS_ASSUME_NONNULL_BEGIN
 + (BOOL)addThreadToProfileWhitelistIfEmptyOrPendingRequestAndSetDefaultTimer:(TSThread *)thread
                                                                  transaction:(SDSAnyWriteTransaction *)transaction
 {
+    return [self addThreadToProfileWhitelistIfEmptyOrPendingRequest:thread
+                                         setDefaultTimerIfNecessary:YES
+                                                        transaction:transaction];
+}
+
++ (BOOL)addThreadToProfileWhitelistIfEmptyOrPendingRequest:(TSThread *)thread
+                                setDefaultTimerIfNecessary:(BOOL)setDefaultTimerIfNecessary
+                                               transaction:(SDSAnyWriteTransaction *)transaction
+{
     OWSAssertDebug(thread);
 
     DisappearingMessageToken *defaultTimerToken =
@@ -193,7 +201,7 @@ NS_ASSUME_NONNULL_BEGIN
         [GRDBThreadFinder shouldSetDefaultDisappearingMessageTimerWithThread:thread
                                                                  transaction:transaction.unwrapGrdbRead];
 
-    if (needsDefaultTimerSet) {
+    if (needsDefaultTimerSet && setDefaultTimerIfNecessary) {
         OWSDisappearingMessagesConfiguration *configuration =
             [OWSDisappearingMessagesConfiguration applyToken:defaultTimerToken toThread:thread transaction:transaction];
 

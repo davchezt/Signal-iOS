@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -437,6 +437,7 @@ struct ConversationHeaderBuilder: Dependencies {
 
         avatarView.update(transaction) {
             $0.dataSource = .thread(delegate.thread)
+            $0.storyState = delegate.threadViewModel.storyState
         }
         avatarView.interactionDelegate = delegate
 
@@ -493,7 +494,7 @@ struct ConversationHeaderBuilder: Dependencies {
         let label = OWSLabel()
 
         // Defaults need to be set *before* assigning the attributed text,
-        // or the attributes will get overriden
+        // or the attributes will get overridden
         label.textColor = Theme.secondaryTextAndIconColor
         label.lineBreakMode = .byTruncatingTail
         label.font = .ows_dynamicTypeSubheadlineClamped
@@ -574,7 +575,7 @@ extension ConversationHeaderDelegate {
             return owsFailDebug("Tried to start an audio only group call")
         }
 
-        guard !blockingManager.isThreadBlocked(thread) else {
+        guard !threadViewModel.isBlocked else {
             didTapUnblockThread { [weak self] in
                 self?.startCall(withVideo: withVideo)
             }
@@ -606,7 +607,7 @@ extension ConversationHeaderDelegate {
             // We initiated a call, so if there was a pending message request we should accept it.
             ThreadUtil.addThreadToProfileWhitelistIfEmptyOrPendingRequestAndSetDefaultTimerWithSneakyTransaction(thread: thread)
 
-            outboundIndividualCallInitiator.initiateCall(address: contactThread.contactAddress, isVideo: withVideo)
+            outboundIndividualCallInitiator.initiateCall(thread: contactThread, isVideo: withVideo)
         }
     }
 }

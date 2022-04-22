@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -29,7 +29,7 @@ public class ViewOnceTooltip: TooltipView {
 
     public override func bubbleContentView() -> UIView {
         let label = UILabel()
-        label.text = NSLocalizedString("VIEW_ONCE_MESSAGES_TOOLTIP",
+        label.text = OWSLocalizedString("VIEW_ONCE_MESSAGES_TOOLTIP",
                                        comment: "Tooltip highlighting the view once messages button.")
         label.font = UIFont.ows_dynamicTypeSubheadline
         label.textColor = UIColor.ows_white

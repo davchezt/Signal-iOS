@@ -154,6 +154,9 @@
 /* Title for the 'app launch failed' alert. */
 "APP_LAUNCH_FAILURE_ALERT_TITLE" = "പിഴവ്";
 
+/* No comment provided by engineer. */
+"APP_LAUNCH_FAILURE_CHECK_DATABASE" = "Run Database Integrity Check";
+
 /* Error indicating that the app could not launch because the database could not be loaded. */
 "APP_LAUNCH_FAILURE_COULD_NOT_LOAD_DATABASE" = "ഡാറ്റാബേസ് ലോഡ് ചെയ്യാൻ കഴിയുന്നില്ല.";
 
@@ -374,22 +377,22 @@
 "BADGE_DETAILS_BECOME_A_SUSTAINER" = "പരിപാലകര്‍ ആകുക";
 
 /* Text prompting the user to boost */
-"BADGE_DETAILS_GIVE_A_BOOST" = "Give Signal a Boost";
+"BADGE_DETAILS_GIVE_A_BOOST" = "Signal ന് ഒരു ബൂസ്റ്റ് നല്‍കുക";
 
 /* String explaing to the user that their boost badge has expired on the badge expiry sheetsheet. */
-"BADGE_EXIPRED_BOOST_BODY_FORMAT" = "Your Boost badge has expired, and is no longer visible on your profile.\n\nYou can continue using Signal but to support technology that is built for you, please consider becoming a monthly Sustainer.";
+"BADGE_EXIPRED_BOOST_BODY_FORMAT" = "Your Boost badge has expired and is no longer visible on your profile.\n\nYou can keep using Signal but to support technology that is built for you, consider becoming a sustainer by making a monthly donation.";
 
 /* String explaing to the user that their boost badge has expired while they are a current subscription sustainer on the badge expiry sheetsheet. */
 "BADGE_EXIPRED_BOOST_CURRENT_SUSTAINER_BODY_FORMAT" = "Your Boost badge has expired, and is no longer visible on your profile.\n\nYou can reactivate your Boost badge for another 30 days with a one-time contribution.";
 
 /* String explaing to the user that their subscription badge has expired on the badge expiry sheetsheet. Embed {badge name}. */
-"BADGE_EXIPRED_SUBSCRIPTION_BODY_FORMAT" = "Your Sustainer subscription was automatically cancelled because you were inactive for too long. Your %@ badge is no longer visible on your profile.\n\nYou can keep using Signal but to support the app and reactivate your badge, renew now.";
+"BADGE_EXIPRED_SUBSCRIPTION_BODY_FORMAT" = "Your recurring monthly donation was automatically cancelled because you were inactive for too long. Your %@ badge is no longer visible on your profile.\n\nYou can keep using Signal but to support the app and reactivate your badge, renew now.";
 
 /* Button title for boost on the badge expiration sheet, used if the user is not already a sustainer. */
 "BADGE_EXPIRED_BOOST_RENEWAL_BUTTON" = "പരിപാലകര്‍ ആകുക";
 
 /* Button title for boost on the badge expiration sheet, used if the user is already a sustainer. */
-"BADGE_EXPIRED_BOOST_RENEWAL_BUTTON_SUSTAINER" = "Add a Boost";
+"BADGE_EXPIRED_BOOST_RENEWAL_BUTTON_SUSTAINER" = "ഒരു ബൂസ്റ്റ് ചേർക്കുക";
 
 /* Title for boost on the badge expiration sheet. */
 "BADGE_EXPIRED_BOOST_TITLE" = "ബാഡ്ജ് കാലഹരണപ്പെട്ടു";
@@ -398,7 +401,7 @@
 "BADGE_EXPIRED_SUBSCRIPTION_RENEWAL_BUTTON" = "സബ്സ്ക്രിപ്ഷൻ പുതുക്കുക";
 
 /* Title for subscription on the badge expiration sheet. */
-"BADGE_EXPIRED_SUBSCRIPTION_TITLE" = "സബ്‌സ്‌ക്രിപ്‌ഷൻ റദ്ദാക്കി";
+"BADGE_EXPIRED_SUBSCRIPTION_TITLE" = "Monthly Donation Cancelled";
 
 /* Title for boost on the thank you sheet. */
 "BADGE_THANKS_BOOST_TITLE" = "ബൂസ്റ്റിനു നന്ദി!";
@@ -407,16 +410,16 @@
 "BADGE_THANKS_DISPLAY_ON_PROFILE_LABEL" = "പ്രൊഫൈലിൽ പ്രദർശിപ്പിക്കുക";
 
 /* Label prompting the user to feature the new badge on their profile on the badge thank you sheet. */
-"BADGE_THANKS_MAKE_FEATURED" = "Make Featured Badge";
+"BADGE_THANKS_MAKE_FEATURED" = "ഫീച്ചേർഡ് ബാഡ്ജ് ഉണ്ടാക്കുക";
 
 /* Title for subscription on the thank you sheet. */
 "BADGE_THANKS_SUBSCRIPTION_TITLE" = "നിങ്ങളുടെ പിന്തുണയ്ക്ക് നന്ദി!";
 
 /* Footer explaining that only one badge can be featured at a time on the thank you sheet. */
-"BADGE_THANKS_TOGGLE_FOOTER" = "When you have more than one badge, you can choose one to feature for others to see on your profile.";
+"BADGE_THANKS_TOGGLE_FOOTER" = "നിങ്ങൾക്ക് ഒന്നിലധികം ബാഡ്‌ജുകൾ ഉള്ളപ്പോൾ, നിങ്ങളുടെ പ്രൊഫൈലിൽ മറ്റുള്ളവർക്ക് കാണുന്നതിന് ഫീച്ചർ ചെയ്യുന്നതിനായി നിങ്ങൾക്ക് ഒന്ന് തിരഞ്ഞെടുക്കാം.";
 
 /* String explaing to the user that they've earned a badge on the badge thank you sheet. Embed {badge name}. */
-"BADGE_THANKS_YOU_EARNED_FORMAT" = "You’ve earned the %@ badge! Help Signal build awareness by displaying this badge on your profile.";
+"BADGE_THANKS_YOU_EARNED_FORMAT" = "You’ve earned a %@ badge. Display this badge on your profile to build awareness for donating to Signal.";
 
 /* Accessibility label for banner close button */
 "BANNER_CLOSE_ACCESSIBILITY_LABEL" = "ബാനർ അടയ്‌ക്കുക";
@@ -497,7 +500,7 @@
 "BOOST_VIEW_AMOUNT_LABEL" = "Set currency";
 
 /* The body text for the donate to signal view */
-"BOOST_VIEW_BODY" = "Say “Thanks!” and earn the Boost badge for 30 days.";
+"BOOST_VIEW_BODY" = "Make a one-time donation and earn a Boost badge for 30 days.";
 
 /* The body text for the donate to signal view, embeds {{Expiration}} */
 "BOOST_VIEW_BODY_WITH_EXPIRATION_FORMAT" = "Your Boost badge will expire on %@.";
@@ -518,7 +521,7 @@
 "BOOST_VIEW_SELECT_AN_AMOUNT" = "സംഭാവന ചെയ്യാൻ ഒരു തുക തിരഞ്ഞെടുക്കുക";
 
 /* Title for the donate to signal view */
-"BOOST_VIEW_TITLE" = "Give Signal a Boost";
+"BOOST_VIEW_TITLE" = "Signal ന് ഒരു ബൂസ്റ്റ് നല്‍കുക";
 
 /* Label for the 'add' button. */
 "BUTTON_ADD" = "ചേർക്കുക";
@@ -586,8 +589,17 @@
 /* notification body */
 "CALL_AUDIO_INCOMING_NOTIFICATION_BODY" = "📞 ഇൻകമിംഗ് ഓഡിയോ കോൾ...";
 
-/* notification body */
+/* notification body for a missed call in the last 24 hours. Embeds {{time}}, e.g. '3:30 PM'. */
+"CALL_AUDIO_MISSED_24_HOURS_NOTIFICATION_BODY_FORMAT" = "📞 Missed audio call at %@";
+
+/* notification body for a call that was just missed */
 "CALL_AUDIO_MISSED_NOTIFICATION_BODY" = "📞 നഷ്‌ടമായ ഓഡിയോ കോൾ";
+
+/* notification body for a missed call from more than a week ago. Embeds {{short date}}, e.g. '6/28'. */
+"CALL_AUDIO_MISSED_PAST_NOTIFICATION_BODY_FORMAT" = "📞 Missed audio call on %@";
+
+/* notification body for a missed call from the last week. Embeds {{weekday}}, e.g. 'Monday'. */
+"CALL_AUDIO_MISSED_WEEK_NOTIFICATION_BODY_FORMAT" = "📞 Missed audio call on %@";
 
 /* Alert message when calling and permissions for microphone are missing */
 "CALL_AUDIO_PERMISSION_MESSAGE" = "നിങ്ങൾക്ക് Signal വഴി കോൾ ചെയ്യുന്നതിനും വോയിസ് മെസേജുകൾ റെക്കോഡ് ചെയ്യുന്നതിനും iOS സെറ്റിംഗ്സ് ആപ്പിൽ മൈക്രോഫോൺ അക്സസ്സ് പ്രാപ്തമാക്കാവുന്നതാണ്.";
@@ -619,8 +631,17 @@
 /* notification body */
 "CALL_VIDEO_INCOMING_NOTIFICATION_BODY" = "📹 ഇൻകമിംഗ് വീഡിയോ കോൾ...";
 
-/* notification body */
+/* notification body for a missed call in the last 24 hours. Embeds {{time}}, e.g. '3:30 PM'. */
+"CALL_VIDEO_MISSED_24_HOURS_NOTIFICATION_BODY_FORMAT" = "📹 Missed video call at %@";
+
+/* notification body for a call that was just missed */
 "CALL_VIDEO_MISSED_NOTIFICATION_BODY" = "നഷ്‌ടമായ വീഡിയോ കോൾ";
+
+/* notification body for a missed call from more than a week ago. Embeds {{short date}}, e.g. '6/28'. */
+"CALL_VIDEO_MISSED_PAST_NOTIFICATION_BODY_FORMAT" = "📹 Missed video call on %@";
+
+/* notification body for a missed call from the last week. Embeds {{weekday}}, e.g. 'Monday'. */
+"CALL_VIDEO_MISSED_WEEK_NOTIFICATION_BODY_FORMAT" = "📹 Missed video call on %@";
 
 /* label for accepting incoming video calls as audio  only */
 "CALL_VIEW_ACCEPT_INCOMING_CALL_AUDIO_ONLY_LABEL" = "വീഡിയോ ഇല്ലാതെ ഉത്തരം നൽകുക";
@@ -677,22 +698,22 @@
 "CENSORSHIP_CIRCUMVENTION_COUNTRY_VIEW_TITLE" = "രാ‍ജ്യം തിരഞ്ഞെടുക്കുക";
 
 /* Button label to allow user to change avatar */
-"CHANGE_AVATAR_BUTTON_LABEL" = "Edit Photo";
+"CHANGE_AVATAR_BUTTON_LABEL" = "ഫോട്ടോ എഡിറ്റ് ചെയ്യുക";
 
 /* Error indicating that the user's old and new phone numbers are identical. */
-"CHANGE_PHONE_NUMBER_IDENTICAL_PHONE_NUMBERS_ALERT_MESSAGE" = "Your new number should not be the same as your old one. Please enter a new phone number to change your number.";
+"CHANGE_PHONE_NUMBER_IDENTICAL_PHONE_NUMBERS_ALERT_MESSAGE" = "നിങ്ങളുടെ പുതിയ നമ്പർ പഴയതിന് സമാനമായിരിക്കരുത്. നിങ്ങളുടെ നമ്പർ മാറ്റാൻ ദയവായി ഒരു പുതിയ ഫോൺ നമ്പർ നൽകുക.";
 
 /* Error indicating that the user's old phone number was not entered correctly. */
 "CHANGE_PHONE_NUMBER_INCORRECT_OLD_PHONE_NUMBER_ALERT_MESSAGE" = "നിങ്ങൾ നൽകിയ ഫോൺ നമ്പർ നിങ്ങളുടെ അക്കൗണ്ടുമായി പൊരുത്തപ്പെടുന്നില്ല.";
 
 /* Error indicating that the user's new phone number is not valid. */
-"CHANGE_PHONE_NUMBER_INVALID_PHONE_NUMBER_ALERT_MESSAGE_NEW" = "Invalid new phone number. Please enter a valid phone number to change your number.";
+"CHANGE_PHONE_NUMBER_INVALID_PHONE_NUMBER_ALERT_MESSAGE_NEW" = "പുതിയ ഫോൺ നമ്പർ അസാധുവാണ്. നിങ്ങളുടെ നമ്പർ മാറ്റാൻ സാധുവായ ഒരു ഫോൺ നമ്പർ നൽകുക.";
 
 /* Error indicating that the user's old phone number is not valid. */
-"CHANGE_PHONE_NUMBER_INVALID_PHONE_NUMBER_ALERT_MESSAGE_OLD" = "Invalid old phone number. Please enter a valid phone number to change your number.";
+"CHANGE_PHONE_NUMBER_INVALID_PHONE_NUMBER_ALERT_MESSAGE_OLD" = "പഴയ ഫോൺ നമ്പർ അസാധുവാണ്. നിങ്ങളുടെ നമ്പർ മാറ്റാൻ സാധുവായ ഒരു ഫോൺ നമ്പർ നൽകുക.";
 
 /* Title of the 'change phone number PIN' view. */
-"CHANGE_PHONE_NUMBER_PIN_EXPLANATION" = "Enter the PIN for the new phone number. This is different from your SMS verification code.";
+"CHANGE_PHONE_NUMBER_PIN_EXPLANATION" = "പുതിയ ഫോൺ നമ്പറിനായി പിൻ നൽകുക. ഇത് നിങ്ങളുടെ SMS സ്ഥിരീകരണ കോഡിൽ നിന്ന് വ്യത്യസ്തമാണ്.";
 
 /* The incoming bubble text when setting a chat color. */
 "CHAT_COLOR_INCOMING_MESSAGE" = "ചാറ്റ് നിറത്തിന്റെ ഒരു പ്രിവ്യൂ ഇതാ";
@@ -735,6 +756,9 @@
 
 /* Tooltip highlighting the auto chat color option. */
 "CHAT_COLORS_AUTO_TOOLTIP" = "വാൾപേപ്പറിന്റെ നിറവുമായി സ്വയമേവ പൊരുത്തപ്പെടുന്നു";
+
+/* Title for the chat list's default mode. */
+"CHAT_LIST_TITLE_INBOX" = "ചാറ്റുകൾ";
 
 /* Title for the color & wallpaper settings view. */
 "COLOR_AND_WALLPAPER_SETTINGS_TITLE" = "ചാറ്റ് നിറം & വാള്‍പേപ്പര്‍";
@@ -998,16 +1022,16 @@
 "CONVERSATION_DELETE_CONFIRMATION_ALERT_MESSAGE" = "ഈ ചാറ്റ് ഈ ഉപകരണത്തിൽ നിന്ന് നീക്കംചെയ്യും.";
 
 /* Message for the 'conversations delete confirmation' alert for multiple messages. */
-"CONVERSATION_DELETE_CONFIRMATION_ALERT_MESSAGES" = "These chats will be deleted from this device.";
+"CONVERSATION_DELETE_CONFIRMATION_ALERT_MESSAGES" = "ഈ ചാറ്റുകൾ ഈ ഉപകരണത്തിൽ നിന്ന് ഇല്ലാതാക്കപ്പെടും.";
 
 /* Title for the 'conversation delete confirmation' alert. */
 "CONVERSATION_DELETE_CONFIRMATION_ALERT_TITLE" = "ചാറ്റ് ഇല്ലാതാക്കണോ?";
 
 /* Title for the 'conversations delete confirmation' alert for multiple messages. Embeds: {{ %@ the number of currently selected items }}. */
-"CONVERSATION_DELETE_CONFIRMATIONS_ALERT_TITLE" = "Delete %@ Chats?";
+"CONVERSATION_DELETE_CONFIRMATIONS_ALERT_TITLE" = "%@ ചാറ്റുകൾ ഇല്ലാതാക്കണോ?";
 
 /* Title for the 'conversation mute confirmation' alert. */
-"CONVERSATION_MUTE_CONFIRMATION_ALERT_TITLE" = "Mute this chat for...";
+"CONVERSATION_MUTE_CONFIRMATION_ALERT_TITLE" = "ചാറ്റ് മ്യൂട്ടുചെയ്യുക...";
 
 /* 1 day */
 "CONVERSATION_MUTE_CONFIRMATION_OPTION_1D" = "1 ദിവസം";
@@ -1079,7 +1103,7 @@
 "CONVERSATION_SETTINGS_AUDIO_CALL_BUTTON" = "ഓഡിയോ";
 
 /* Footer string for a contact's badges in conversation settings */
-"CONVERSATION_SETTINGS_BADGES_FOOTER" = "Get badges for your profile by supporting Signal. Tap a badge to learn more.";
+"CONVERSATION_SETTINGS_BADGES_FOOTER" = "Signal-നെ പിന്തുണച്ച് നിങ്ങളുടെ പ്രൊഫൈലിനായി ബാഡ്ജുകൾ നേടുക. കൂടുതലറിയാൻ ഒരു ബാഡ്ജിൽ തൊടുക.";
 
 /* Header title for a contact's badges in conversation settings */
 "CONVERSATION_SETTINGS_BADGES_HEADER" = "ബാഡ്ജുകള്‍";
@@ -1151,7 +1175,7 @@
 "CONVERSATION_SETTINGS_MESSAGE_BUTTON" = "സന്ദേശം";
 
 /* Title for the mute action sheet */
-"CONVERSATION_SETTINGS_MUTE_ACTION_SHEET_TITLE" = "ഇതിനായി ഈ ചാറ്റ് മ്യൂട്ടുചെയ്യുക ...";
+"CONVERSATION_SETTINGS_MUTE_ACTION_SHEET_TITLE" = "ചാറ്റ് മ്യൂട്ടുചെയ്യുക...";
 
 /* Label for button to mute a thread forever. */
 "CONVERSATION_SETTINGS_MUTE_ALWAYS_ACTION" = "എല്ലായ്പ്പോഴും";
@@ -1306,6 +1330,21 @@
 /* Tooltip highlighting the custom chat color controls. */
 "CUSTOM_CHAT_COLOR_SETTINGS_TOOLTIP" = "ഗ്രേഡിയന്റിന്റെ ദിശ മാറ്റാൻ വലിച്ചിടുക";
 
+/* Button to run the database integrity check */
+"DATABASE_INTEGRITY_CHECK_ACTION_RUN" = "Run";
+
+/* Message for alert before running a database integrity check */
+"DATABASE_INTEGRITY_CHECK_MESSAGE" = "This may take a while (several minutes or more) depending on how much you have used Signal. It is safe to close Signal if it is taking too long.";
+
+/* Button to save database integrity check results to the debug log */
+"DATABASE_INTEGRITY_CHECK_RESULTS_ACTION_LOG" = "Add to Debug Log";
+
+/* Title for alert after running a database integrity check */
+"DATABASE_INTEGRITY_CHECK_RESULTS_TITLE" = "Integrity check results";
+
+/* Title for alert before running a database integrity check */
+"DATABASE_INTEGRITY_CHECK_TITLE" = "Run database integrity check?";
+
 /* Subtitle shown while the app is updating its database. */
 "DATABASE_VIEW_OVERLAY_SUBTITLE" = "ഇത് കുറച്ച് മിനിറ്റുകൾ എടുക്കും.";
 
@@ -1330,9 +1369,6 @@
 /* The day before today. */
 "DATE_YESTERDAY" = "ഇന്നലെ";
 
-/* Error indicating that the debug logs could not be copied. */
-"DEBUG_LOG_ALERT_COULD_NOT_COPY_LOGS" = "ലോഗുകൾ കോപ്പി ചെയ്യാനായില്ല.";
-
 /* Error indicating that the debug logs could not be packaged. */
 "DEBUG_LOG_ALERT_COULD_NOT_PACKAGE_LOGS" = "ലോഗുകൾ പാക്കേജ് ചെയ്യാനായില്ല.";
 
@@ -1353,6 +1389,9 @@
 
 /* Label for the 'email debug log' option of the debug log alert. */
 "DEBUG_LOG_ALERT_OPTION_EMAIL" = "ഇമെയിൽ സപ്പോർട്ട്";
+
+/* Label for the 'Export Logs' fallback option for the alert when debug log uploading fails. */
+"DEBUG_LOG_ALERT_OPTION_EXPORT_LOG_ARCHIVE" = "Export Logs";
 
 /* Label for the 'send to self' option of the debug log alert. */
 "DEBUG_LOG_ALERT_OPTION_SEND_TO_SELF" = "സ്വന്തമായി അയയ്ക്കുക";
@@ -1480,7 +1519,7 @@
 /* A warning for the device transfer 'choice' view indicating you can only have one device registered with your number */
 "DEVICE_TRANSFER_CHOICE_WARNING" = "തുടർന്നാൽ, ഇതേ ഫോൺ നമ്പർ നിലവിൽ രജിസ്റ്റർ ചെയ്തിരിക്കുന്ന മറ്റ് ഡിവൈസുകളിൽ  Signal നെ  സജീവമല്ലാതാക്കും.";
 
-/* An error indicating that we were unable to verify the indentity of the new device to complete the transfer */
+/* An error indicating that we were unable to verify the identity of the new device to complete the transfer */
 "DEVICE_TRANSFER_ERROR_CERTIFICATE_MISMATCH" = "നിങ്ങളുടെ പുതിയ ഡിവൈസ് പരിശോധിക്കാൻ കഴിയുന്നില്ല, ദയവായി വീണ്ടും ശ്രമിക്കുക";
 
 /* An error indicating that something went wrong with the transfer and it could not complete */
@@ -1585,38 +1624,41 @@
 /* Section title for the 'domain fronting country' view. */
 "DOMAIN_FRONTING_COUNTRY_VIEW_SECTION_HEADER" = "സെൻസർഷിപ്പ് സർക്കംവെൻഷൻ ലൊക്കേഷൻ";
 
-/* Donation amount label for the donate to signal view */
-"DONATION_VIEW_AMOUNT_LABEL" = "സംഭാവന തുക";
+/* Section title for donation amount on receipts */
+"DONATION_RECEIPT_AMOUNT" = "തുക";
 
-/* Default text for the custom amount field of the donation view. */
-"DONATION_VIEW_CUSTOM_AMOUNT_PLACEHOLDER" = "ഇഷ്ടാനുസൃത തുക നൽകുക";
+/* Section title for donation date on receipts */
+"DONATION_RECEIPT_DATE_PAID" = "Date paid";
+
+/* Title on the view where you can see a single receipt */
+"DONATION_RECEIPT_DETAILS" = "വിശദാംശങ്ങൾ";
+
+/* Text on the button that exports the receipt */
+"DONATION_RECEIPT_EXPORT_RECEIPT_BUTTON" = "Share Receipt";
+
+/* Footer text at the bottom of donation receipts */
+"DONATION_RECEIPT_FOOTER" = "Thank you for supporting Signal. Your contribution helps fuel the mission of developing open source privacy technology that protects free expression and enables secure global communication for millions around the world. If you’re a resident of the United States, please retain this receipt for your tax records. Signal Technology Foundation is a tax-exempt nonprofit organization in the United States under section 501c3 of the Internal Revenue Code. Our Federal Tax ID is 82-4506840.";
+
+/* Title for one-time donation receipts */
+"DONATION_RECEIPT_ONE_TIME" = "One-time";
+
+/* Title for recurring donation receipts */
+"DONATION_RECEIPT_RECURRING" = "Recurring";
+
+/* Title on donation receipts */
+"DONATION_RECEIPT_TITLE" = "Donation receipt";
+
+/* Section title for donation type on receipts */
+"DONATION_RECEIPT_TYPE" = "Type";
+
+/* Title of view where you can see all of your donation receipts, or button to take you there */
+"DONATION_RECEIPTS" = "Donation Receipts";
+
+/* Text at the bottom of the donation receipts list, telling users that receipts might not be available */
+"DONATION_RECEIPTS_MIGHT_BE_MISSING_IF_YOU_REINSTALLED" = "If you have reinstalled Signal, receipts from previous donations will not be available.";
 
 /* Text describing to the user that they're going to pay a donation to Signal */
 "DONATION_VIEW_DONATION_TO_SIGNAL" = "Signal-ലേക്കുള്ള സംഭാവന";
-
-/* Text explaining there are other ways to donate on the donation view. */
-"DONATION_VIEW_OTHER_WAYS" = "സംഭാവന ചെയ്യാനുള്ള മറ്റ് വഴികൾ";
-
-/* Error text notifying the user they must select a large amount on the donate to signal view */
-"DONATION_VIEW_SELECT_A_LARGER_AMOUNT" = "സംഭാവന ചെയ്യാൻ ഒരു വലിയ തുക തിരഞ്ഞെടുക്കുക";
-
-/* Error text notifying the user they must select a smaller amount on the donate to signal view */
-"DONATION_VIEW_SELECT_A_SMALLER_AMOUNT" = "സംഭാവന നൽകാൻ ഒരു ചെറിയ തുക തിരഞ്ഞെടുക്കുക";
-
-/* Error text notifying the user they must select an amount on the donate to signal view */
-"DONATION_VIEW_SELECT_AN_AMOUNT" = "സംഭാവന ചെയ്യാൻ ഒരു തുക തിരഞ്ഞെടുക്കുക";
-
-/* Thank you message on the donate to signal view */
-"DONATION_VIEW_THANKS_FOR_YOUR_SUPPORT" = "നിങ്ങളുടെ പിന്തുണയ്ക്ക് നന്ദി!";
-
-/* Title for the donate to signal view */
-"DONATION_VIEW_TITLE" = "നിങ്ങളെപ്പോലുള്ളവരാണ് Signal പ്രവർത്തിപ്പിക്കുന്നത്.";
-
-/* The body of the 'Why Donate' section of the donate to signal view */
-"DONATION_VIEW_WHY_DONATE_BODY" = "ആഗോള ആശയവിനിമയം പ്രാപ്തമാക്കുകയും ചെയ്യുന്ന ഓപ്പൺ സോഴ്സ് സ്വകാര്യതാ സാങ്കേതികവിദ്യ വികസിപ്പിക്കുന്നതിനുള്ള ദൗത്യത്തിന് Signal-ലെ ടീം പ്രതിജ്ഞാബദ്ധമാണ്. നിങ്ങളുടെ സംഭാവന ഈ കാരണം ഇന്ധനമാക്കുന്നു. പരസ്യങ്ങളൊന്നുമില്ല. ട്രാക്കറുകൾ ഇല്ല. തമാശ ഇല്ല.\n\nസ്വകാര്യവും തൽക്ഷണവുമായ ആശയവിനിമയത്തിനായി ലോകമെമ്പാടുമുള്ള ദശലക്ഷക്കണക്കിന് ആളുകൾ ഉപയോഗിക്കുന്ന ഒരു ആപ്പിന്റെ വികസനം, സെർവറുകൾ, ബാൻഡ് വിഡ്ത്ത് എന്നിവയ്ക്ക് പണം നൽകാൻ നിങ്ങളുടെ സംഭാവന സഹായിക്കുന്നു.";
-
-/* The title of the 'Why Donate' section of the donate to signal view */
-"DONATION_VIEW_WHY_DONATE_TITLE" = "എന്തിനാണ് സംഭാവന നൽകുന്നത്?";
 
 /* Alert body for when the user has just tried to edit a contacts after declining to give Signal contacts permissions */
 "EDIT_CONTACT_WITHOUT_CONTACTS_PERMISSION_ALERT_BODY" = "iOS സെറ്റിംഗ്സ് ആപ്പിൽ നിങ്ങൾക്ക് അക്സസ് പ്രാപ്തമാക്കാവുന്നതാണ്.";
@@ -1841,10 +1883,10 @@
 "FAILED_VERIFICATION_TITLE" = "സുരക്ഷാ നമ്പർ പരിശോധിക്കുന്നതിൽ പരാജയപ്പെട്ടു!";
 
 /* Section header directing user to select a badge */
-"FEATURED_BADGE_SECTION_HEADER" = "Select a Badge";
+"FEATURED_BADGE_SECTION_HEADER" = "ഒരു ബാഡ്ജ് തിരഞ്ഞെടുക്കുക";
 
 /* The title for the featured badge settings page */
-"FEATURED_BADGE_SETTINGS_TITLE" = "Featured Badge";
+"FEATURED_BADGE_SETTINGS_TITLE" = "ഫീച്ചേർഡ് ബാഡ്ജ്";
 
 /* Button that marks user as verified after a successful fingerprint scan. */
 "FINGERPRINT_SCAN_VERIFY_BUTTON" = "പരിശോധിച്ചതായി അടയാളപ്പെടുത്തുക";
@@ -1862,7 +1904,7 @@
 "FORWARD_MESSAGE" = "സന്ദേശം ഫോർവേഡ് ചെയ്യുക";
 
 /* Message for alert with information about forwarding messages. */
-"FORWARD_MESSAGE_FIRST_FORWARD_MESSAGE" = "Forwarded messages are now sent immediately.";
+"FORWARD_MESSAGE_FIRST_FORWARD_MESSAGE" = "കൈമാറിയ സന്ദേശങ്ങള്‍ ഇപ്പോൾ ഉടനടി അയയ്‌ക്കുന്നു.";
 
 /* Label for button to proceed with forwarding a single message. */
 "FORWARD_MESSAGE_FIRST_FORWARD_PROCEED_1" = "സന്ദേശം അയയ്ക്കുക";
@@ -1874,7 +1916,7 @@
 "FORWARD_MESSAGE_FIRST_FORWARD_TITLE" = "Faster Forwards";
 
 /* Indicates that a single message was forwarded. */
-"FORWARD_MESSAGE_MESSAGES_SENT_1" = "Message sent";
+"FORWARD_MESSAGE_MESSAGES_SENT_1" = "സന്ദേശം അയച്ചു";
 
 /* Indicates that multiple messages were forwarded. */
 "FORWARD_MESSAGE_MESSAGES_SENT_N" = "സന്ദേശങ്ങള്‍ അയച്ചു";
@@ -1984,10 +2026,10 @@
 /* Title for alert explaining that a group call participant is blocked. Embeds {{ user's name }} */
 "GROUP_CALL_BLOCKED_ALERT_TITLE_FORMAT" = "%@- - നെ തടഞ്ഞിരിക്കുന്നു";
 
-/* Message for eror alert indicating that only group administrators can start calls in announcement-only groups. */
+/* Message for error alert indicating that only group administrators can start calls in announcement-only groups. */
 "GROUP_CALL_BLOCKED_BY_ANNOUNCEMENT_ONLY_MESSAGE" = "ഈ ഗ്രൂപ്പിന്റെ അഡ്മിൻമാർക്ക് മാത്രമേ ഒരു കോൾ ആരംഭിക്കാൻ കഴിയൂ.";
 
-/* Title for eror alert indicating that only group administrators can start calls in announcement-only groups. */
+/* Title for error alert indicating that only group administrators can start calls in announcement-only groups. */
 "GROUP_CALL_BLOCKED_BY_ANNOUNCEMENT_ONLY_TITLE" = "ഗ്രൂപ്പ് കോൾ ആരംഭിക്കാനാകില്ല";
 
 /* String displayed in group call grid cell when a user is blocked. Embeds {user's name} */
@@ -2260,6 +2302,9 @@
 /* Message indicating that 'announcement-only' mode was enabled by a remote user. Embeds {{ user who enabled 'announcement-only' mode }}. */
 "GROUP_IS_ANNOUNCEMENT_ONLY_ENABLED_BY_REMOTE_USER_FORMAT" = "അഡ്മിൻമാർക്ക് സന്ദേശങ്ങള്‍ അയയ്ക്കാൻ മാത്രം അനുവദിക്കുന്നതിന് %@ ഗ്രൂപ്പ് ക്രമീകരണങ്ങൾ മാറ്റി.";
 
+/* Subtitle indicating that the local user has been blocked from joining the group */
+"GROUP_LINK_ACTION_SHEET_VIEW_BLOCKED_FROM_JOINING_SUBTITLE" = "ഒരു അഡ്മിൻ നിങ്ങളെ നീക്കം ചെയ്തതിനാൽ ഗ്രൂപ്പ് ലിങ്ക് വഴി നിങ്ങൾക്ക് ഈ ഗ്രൂപ്പിൽ ചേരാൻ കഴിയില്ല.";
+
 /* Subtitle indicating that the group invite link has expired in the 'group invite link' action sheet. */
 "GROUP_LINK_ACTION_SHEET_VIEW_EXPIRED_LINK_SUBTITLE" = "ഈ ഗ്രൂപ്പ് ലിങ്ക് സജീവമല്ല.";
 
@@ -2404,7 +2449,7 @@
 /* Message indicating that the local user was removed from the group by an unknown user. */
 "GROUP_LOCAL_USER_REMOVED_BY_UNKNOWN_USER" = "നിങ്ങളെ ഗ്രൂപ്പിൽ നിന്ന് നീക്കം ചെയ്തിരിക്കുന്നു.";
 
-/* Message indicating that the local user's request to join the group was approved by another user. Embeds {{ %@ the name of the user who approved the reuqest }}. */
+/* Message indicating that the local user's request to join the group was approved by another user. Embeds {{ %@ the name of the user who approved the request }}. */
 "GROUP_LOCAL_USER_REQUEST_APPROVED_BY_REMOTE_USER_FORMAT" = "ഗ്രൂപ്പിൽ ചേരാനുള്ള നിങ്ങളുടെ അഭ്യർത്ഥന %@ അംഗീകരിച്ചു.";
 
 /* Message indicating that the local user cancelled their request to join the group. */
@@ -2598,6 +2643,9 @@
 
 /* The title for the 'group requests and invites' view. */
 "GROUP_REQUESTS_AND_INVITES_VIEW_TITLE" = "അഭ്യർത്ഥനകളും ക്ഷണങ്ങളും";
+
+/* Name for a group story on the stories list. Embeds {author's name}, {group name} */
+"GROUP_STORY_NAME_FORMAT" = "%1$@ to %2$@";
 
 /* Info message indicating that the group was updated by an unknown user. */
 "GROUP_UPDATED" = "ഗ്രൂപ്പ് അപ്‌ഡേറ്റുചെയ്‌തു.";
@@ -2941,13 +2989,10 @@
 /* Title for the conversation list's 'archive' mode. */
 "HOME_VIEW_TITLE_ARCHIVE" = "ആർക്കൈവ്";
 
-/* Title for the conversation list's default mode. */
-"HOME_VIEW_TITLE_INBOX" = "Signal";
+/* Title for the 'Select Chats' option in the ChatList. */
+"HOME_VIEW_TITLE_SELECT_CHATS" = "ചാറ്റുകൾ തിരഞ്ഞെടുക്കുക";
 
-/* Title for the 'Select Chats' option in the HomeView. */
-"HOME_VIEW_TITLE_SELECT_CHATS" = "Select Chats";
-
-/* Title 'Read All' button in the toolbar of the homeview if multi-section is active. */
+/* Title 'Read All' button in the toolbar of the ChatList if multi-section is active. */
 "HOME_VIEW_TOOLBAR_READ_ALL" = "Read All";
 
 /* The image editor hint that you can draw blur */
@@ -3281,13 +3326,13 @@
 "MESSAGE_ACTION_TITLE_STICKER_PACK" = "സ്റ്റിക്കർ പാക്ക്";
 
 /* Label for the toolbar used in the multi-select mode of conversation view when 0 items are selected. */
-"MESSAGE_ACTIONS_TOOLBAR_LABEL_0" = "0 Selected";
+"MESSAGE_ACTIONS_TOOLBAR_LABEL_0" = "0 തിരഞ്ഞെടുത്തു";
 
 /* Label for the toolbar used in the multi-select mode of conversation view when 1 item is selected. */
-"MESSAGE_ACTIONS_TOOLBAR_LABEL_1" = "1 Selected";
+"MESSAGE_ACTIONS_TOOLBAR_LABEL_1" = "1 തിരഞ്ഞെടുത്തു";
 
 /* Format for the toolbar used in the multi-select mode of conversation view. Embeds: {{ %@ the number of currently selected items }}. */
-"MESSAGE_ACTIONS_TOOLBAR_LABEL_N_FORMAT" = "%@ Selected";
+"MESSAGE_ACTIONS_TOOLBAR_LABEL_N_FORMAT" = "%@ എണ്ണം തിരഞ്ഞെടുത്തു";
 
 /* Title for the 'message approval' dialog. */
 "MESSAGE_APPROVAL_DIALOG_TITLE" = "സന്ദേശം";
@@ -4280,10 +4325,10 @@
 "PIN_ACTION" = "പിൻചെയ്യു";
 
 /* Error body indicating that the attempt to change a PIN failed. */
-"PIN_CHANGE_ERROR_MESSAGE" = "Couldn't create your new PIN. Your existing PIN has been disabled. Check your connection and try again.";
+"PIN_CHANGE_ERROR_MESSAGE" = "നിങ്ങളുടെ പുതിയ പിൻ സൃഷ്‌ടിക്കാനായില്ല. നിങ്ങളുടെ നിലവിലുള്ള പിൻ പ്രവർത്തനരഹിതമാക്കിയിരിക്കുന്നു. നിങ്ങളുടെ കണക്ഷൻ പരിശോധിച്ച് വീണ്ടും ശ്രമിക്കുക.";
 
 /* Error title indicating that the attempt to change a PIN failed. */
-"PIN_CHANGE_ERROR_TITLE" = "PIN Change Failed";
+"PIN_CHANGE_ERROR_TITLE" = "പിൻ മാറ്റം പരാജയപ്പെട്ടു";
 
 /* Label indicating the user must use at least 4 characters */
 "PIN_CREATION_ALPHANUMERIC_HINT" = "PIN ൽ കുറഞ്ഞത് 4 അക്കങ്ങൾ/അക്ഷരങ്ങൾ ഉണ്ടായിരിക്കണം";
@@ -4328,10 +4373,10 @@
 "PIN_CREATION_MISMATCH_ERROR" = "PIN കൾ പൊരുത്തപ്പെടുന്നില്ല. വീണ്ടും പരിശ്രമിക്കുക.";
 
 /* Error body indicating that the attempt to create a PIN failed due to network issues. */
-"PIN_CREATION_NO_NETWORK_ERROR_MESSAGE" = "Check your connection and try again.";
+"PIN_CREATION_NO_NETWORK_ERROR_MESSAGE" = "നിങ്ങളുടെ കണക്ഷൻ പരിശോധിച്ച് വീണ്ടും ശ്രമിക്കുക.";
 
 /* Error title indicating that the attempt to create a PIN failed due to network issues. */
-"PIN_CREATION_NO_NETWORK_ERROR_TITLE" = "No Network Connection";
+"PIN_CREATION_NO_NETWORK_ERROR_TITLE" = "നെറ്റ്‌വർക്ക് കണക്ഷനില്ല";
 
 /* Label indicating the user must use at least 4 digits */
 "PIN_CREATION_NUMERIC_HINT" = "PIN ൽ കുറഞ്ഞത് 4 അക്കങ്ങൾ ഉണ്ടായിരിക്കണം";
@@ -4344,9 +4389,6 @@
 
 /* The re-creation explanation in the 'pin creation' view. */
 "PIN_CREATION_RECREATION_EXPLANATION" = "ഈ ഡിവൈസ് രജിസ്റ്റർ ചെയ്തിരിക്കുന്ന കാലത്തോളം നിങ്ങൾക്ക് നിങ്ങളുടെ PIN മാറ്റാവുന്നതാണ്.";
-
-/* Title of the 'pin creation' recreation view. */
-"PIN_CREATION_RECREATION_TITLE" = "നിങ്ങളുടെ പിൻ മാറ്റുക";
 
 /* Action of the 'pin disable' reglock action sheet. */
 "PIN_CREATION_REGLOCK_CONFIRMATION_ACTION" = "ഓഫ് ആക്കുക";
@@ -4596,6 +4638,15 @@
 
 /* Toast alert text shown when tapping on a quoted message which we cannot scroll to because the local copy of the message didn't exist when the quote was received. */
 "QUOTED_REPLY_ORIGINAL_MESSAGE_REMOTELY_SOURCED" = "യഥാർത്ഥ സന്ദേശം കണ്ടെത്തിയില്ല";
+
+/* Header label that appears above quoted messages when the quoted content was includes a reaction to your own story. */
+"QUOTED_REPLY_REACTION_TO_OWN_STORY" = "Reacted to your story";
+
+/* Header label that appears above quoted messages when the quoted content was includes a reaction to a story. Embeds {{ story author name }} */
+"QUOTED_REPLY_REACTION_TO_STORY_FORMAT" = "Reacted to %@’s story";
+
+/* Message header when you are quoting a story. Embeds {{ story author name }} */
+"QUOTED_REPLY_STORY_AUTHOR_INDICATOR_FORMAT" = "%@ · Story";
 
 /* Indicates this message is a quoted reply to an attachment of unknown type. */
 "QUOTED_REPLY_TYPE_ATTACHMENT" = "അറ്റാച്ച്‌മെന്റ്";
@@ -5110,9 +5161,6 @@
 /* alert action when the user decides not to cancel the media flow after all. */
 "SEND_MEDIA_RETURN_TO_CAMERA" = "ക്യാമറയിലേക്ക് തിരികെ പോകുക";
 
-/* alert action when the user decides not to cancel the media flow after all. */
-"SEND_MEDIA_RETURN_TO_MEDIA_LIBRARY" = "മീഡിയാ ലൈബ്രറിയിലേക്ക് തിരികെ പോകുക";
-
 /* No comment provided by engineer. */
 "SEND_SMS_CONFIRM_TITLE" = "സുരക്ഷിതമല്ലാത്ത SMS ലൂടെ ഒരു സുഹൃത്തിനെ ക്ഷണിക്കണോ?";
 
@@ -5353,9 +5401,6 @@
 /* Settings table view cell label */
 "SETTINGS_INVITE_TITLE" = "നിങ്ങളുടെ സുഹൃത്തുക്കളെ ക്ഷണിക്കുക";
 
-/* content of tweet when inviting via twitter - please do not translate URL */
-"SETTINGS_INVITE_TWITTER_TEXT" = "നിങ്ങൾക്ക് ഞാനുമായി ബന്ധപ്പെടാം @signalapp. ഇപ്പോൾ തന്നെ അത് നേടൂ: https://signal.org/download/";
-
 /* Label for settings view that allows user to change the chat color and wallpaper. */
 "SETTINGS_ITEM_COLOR_AND_WALLPAPER" = "ചാറ്റ് നിറം & വാള്‍പേപ്പര്‍";
 
@@ -5421,6 +5466,9 @@
 
 /* The title for the notification settings. */
 "SETTINGS_NOTIFICATIONS" = "അറിയിപ്പുകൾ";
+
+/* Title for the 'one-time donation' link in settings. */
+"SETTINGS_ONE_TIME_DONATION" = "One-time Donation";
 
 /* Label for the 'agree to payments terms' button in the 'activate payments confirmation' UI in the payment settings. */
 "SETTINGS_PAYMENTS_ACTIVATE_PAYMENTS_CONFIRM_AGREE" = "സജീവമാക്കുക";
@@ -5935,11 +5983,8 @@
 /* Footer for setting for enabling & disabling contact and notification sharing with iOS. */
 "SETTINGS_SHARING_SUGGESTIONS_NOTIFICATIONS_FOOTER" = "Allow iOS access to Signal contacts and chats for features such as sharing suggestions and notifications.";
 
-/* Title for the 'signal boost' link in settings. */
-"SETTINGS_SIGNAL_BOOST" = "Signal ബൂസ്റ്റ്";
-
-/* Title for the 'become a sustainer' link in settings. */
-"SETTINGS_SUBSCRIPTION" = "Signal പരിപാലകര്‍ ആകുക";
+/* Title for the 'monthly donation' link in settings. */
+"SETTINGS_SUBSCRIPTION" = "Monthly Donation";
 
 /* Label for the 'enable registration lock' switch of the privacy settings. */
 "SETTINGS_TWO_FACTOR_AUTH_SWITCH_LABEL" = "രജിസ്ട്രേഷൻ ലോക്ക്";
@@ -5973,9 +6018,6 @@
 
 /* action sheet item to open native messages app */
 "SHARE_ACTION_MESSAGE" = "സന്ദേശം";
-
-/* action sheet item */
-"SHARE_ACTION_TWEET" = "ട്വിറ്റർ";
 
 /* alert body when sharing file failed because of untrusted/changed identity keys */
 "SHARE_EXTENSION_FAILED_SENDING_BECAUSE_UNTRUSTED_IDENTITY_FORMAT" = "%@ നൊപ്പമുള്ള നിങ്ങളുടെ സുരക്ഷാ നമ്പർ അടുത്തിടെ മാറിയിരിക്കുന്നു.  വീണ്ടും അയയ്ക്കുന്നതിന് മുൻപ് പ്രധാന ആപ്പിൽ നിങ്ങൾ അത് വിലയിരുത്താൻ താത്പര്യപ്പെടുന്നു.";
@@ -6091,6 +6133,60 @@
 /* Label for the 'uninstall sticker pack' button. */
 "STICKERS_UNINSTALL_BUTTON" = "അൺഇൻസ്റ്റാൾ ചെയ്യുക";
 
+/* Text indication a story caption can be tapped to read more. */
+"STORIES_CAPTION_READ_MORE" = "കൂടുതൽ വായിക്കുക";
+
+/* Context menu action to copy the selected story reply */
+"STORIES_COPY_REPLY_ACTION" = "പകർത്തൂ";
+
+/* Context menu action to delete the selected story reply */
+"STORIES_DELETE_REPLY_ACTION" = "ഇല്ലാതാക്കൂ";
+
+/* Context menu action to forward the selected story */
+"STORIES_FORWARD_STORY_ACTION" = "ഫോർവേഡ് ചെയ്യുക";
+
+/* Context menu action to open the chat associated with the selected story */
+"STORIES_GO_TO_CHAT_ACTION" = "Go to Chat";
+
+/* Context menu action to hide the selected story */
+"STORIES_HIDE_STORY_ACTION" = "Hide Story";
+
+/* Indicates that there are no recent stories to render */
+"STORIES_NO_RECENT_MESSAGES" = "No recent updates to show right now.";
+
+/* Indicates that this story has no replies yet */
+"STORIES_NO_REPLIES_YET" = "No replies yet";
+
+/* Context menu action to share the selected story */
+"STORIES_SHARE_STORY_ACTION" = "പങ്കിടുക";
+
+/* Title for the stories view. */
+"STORIES_TITLE" = "Stories";
+
+/* Tooltip prompting the user to visit a story link. */
+"STORY_LINK_PREVIEW_VISIT_LINK_TOOLTIP" = "ലിങ്ക് സന്ദർശിക്കുക";
+
+/* Text indicating a story that was replied to is no longer available. */
+"STORY_NO_LONGER_AVAILABLE" = "No longer available";
+
+/* Button for replying to a story with a single existing reply. */
+"STORY_REPLY_BUTTON_WITH_1_REPLY" = "<bold>1</bold> reply";
+
+/* Button for replying to a story with N existing replies. {embeds the number of replies} */
+"STORY_REPLY_BUTTON_WITH_N_REPLIES_FORMAT" = "<bold>%@</bold> replies";
+
+/* Button for replying to a story with no existing replies. */
+"STORY_REPLY_BUTTON_WITH_NO_REPLIES" = "മറുപടി";
+
+/* Text indicating a story has been reacted to */
+"STORY_REPLY_REACTION" = "Reacted to the story";
+
+/* placeholder text for replying to a story */
+"STORY_REPLY_TEXT_FIELD_PLACEHOLDER" = "മറുപടി";
+
+/* Author text when the local user author's a story reply */
+"STORY_REPLY_YOU_AUTHOR" = "നിങ്ങൾ";
+
 /* Title for the 'Badges' button in sustainer view. */
 "SUBSCRIBER_BADGES" = "ബാഡ്ജുകള്‍";
 
@@ -6098,16 +6194,16 @@
 "SUBSCRIBER_MANAGE_SUBSCRIPTION" = "Manage Subscription";
 
 /* Title for the 'Subscription FAQ' button in sustainer view. */
-"SUBSCRIBER_SUBSCRIPTION_FAQ" = "Subscription FAQ";
+"SUBSCRIBER_SUBSCRIPTION_FAQ" = "സബ്സ്ക്രിപ്ഷൻ FAQ";
 
 /* Action text for subscription megaphone */
-"SUBSCRIPTION_MEGAPHONE_ACTION" = "സംഭാവന ചെയ്യുക";
+"SUBSCRIPTION_MEGAPHONE_ACTION" = "സംഭാവനചെയ്യുക";
 
 /* Body for subscription megaphone */
-"SUBSCRIPTION_MEGAPHONE_BODY" = "Signal is powered by people like you. Contribute and receive a badge.";
+"SUBSCRIPTION_MEGAPHONE_BODY" = "Signal is powered by people like you. Donate and receive a badge.";
 
 /* Cancel text for subscription megaphone */
-"SUBSCRIPTION_MEGAPHONE_CANCEL" = "വേണ്ട, നന്ദി";
+"SUBSCRIPTION_MEGAPHONE_CANCEL" = "ഇപ്പോൾ വേണ്ട";
 
 /* Title for subscription megaphone */
 "SUBSCRIPTION_MEGAPHONE_TITLE" = "പരിപാലകര്‍ ആകുക";
@@ -6170,22 +6266,22 @@
 "SUPPORT_LOG_UPLOAD_IN_PROGRESS" = "ലോഡിംഗ്";
 
 /* First block of description text in read more sheet */
-"SUSTAINER_READ_MORE_DESCRIPTION_BLOCK_ONE" = "Signal is a nonprofit with no advertisers or investors, sustained only by the people who use and value it. Make a recurring monthly contribution and receive a profile badge to share your support.";
+"SUSTAINER_READ_MORE_DESCRIPTION_BLOCK_ONE" = "Signal is a nonprofit with no advertisers or investors, sustained only by the people who use and value it. Make a recurring monthly donation and receive a profile badge to share your support.";
 
 /* Second block of description text in read more sheet */
-"SUSTAINER_READ_MORE_DESCRIPTION_BLOCK_TWO" = "Signal is committed to developing open source privacy technology that protects free expression and enables secure global communication.\n\nYour contribution fuels this cause and pays for the development and operations of an app used by millions for private communication. No ads. No trackers. No kidding.";
+"SUSTAINER_READ_MORE_DESCRIPTION_BLOCK_TWO" = "Signal is committed to developing open source privacy technology that protects free expression and enables secure global communication.\n\nYour donation fuels this cause and pays for the development and operations of an app used by millions for private communication. No ads. No trackers. No kidding.";
 
 /* Title for the signal sustainer read more view */
-"SUSTAINER_READ_MORE_TITLE" = "Support technology that is built for you - not for your data - by joining the community that sustains it.";
+"SUSTAINER_READ_MORE_TITLE" = "Support technology that is built for you—not for your data—by joining the community that sustains it.";
 
 /* Why Contribute title for the signal sustainer read more view */
-"SUSTAINER_READ_MORE_WHY_CONTRIBUTE" = "എന്തുകൊണ്ട് സംഭാവന ചെയ്യണം?";
+"SUSTAINER_READ_MORE_WHY_CONTRIBUTE" = "എന്തിനാണ് സംഭാവന നൽകുന്നത്?";
 
 /* Action sheet title for Still Processing Badge sheet */
 "SUSTAINER_STILL_PROCESSING_BADGE_TITLE" = "Still Processing";
 
 /* Sustainer view Add Boost button title */
-"SUSTAINER_VIEW_ADD_BOOST" = "Add a Signal Boost";
+"SUSTAINER_VIEW_ADD_BOOST" = "ഒരു Signal ബൂസ്റ്റ് ചേർക്കുക";
 
 /* Description text for sustainer view badges, embeds {{localized badge name}} */
 "SUSTAINER_VIEW_BADGE_DESCRIPTION" = "Get a %@ badge";
@@ -6212,7 +6308,7 @@
 "SUSTAINER_VIEW_CANT_ADD_BADGE_TITLE" = "Couldn't Add Badge";
 
 /* Contact support link */
-"SUSTAINER_VIEW_CONTACT_SUPPORT" = "Please contact support.";
+"SUSTAINER_VIEW_CONTACT_SUPPORT" = "ദയവായി പിന്തുണയുമായി ബന്ധപ്പെടുക.";
 
 /* Set currency label in sustainer view */
 "SUSTAINER_VIEW_CURRENCY" = "Set currency";
@@ -6223,7 +6319,7 @@
 /* Existing subscriber support header */
 "SUSTAINER_VIEW_MY_SUPPORT" = "My Support";
 
-/* Payment error occured text, embeds {{link to contact support}} */
+/* Payment error occurred text, embeds {{link to contact support}} */
 "SUSTAINER_VIEW_PAYMENT_ERROR" = "Error processing payment. %@";
 
 /* Pricing text for sustainer view badges, embeds {{price}} */
@@ -6236,13 +6332,13 @@
 "SUSTAINER_VIEW_PRICING_RENEWAL" = " · Renews %@";
 
 /* Loading indicator on the sustainer view */
-"SUSTAINER_VIEW_PROCESSING_PAYMENT" = "Processing payment...";
+"SUSTAINER_VIEW_PROCESSING_PAYMENT" = "പേയ്‌മെന്റ് പ്രോസസ്സ് ചെയ്യുന്നു...";
 
 /* Status text while processing a badge redemption */
 "SUSTAINER_VIEW_PROCESSING_TRANSACTION" = "Processing Transaction...";
 
 /* Read More tappable text in sustainer view body */
-"SUSTAINER_VIEW_READ_MORE" = "കൂടുതൽ വായിക്കുക.";
+"SUSTAINER_VIEW_READ_MORE" = "Read more.";
 
 /* Renewal date text for sustainer view level, embeds {{renewal date}} */
 "SUSTAINER_VIEW_RENEWAL" = "Renews %@";
@@ -6269,7 +6365,7 @@
 "SUSTAINER_VIEW_UPDATE_SUBSCRIPTION_CONFIRMATION_UPDATE" = "അപ്‌ഡേറ്റ്";
 
 /* The body text for the signal sustainer view */
-"SUSTAINER_VIEW_WHY_DONATE_BODY" = "Support technology that is built for you - not for your data - by joining the community of people that sustain it.";
+"SUSTAINER_VIEW_WHY_DONATE_BODY" = "Make a recurring monthly donation to Signal to support technology built for you, not your data.";
 
 /* Label for 'off' state of a switch control. */
 "SWITCH_OFF" = "ഓഫ്";
@@ -6465,12 +6561,6 @@
 
 /* Error indicating that a group could not be updated due to network connectivity problems. */
 "UPDATE_GROUP_FAILED_DUE_TO_NETWORK" = "ഗ്രൂപ്പ് അപ്‌ഡേറ്റുചെയ്യാനായില്ല. നിങ്ങളുടെ ഇന്റർനെറ്റ് കണക്ഷൻ പരിശോധിച്ച് വീണ്ടും ശ്രമിക്കുക.";
-
-/* Message for the alert indicating that user should upgrade iOS. */
-"UPGRADE_IOS_ALERT_MESSAGE" = "Signal ന് ഉടനെ തന്നെ iOS 11 അല്ലെങ്കിൽ അതിന് ശേഷമുള്ളത് ആവശ്യമുണ്ട്.   Settings app >> General >> Software Update ൽ പോയി അപ്‌ഗ്രേഡ് ചെയ്യുക.";
-
-/* Title for the alert indicating that user should upgrade iOS. */
-"UPGRADE_IOS_ALERT_TITLE" = "iOS അപ്‌ഗ്രേഡ് ചെയ്യുക";
 
 /* An explanation of how usernames work on the username view. */
 "USERNAME_DESCRIPTION" = "Signal ൽ യൂസർ പേര് ഓപ്ഷണൽ ആണ്.  നിങ്ങൾ ഒരു യൂസർ പേര് സൃഷ്ടിക്കുകയാണെങ്കിൽ, മറ്റ് Signal യൂസർമാർക്ക് നിങ്ങളുടെ ഈ യൂസർ പേര് വച്ച് നിങ്ങളെ കണ്ടുപിടിക്കാനും നിങ്ങളുടെ ഫോൺ നമ്പർ അറിയാതെ തന്നെ നിങ്ങളെ ബന്ധപ്പെടാനും സാധിക്കും.";

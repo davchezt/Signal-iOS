@@ -3,6 +3,7 @@
 //
 
 import Foundation
+import SignalServiceKit
 
 public enum ConversationUIMode: UInt {
     case normal
@@ -33,6 +34,7 @@ public class ConversationViewController: OWSViewController {
     var selectionToolbar: MessageActionsToolbar?
 
     var otherUsersProfileDidChangeEvent: DebouncedEvent?
+    private var leases = [ModelReadCacheSizeLease]()
 
     // MARK: -
 
@@ -58,6 +60,7 @@ public class ConversationViewController: OWSViewController {
 
         self.viewState.delegate = self
         self.viewState.selectionState.delegate = self
+        self.hidesBottomBarWhenPushed = true
 
         #if TESTABLE_BUILD
         self.initialLoadBenchSteps.step("Init CVC")
@@ -161,8 +164,6 @@ public class ConversationViewController: OWSViewController {
         self.collectionView.autoPinEdge(toSuperviewSafeArea: .leading)
         self.collectionView.autoPinEdge(toSuperviewSafeArea: .trailing)
 
-        // TODO: Do we still need to do this?
-        self.collectionView.applyInsetsFix()
         self.collectionView.accessibilityIdentifier = "collectionView"
 
         self.registerReuseIdentifiers()
@@ -205,7 +206,7 @@ public class ConversationViewController: OWSViewController {
         // If we become the first responder, it means that the
         // input toolbar is not the first responder. As such,
         // we should clear out the desired keyboard since an
-        // interactive dismissal may have just occured and we
+        // interactive dismissal may have just occurred and we
         // need to update the UI to reflect that fact. We don't
         // actually ever want to be the first responder, so resign
         // immediately. We just want to know when the responder
@@ -250,9 +251,11 @@ public class ConversationViewController: OWSViewController {
 
         Logger.verbose("viewWillAppear")
 
-        self.ensureBannerState()
-
         super.viewWillAppear(animated)
+
+        if let groupThread = thread as? TSGroupThread {
+            acquireCacheLeases(groupThread)
+        }
 
         if self.inputToolbar == nil {
             // This will create the input toolbar for the first time.
@@ -262,13 +265,15 @@ public class ConversationViewController: OWSViewController {
             owsAssertDebug(self.inputToolbar != nil)
 
             self.createGestureRecognizers()
+        } else {
+            self.ensureBannerState()
         }
 
         self.isViewVisible = true
         self.viewWillAppearForLoad()
 
         // We should have already requested contact access at this point, so this should be a no-op
-        // unless it ever becomes possible to load this VC without going via the HomeViewController.
+        // unless it ever becomes possible to load this VC without going via the ChatListViewController.
         self.contactsManagerImpl.requestSystemContactsOnce()
 
         self.updateBarButtonItems()
@@ -289,8 +294,22 @@ public class ConversationViewController: OWSViewController {
         #endif
     }
 
+    private func acquireCacheLeases(_ groupThread: TSGroupThread) {
+        guard leases.isEmpty else {
+            // Hold leases for the CVC's lifetime because a view controller may "viewDidAppear" more than once without
+            // leaving the navigation controller's stack.
+            return
+        }
+        let numberOfGroupMembers = groupThread.groupModel.groupMembers.count
+        leases = [groupThread.profileManager.leaseCacheSize(numberOfGroupMembers),
+                  groupThread.contactsManager.leaseCacheSize(numberOfGroupMembers),
+                  groupThread.modelReadCaches.signalAccountReadCache.leaseCacheSize(numberOfGroupMembers)].compactMap { $0 }
+    }
+
     public override func viewDidAppear(_ animated: Bool) {
         self.viewDidAppearDidBegin()
+
+        InstrumentsMonitor.trackEvent(name: "ConversationViewController.viewDidAppear")
 
         #if TESTABLE_BUILD
         initialLoadBenchSteps.step("viewDidAppear.1")
@@ -388,11 +407,7 @@ public class ConversationViewController: OWSViewController {
 
         self.isViewCompletelyAppeared = false
 
-        if FeatureFlags.contextMenus {
-            dismissMessageContextMenu(animated: false)
-        } else {
-            dismissMessageActions(animated: false)
-        }
+        dismissMessageContextMenu(animated: false)
 
         self.dismissReactionsDetailSheet(animated: false)
         self.saveLastVisibleSortIdAndOnScreenPercentage(async: true)
@@ -402,6 +417,8 @@ public class ConversationViewController: OWSViewController {
         Logger.verbose("")
 
         super.viewDidDisappear(animated)
+
+        InstrumentsMonitor.trackEvent(name: "ConversationViewController.viewDidDisappear")
 
         self.userHasScrolled = false
         self.isViewVisible = false
@@ -438,7 +455,7 @@ public class ConversationViewController: OWSViewController {
         // However it's possible this draft-text is set before the inputToolbar (an inputAccessoryView) is mounted
         // in the view hierarchy. Since it's not in the view hierarchy, it hasn't been laid out and has no width,
         // which is used to determine height.
-        // So here we unsure the proper height once we know everything's been layed out.
+        // So here we unsure the proper height once we know everything's been laid out.
         self.inputToolbar?.ensureTextViewHeight()
 
         self.positionGroupCallTooltip()
@@ -498,11 +515,8 @@ public class ConversationViewController: OWSViewController {
 
         // Re-styling the message actions is tricky,
         // since this happens rarely just dismiss
-        if FeatureFlags.contextMenus {
-            dismissMessageContextMenu(animated: false)
-        } else {
-            dismissMessageActions(animated: false)
-        }
+        dismissMessageContextMenu(animated: false)
+
         dismissReactionsDetailSheet(animated: false)
     }
 
@@ -548,11 +562,7 @@ public class ConversationViewController: OWSViewController {
 
         super.viewWillTransition(to: size, with: coordinator)
 
-        if FeatureFlags.contextMenus {
-            dismissMessageContextMenu(animated: false)
-        } else {
-            dismissMessageActions(animated: false)
-        }
+        dismissMessageContextMenu(animated: false)
 
         dismissReactionsDetailSheet(animated: false)
 

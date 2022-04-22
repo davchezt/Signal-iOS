@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -79,7 +79,7 @@ class ConversationInputTextView: MentionTextView {
         var rightInset: CGFloat = leftInset
 
         // If the placeholder view is visible, we need to offset
-        // the input container to accomodate for the sticker button.
+        // the input container to accommodate for the sticker button.
         if !placeholderView.isHidden {
             if CurrentAppContext().isRTL {
                 leftInset += stickerButtonOffset

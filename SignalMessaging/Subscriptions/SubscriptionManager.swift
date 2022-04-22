@@ -4,7 +4,7 @@
 
 import Foundation
 import PassKit
-import SignalClient
+import LibSignalClient
 import SignalServiceKit
 
 public enum SubscriptionBadgeIds: String, CaseIterable {
@@ -365,7 +365,7 @@ public class SubscriptionManager: NSObject {
         if failureReason != .none {
             Logger.info("[Subscriptions] Upgrading subscription with a prior known error state, cancelling and re-setting up")
             return firstly {
-                try self.cancelSubscription(for: subscriberID)
+                self.cancelSubscription(for: subscriberID)
             }.then(on: .sharedUserInitiated) {
                 try self.setupNewSubscription(subscription: subscription, payment: payment, currencyCode: currencyCode)
             }
@@ -413,8 +413,7 @@ public class SubscriptionManager: NSObject {
 
     }
 
-    public class func cancelSubscription(for subscriberID: Data) throws -> Promise<Void> {
-
+    public class func cancelSubscription(for subscriberID: Data) -> Promise<Void> {
         let request = OWSRequestFactory.deleteSubscriptionIDRequest(subscriberID.asBase64Url)
         return firstly {
             networkManager.makePromise(request: request)
@@ -494,7 +493,7 @@ public class SubscriptionManager: NSObject {
             return self.getCurrentSubscriptionStatus(for: subscriberID)
         }.done(on: .global()) { subscription in
             guard let subscription = subscription else {
-                throw OWSAssertionError("Failed to fetch valid subscription object afer setSubscription")
+                throw OWSAssertionError("Failed to fetch valid subscription object after setSubscription")
             }
 
             databaseStorage.write { transaction in
@@ -522,14 +521,13 @@ public class SubscriptionManager: NSObject {
 
         databaseStorage.asyncWrite { transaction in
 
-            self.subscriptionJobQueue.add(isBoost: false,
-                                          receiptCredentialRequestContext: request.context.serialize().asData,
-                                          receiptCredentailRequest: request.request.serialize().asData,
-                                          subscriberID: subscriberID,
-                                          targetSubscriptionLevel: subscriptionLevel,
-                                          priorSubscriptionLevel: priorSubscriptionLevel,
-                                          boostPaymentIntentID: String(),
-                                          transaction: transaction)
+            self.subscriptionJobQueue.addSubscriptionJob(receiptCredentialRequestContext: request.context.serialize().asData,
+                                                         receiptCredentailRequest: request.request.serialize().asData,
+                                                         subscriberID: subscriberID,
+                                                         targetSubscriptionLevel: subscriptionLevel,
+                                                         priorSubscriptionLevel: priorSubscriptionLevel,
+                                                         boostPaymentIntentID: String(),
+                                                         transaction: transaction)
         }
     }
 
@@ -958,7 +956,9 @@ public class OWSRetryableSubscriptionError: NSObject, CustomNSError, IsRetryable
 }
 
 extension SubscriptionManager {
-    public class func createAndRedeemBoostReceipt(for intentId: String) throws {
+    public class func createAndRedeemBoostReceipt(for intentId: String,
+                                                  amount: Decimal,
+                                                  currencyCode: Currency.Code) throws {
         let request = try generateRecieptRequest()
 
         // Remove prior operations if one exists (allow prior job to complete)
@@ -969,15 +969,12 @@ extension SubscriptionManager {
         }
 
         databaseStorage.asyncWrite { transaction in
-
-            self.subscriptionJobQueue.add(isBoost: true,
-                                          receiptCredentialRequestContext: request.context.serialize().asData,
-                                          receiptCredentailRequest: request.request.serialize().asData,
-                                          subscriberID: Data(),
-                                          targetSubscriptionLevel: 0,
-                                          priorSubscriptionLevel: 0,
-                                          boostPaymentIntentID: intentId,
-                                          transaction: transaction)
+            self.subscriptionJobQueue.addBoostJob(amount: amount,
+                                                  currencyCode: currencyCode,
+                                                  receiptCredentialRequestContext: request.context.serialize().asData,
+                                                  receiptCredentailRequest: request.request.serialize().asData,
+                                                  boostPaymentIntentID: intentId,
+                                                  transaction: transaction)
         }
     }
 
@@ -1233,6 +1230,18 @@ extension SubscriptionManager: SubscriptionManagerProtocol {
         }
 
         return lastSubscriptionExpiryDate.isAfterNow
+    }
+
+    public func timeSinceLastSubscriptionExpiration(transaction: SDSAnyReadTransaction) -> TimeInterval {
+        guard let lastSubscriptionExpiryDate = Self.lastSubscriptionExpirationDate(transaction: transaction) else {
+            return -Date.distantPast.timeIntervalSinceNow
+        }
+
+        guard lastSubscriptionExpiryDate.isBeforeNow else {
+            return 0
+        }
+
+        return -lastSubscriptionExpiryDate.timeIntervalSinceNow
     }
 
     public func userManuallyCancelledSubscription(transaction: SDSAnyReadTransaction) -> Bool {

@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -379,10 +379,17 @@ extension BaseGroupMemberViewController: RecipientPickerDelegate {
             owsFailDebug("Missing groupMemberViewDelegate.")
             return
         }
-        guard (Self.databaseStorage.read { transaction in
-            !groupMemberViewDelegate.groupMemberViewIsPreExistingMember(recipient,
-                                                                       transaction: transaction)
-        }) else {
+
+        let (isPreExistingMember, isBlocked) = databaseStorage.read { readTx -> (Bool, Bool) in
+            let isPreexisting = groupMemberViewDelegate.groupMemberViewIsPreExistingMember(
+                recipient,
+                transaction: readTx)
+            let isBlocked = blockingManager.isAddressBlocked(address, transaction: readTx)
+
+            return (isPreexisting, isBlocked)
+        }
+
+        guard !isPreExistingMember else {
             owsFailDebug("Can't re-add pre-existing member.")
             return
         }
@@ -392,8 +399,6 @@ extension BaseGroupMemberViewController: RecipientPickerDelegate {
         }
 
         let isCurrentMember = recipientSet.contains(recipient)
-        let isBlocked = self.contactsViewHelper.isSignalServiceAddressBlocked(address)
-
         let addRecipientCompletion = { [weak self] in
             guard let self = self else {
                 return
@@ -527,7 +532,7 @@ extension BaseGroupMemberViewController: RecipientPickerDelegate {
         }
 
         let isCurrentMember = recipientSet.contains(recipient)
-        let isBlocked = self.contactsViewHelper.isSignalServiceAddressBlocked(address)
+        let isBlocked = blockingManager.isAddressBlocked(address, transaction: transaction)
 
         if isCurrentMember {
             return nil
@@ -555,7 +560,7 @@ extension BaseGroupMemberViewController: RecipientPickerDelegate {
         }
 
         let isCurrentMember = recipientSet.contains(recipient)
-        let isBlocked = self.contactsViewHelper.isSignalServiceAddressBlocked(address)
+        let isBlocked = blockingManager.isAddressBlocked(address, transaction: transaction)
         let isPreExistingMember = groupMemberViewDelegate.groupMemberViewIsPreExistingMember(recipient,
                                                                                              transaction: transaction)
 
@@ -585,16 +590,6 @@ extension BaseGroupMemberViewController: RecipientPickerDelegate {
         if address.uuid == nil {
             // This is internal-only; we don't need to localize.
             items.append("No UUID")
-        }
-        let hasProfileKey = nil != Self.profileManager.profileKeyData(for: address,
-                                                                      transaction: transaction)
-        // Only show the "missing gv2 capability" warning if we have the
-        // user's profile key.
-        if !GroupManager.doesUserHaveGroupsV2Capability(address: address,
-                                                        transaction: transaction),
-           hasProfileKey {
-            // This is internal-only; we don't need to localize.
-            items.append("No capability")
         }
 
         func defaultSubtitle() -> NSAttributedString? {

@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 #import "TSGroupThread.h"
@@ -131,7 +131,7 @@ lastVisibleSortIdOnScreenPercentageObsolete:lastVisibleSortIdOnScreenPercentageO
 
 + (NSString *)defaultGroupName
 {
-    return NSLocalizedString(@"NEW_GROUP_DEFAULT_TITLE", @"");
+    return OWSLocalizedString(@"NEW_GROUP_DEFAULT_TITLE", @"");
 }
 
 - (void)updateWithGroupModel:(TSGroupModel *)newGroupModel transaction:(SDSAnyWriteTransaction *)transaction
@@ -148,8 +148,8 @@ lastVisibleSortIdOnScreenPercentageObsolete:lastVisibleSortIdOnScreenPercentageO
             break;
     }
 
-    BOOL didAvatarChange = ![NSObject isNullableObject:newGroupModel.groupAvatarData
-                                               equalTo:self.groupModel.groupAvatarData];
+    BOOL didAvatarChange = ![NSObject isNullableObject:newGroupModel.avatarHash equalTo:self.groupModel.avatarHash];
+    BOOL didNameChange = ![newGroupModel.groupNameOrDefault isEqualToString:self.groupModel.groupNameOrDefault];
 
     [self anyUpdateGroupThreadWithTransaction:transaction
                                         block:^(TSGroupThread *thread) {
@@ -168,6 +168,10 @@ lastVisibleSortIdOnScreenPercentageObsolete:lastVisibleSortIdOnScreenPercentageO
 
                                             thread.groupModel = [newGroupModel copy];
                                         }];
+    [self updateGroupMemberRecordsWithTransaction:transaction];
+
+    // We only need to re-index the group if the group name changed.
+    [SDSDatabaseStorage.shared touchThread:self shouldReindex:didNameChange transaction:transaction];
 
     if (didAvatarChange) {
         [transaction addAsyncCompletionOnMain:^{ [self fireAvatarChangedNotification]; }];
@@ -209,7 +213,8 @@ lastVisibleSortIdOnScreenPercentageObsolete:lastVisibleSortIdOnScreenPercentageO
     [super anyWillUpdateWithTransaction:transaction];
 
     [self protectV2Migration:transaction];
-    [self updateGroupMemberRecordsWithTransaction:transaction];
+    // We used to update the group member records here, but there are many updates that don't touch membership.
+    // Now it's done explicitly where we update the group model, and not for other updates.
 }
 
 - (void)protectV2Migration:(SDSAnyWriteTransaction *)transaction

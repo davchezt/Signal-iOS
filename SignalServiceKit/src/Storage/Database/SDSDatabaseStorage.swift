@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -273,6 +273,20 @@ public class SDSDatabaseStorage: SDSTransactable {
         }
     }
 
+    @objc(touchStoryMessage:transaction:)
+    public func touch(storyMessage: StoryMessage, transaction: SDSAnyWriteTransaction) {
+        switch transaction.writeTransaction {
+        case .grdbWrite(let grdb):
+            DatabaseChangeObserver.serializedSync {
+                if let databaseChangeObserver = grdbStorage.databaseChangeObserver {
+                    databaseChangeObserver.didTouch(storyMessage: storyMessage, transaction: grdb)
+                } else if AppReadiness.isAppReady {
+                    owsFailDebug("databaseChangeObserver was unexpectedly nil")
+                }
+            }
+        }
+    }
+
     // MARK: - Cross Process Notifications
 
     private func handleCrossProcessWrite() {
@@ -331,15 +345,29 @@ public class SDSDatabaseStorage: SDSTransactable {
 
     // MARK: - SDSTransactable
 
-    @objc
-    public override func read(block: (SDSAnyReadTransaction) -> Void) {
-        do {
-            try grdbStorage.read { transaction in
-                block(transaction.asAnyRead)
+    public override func read(file: String = #file,
+                              function: String = #function,
+                              line: Int = #line,
+                              block: (SDSAnyReadTransaction) -> Void) {
+        InstrumentsMonitor.measure(category: "db", parent: "read", name: Self.owsFormatLogMessage(file: file, function: function, line: line)) {
+            do {
+                try grdbStorage.read { transaction in
+                    block(transaction.asAnyRead)
+                }
+            } catch {
+                owsFail("error: \(error.grdbErrorForLogging)")
             }
-        } catch {
-            owsFail("error: \(error.grdbErrorForLogging)")
         }
+    }
+
+    @objc(readWithBlock:)
+    public func readObjC(block: (SDSAnyReadTransaction) -> Void) {
+        read(file: "objc", function: "block", line: 0, block: block)
+    }
+
+    @objc(readWithBlock:file:function:line:)
+    public func readObjC(block: (SDSAnyReadTransaction) -> Void, file: UnsafePointer<CChar>, function: UnsafePointer<CChar>, line: Int) {
+        read(file: String(cString: file), function: String(cString: function), line: line, block: block)
     }
 
     // NOTE: This method is not @objc. See SDSDatabaseStorage+Objc.h.
@@ -355,22 +383,31 @@ public class SDSDatabaseStorage: SDSTransactable {
         #endif
 
         let benchTitle = "Slow Write Transaction \(Self.owsFormatLogMessage(file: file, function: function, line: line))"
-        do {
-            try grdbStorage.write { transaction in
-                Bench(title: benchTitle, logIfLongerThan: 0.1, logInProduction: DebugFlags.internalLogging) {
-                    block(transaction.asAnyWrite)
+        let timeoutThreshold = DebugFlags.internalLogging ? 0.1 : 0.5
+
+        InstrumentsMonitor.measure(category: "db", parent: "write", name: Self.owsFormatLogMessage(file: file, function: function, line: line)) {
+            do {
+                try grdbStorage.write { transaction in
+                    Bench(title: benchTitle, logIfLongerThan: timeoutThreshold, logInProduction: true) {
+                        block(transaction.asAnyWrite)
+                    }
                 }
+            } catch {
+                owsFail("error: \(error.grdbErrorForLogging)")
             }
-        } catch {
-            owsFail("error: \(error.grdbErrorForLogging)")
         }
         crossProcess.notifyChangedAsync()
     }
 
-    public func readThrows(block: (SDSAnyReadTransaction) throws -> Void) throws {
-        try grdbStorage.readThrows { transaction in
-            try autoreleasepool {
-                try block(transaction.asAnyRead)
+    public func readThrows(file: String = #file,
+                           function: String = #function,
+                           line: Int = #line,
+                           block: (SDSAnyReadTransaction) throws -> Void) throws {
+        try InstrumentsMonitor.measure(category: "db", parent: "read", name: Self.owsFormatLogMessage(file: file, function: function, line: line)) {
+            try grdbStorage.readThrows { transaction in
+                try autoreleasepool {
+                    try block(transaction.asAnyRead)
+                }
             }
         }
     }

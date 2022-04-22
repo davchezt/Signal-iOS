@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -11,7 +11,7 @@ private class StickerPackActionButton: UIView {
 
     @available(*, unavailable, message: "use other constructor instead.")
     required public init?(coder aDecoder: NSCoder) {
-        notImplemented()
+        fatalError("init(coder:) has not been implemented")
     }
 
     init(actionIconName: String, block: @escaping () -> Void) {
@@ -72,10 +72,6 @@ public class ManageStickersViewController: OWSTableViewController2 {
         navigationItem.title = NSLocalizedString("STICKERS_MANAGE_VIEW_TITLE", comment: "Title for the 'manage stickers' view.")
 
         navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .done, target: self, action: #selector(didPressDismiss))
-
-        if FeatureFlags.stickerPackOrdering {
-            navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .edit, target: self, action: #selector(didPressEditButton))
-        }
     }
 
     override public func viewDidLoad() {
@@ -133,7 +129,7 @@ public class ManageStickersViewController: OWSTableViewController2 {
         pendingModalVC?.dismiss {}
         pendingModalVC = nil
 
-        // We need to recyle data sources to maintain continuity.
+        // We need to recycle data sources to maintain continuity.
         var oldInstalledSources = [StickerPackInfo: StickerPackDataSource]()
         var oldTransientSources = [StickerPackInfo: StickerPackDataSource]()
         let updateMapWithOldSources = { (map: inout [StickerPackInfo: StickerPackDataSource], sources: [StickerPackDataSource]) in
@@ -554,15 +550,6 @@ public class ManageStickersViewController: OWSTableViewController2 {
         Logger.verbose("")
 
         needsStateUpdate = true
-    }
-
-    @objc
-    private func didPressEditButton(sender: UIButton) {
-        AssertIsOnMainThread()
-
-        Logger.verbose("")
-
-        // TODO:
     }
 
     @objc

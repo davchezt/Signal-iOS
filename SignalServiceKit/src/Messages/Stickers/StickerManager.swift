@@ -1,9 +1,9 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
-import SignalClient
+import LibSignalClient
 
 // Stickers
 //
@@ -468,13 +468,10 @@ public class StickerManager: NSObject {
                                         verifyExists: Bool,
                                         transaction: SDSAnyReadTransaction) -> [StickerInfo] {
 
-        let allInstalledUniqueIds = Set(InstalledSticker.anyAllUniqueIds(transaction: transaction))
         var result = [StickerInfo]()
         for stickerInfo in stickerPack.stickerInfos {
             let uniqueId = InstalledSticker.uniqueId(for: stickerInfo)
-            let isStickerInstalled = allInstalledUniqueIds.contains(uniqueId)
-            guard isStickerInstalled,
-                let installedSticker = InstalledSticker.anyFetch(uniqueId: uniqueId, transaction: transaction) else {
+            guard let installedSticker = InstalledSticker.anyFetch(uniqueId: uniqueId, transaction: transaction) else {
                     continue
             }
             if verifyExists,
@@ -719,7 +716,7 @@ public class StickerManager: NSObject {
                 // RACE: sticker has already been installed between now and when we last checked.
                 //
                 // Initially we check for a stickers presence with a read transaction, to avoid opening
-                // an unecessary write transaction. However, it's possible a race has occurred and the
+                // an unnecessary write transaction. However, it's possible a race has occurred and the
                 // sticker has since been installed, in which case there's nothing more for us to do.
                 return false
             }
@@ -876,7 +873,7 @@ public class StickerManager: NSObject {
     }
 
     private static let cacheQueue = DispatchQueue(label: "stickerManager.cacheQueue")
-    // This cache shoud only be accessed on cacheQueue.
+    // This cache should only be accessed on cacheQueue.
     private var suggestedStickersCache = LRUCache<String, [InstalledSticker]>(maxSize: 5)
 
     // We clear the cache every time we install or uninstall a sticker.
@@ -1085,7 +1082,7 @@ public class StickerManager: NSObject {
         let stickerKeyInfo = "Sticker Pack"
         let stickerKeyLength = 64
         let stickerKey = try stickerKeyInfo.utf8.withContiguousStorageIfAvailable {
-            try hkdf(outputLength: stickerKeyLength, version: 3, inputKeyMaterial: packKey, salt: [], info: $0)
+            try hkdf(outputLength: stickerKeyLength, inputKeyMaterial: packKey, salt: [], info: $0)
         }!
 
         let temporaryDecryptedFile = OWSFileSystem.temporaryFileUrl(isAvailableWhileDeviceLocked: true)

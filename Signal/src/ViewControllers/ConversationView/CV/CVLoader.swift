@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -58,7 +58,7 @@ public class CVLoader: NSObject {
                         return prevRenderState.threadViewModel
                     }
                     return ThreadViewModel(thread: thread,
-                                           forHomeView: false,
+                                           forChatList: false,
                                            transaction: transaction)
                 }
                 let threadViewModel = loadThreadViewModel()
@@ -94,7 +94,7 @@ public class CVLoader: NSObject {
                         != (prevGroupModel as? TSGroupModelV2)?.descriptionText
                     return (groupModel.groupName != prevGroupModel.groupName ||
                                 groupDescriptionDidChange ||
-                                groupModel.groupAvatarData != prevGroupModel.groupAvatarData ||
+                                groupModel.avatarHash != prevGroupModel.avatarHash ||
                                 groupModel.groupMembership.fullMembers.count != prevGroupModel.groupMembership.fullMembers.count)
                 }()
 
@@ -161,7 +161,9 @@ public class CVLoader: NSObject {
                 self.benchSteps.step("messageMapping")
 
                 let thread = threadViewModel.threadRecord
-                let threadInteractionCount = thread.numberOfInteractions(with: transaction)
+                let threadInteractionCount = thread.numberOfInteractions(
+                    with: messageMapping.storyReplyQueryMode,
+                    transaction: transaction)
 
                 self.benchSteps.step("threadInteractionCount")
 
@@ -296,7 +298,7 @@ public class CVLoader: NSObject {
         AssertIsOnMainThread()
 
         let threadViewModel = ThreadViewModel(thread: thread,
-                                              forHomeView: false,
+                                              forChatList: false,
                                               transaction: transaction)
         let viewStateSnapshot = CVViewStateSnapshot.mockSnapshotForStandaloneItems(coreState: coreState)
         let avatarBuilder = CVAvatarBuilder(transaction: transaction)
@@ -332,7 +334,7 @@ public class CVLoader: NSObject {
         let coreState = CVCoreState(conversationStyle: conversationStyle,
                                     mediaCache: CVMediaCache())
         let threadViewModel = ThreadViewModel(thread: thread,
-                                              forHomeView: false,
+                                              forChatList: false,
                                               transaction: transaction)
         let viewStateSnapshot = CVViewStateSnapshot.mockSnapshotForStandaloneItems(coreState: coreState)
         let avatarBuilder = CVAvatarBuilder(transaction: transaction)
@@ -386,7 +388,7 @@ public class CVLoader: NSObject {
             rootComponent = CVComponentSystemMessage(itemModel: itemModel,
                                                      systemMessage: defaultDisappearingMessageTimer)
         case .textOnlyMessage, .audio, .genericAttachment, .contactShare,
-             .bodyMedia, .viewOnce, .stickerMessage:
+                .bodyMedia, .viewOnce, .stickerMessage, .quoteOnlyMessage:
             rootComponent = CVComponentMessage(itemModel: itemModel)
         case .typingIndicator:
             guard let typingIndicator = itemModel.componentState.typingIndicator else {

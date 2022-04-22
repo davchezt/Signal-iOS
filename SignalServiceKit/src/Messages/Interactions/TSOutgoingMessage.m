@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 #import "TSOutgoingMessage.h"
@@ -135,12 +135,16 @@ NSUInteger const TSOutgoingMessageSchemaVersion = 1;
                  expireStartedAt:(uint64_t)expireStartedAt
                        expiresAt:(uint64_t)expiresAt
                 expiresInSeconds:(unsigned int)expiresInSeconds
+               isGroupStoryReply:(BOOL)isGroupStoryReply
               isViewOnceComplete:(BOOL)isViewOnceComplete
                isViewOnceMessage:(BOOL)isViewOnceMessage
                      linkPreview:(nullable OWSLinkPreview *)linkPreview
                   messageSticker:(nullable MessageSticker *)messageSticker
                    quotedMessage:(nullable TSQuotedMessage *)quotedMessage
     storedShouldStartExpireTimer:(BOOL)storedShouldStartExpireTimer
+           storyAuthorUuidString:(nullable NSString *)storyAuthorUuidString
+              storyReactionEmoji:(nullable NSString *)storyReactionEmoji
+                  storyTimestamp:(nullable NSNumber *)storyTimestamp
               wasRemotelyDeleted:(BOOL)wasRemotelyDeleted
                    customMessage:(nullable NSString *)customMessage
                 groupMetaMessage:(TSGroupMetaMessage)groupMetaMessage
@@ -167,12 +171,16 @@ NSUInteger const TSOutgoingMessageSchemaVersion = 1;
                    expireStartedAt:expireStartedAt
                          expiresAt:expiresAt
                   expiresInSeconds:expiresInSeconds
+                 isGroupStoryReply:isGroupStoryReply
                 isViewOnceComplete:isViewOnceComplete
                  isViewOnceMessage:isViewOnceMessage
                        linkPreview:linkPreview
                     messageSticker:messageSticker
                      quotedMessage:quotedMessage
       storedShouldStartExpireTimer:storedShouldStartExpireTimer
+             storyAuthorUuidString:storyAuthorUuidString
+                storyReactionEmoji:storyReactionEmoji
+                    storyTimestamp:storyTimestamp
                 wasRemotelyDeleted:wasRemotelyDeleted];
 
     if (!self) {
@@ -619,7 +627,7 @@ NSUInteger const TSOutgoingMessageSchemaVersion = 1;
                                           }];
 }
 
-- (void)updateWithAllSendingRecipientsMarkedAsFailedWithTansaction:(SDSAnyWriteTransaction *)transaction
+- (void)updateWithAllSendingRecipientsMarkedAsFailedWithTransaction:(SDSAnyWriteTransaction *)transaction
 {
     OWSAssertDebug(transaction);
 
@@ -1083,6 +1091,40 @@ NSUInteger const TSOutgoingMessageSchemaVersion = 1;
         }
     }
 
+    // Story Context
+    if (self.storyTimestamp && self.storyAuthorUuidString) {
+        if (self.storyReactionEmoji) {
+            SSKProtoDataMessageReactionBuilder *reactionBuilder =
+                [SSKProtoDataMessageReaction builderWithEmoji:self.storyReactionEmoji
+                                                    timestamp:self.storyTimestamp.longLongValue];
+            [reactionBuilder setAuthorUuid:self.storyAuthorUuidString];
+
+            NSError *error;
+            SSKProtoDataMessageReaction *_Nullable reaction = [reactionBuilder buildAndReturnError:&error];
+            if (error || !reaction) {
+                OWSFailDebug(@"Could not build story reaction protobuf: %@.", error);
+            } else {
+                [builder setReaction:reaction];
+
+                if (requiredProtocolVersion < SSKProtoDataMessageProtocolVersionReactions) {
+                    requiredProtocolVersion = SSKProtoDataMessageProtocolVersionReactions;
+                }
+            }
+        }
+
+        SSKProtoDataMessageStoryContextBuilder *storyContextBuilder = [SSKProtoDataMessageStoryContext builder];
+        [storyContextBuilder setAuthorUuid:self.storyAuthorUuidString];
+        [storyContextBuilder setSentTimestamp:self.storyTimestamp.longLongValue];
+
+        NSError *error;
+        SSKProtoDataMessageStoryContext *_Nullable storyContext = [storyContextBuilder buildAndReturnError:&error];
+        if (error || !storyContext) {
+            OWSFailDebug(@"Could not build storyContext protobuf: %@.", error);
+        } else {
+            [builder setStoryContext:storyContext];
+        }
+    }
+
     [builder setExpireTimer:self.expiresInSeconds];
     
     // Group Messages
@@ -1160,8 +1202,7 @@ NSUInteger const TSOutgoingMessageSchemaVersion = 1;
 
     // Link Preview
     if (self.linkPreview) {
-        SSKProtoDataMessagePreviewBuilder *previewBuilder =
-            [SSKProtoDataMessagePreview builderWithUrl:self.linkPreview.urlString];
+        SSKProtoPreviewBuilder *previewBuilder = [SSKProtoPreview builderWithUrl:self.linkPreview.urlString];
         if (self.linkPreview.title.length > 0) {
             [previewBuilder setTitle:self.linkPreview.title];
         }
@@ -1184,7 +1225,7 @@ NSUInteger const TSOutgoingMessageSchemaVersion = 1;
         }
 
         NSError *error;
-        SSKProtoDataMessagePreview *_Nullable previewProto = [previewBuilder buildAndReturnError:&error];
+        SSKProtoPreview *_Nullable previewProto = [previewBuilder buildAndReturnError:&error];
         if (error || !previewProto) {
             OWSFailDebug(@"Could not build link preview protobuf: %@.", error);
         } else {
@@ -1250,7 +1291,7 @@ NSUInteger const TSOutgoingMessageSchemaVersion = 1;
     SSKProtoGroupContextBuilder *groupBuilder = [SSKProtoGroupContext builderWithId:groupModel.groupId];
     [groupBuilder setType:groupMessageType];
     if (groupMessageType == SSKProtoGroupContextTypeUpdate) {
-        if (groupModel.groupAvatarData != nil && self.attachmentIds.count == 1) {
+        if (groupModel.avatarHash != nil && self.attachmentIds.count == 1) {
             attachmentWasGroupAvatar = YES;
             SSKProtoAttachmentPointer *_Nullable attachmentProto =
                 [TSAttachmentStream buildProtoForAttachmentId:self.attachmentIds.firstObject transaction:transaction];

@@ -1,8 +1,9 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
+import SignalServiceKit
 
 @objc
 public class ProvisioningController: NSObject {
@@ -78,7 +79,7 @@ public class ProvisioningController: NSObject {
             // if we have some backwards compatible support and allow a limited linking with an old
             // version of the app.
             guard let provisioningVersion = message.provisioningVersion,
-                provisioningVersion >= OWSProvisioningVersion else {
+                provisioningVersion >= OWSDeviceProvisioner.provisioningVersion else {
                     OWSActionSheets.showActionSheet(
                         title: NSLocalizedString("SECONDARY_LINKING_ERROR_OLD_VERSION_TITLE",
                                                  comment: "alert title for outdated linking device"),
@@ -221,12 +222,7 @@ public class ProvisioningController: NSObject {
 
         // We don't use URLComponents to generate this URL as it encodes '+' and '/'
         // in the base64 pub_key in a way the Android doesn't tolerate.
-        let urlString: String
-        if FeatureFlags.newLinkDeviceScheme {
-            urlString = "\(kURLSchemeSGNLKey)://\(kURLHostLinkDevicePrefix)?uuid=\(deviceId)&pub_key=\(encodedPubKey)"
-        } else {
-            urlString = "tsdevice:/?uuid=\(deviceId)&pub_key=\(encodedPubKey)"
-        }
+        let urlString = "\(kURLSchemeSGNLKey)://\(kURLHostLinkDevicePrefix)?uuid=\(deviceId)&pub_key=\(encodedPubKey)"
         guard let url = URL(string: urlString) else {
             throw OWSAssertionError("invalid url: \(urlString)")
         }
@@ -253,7 +249,7 @@ extension ProvisioningController: ProvisioningSocketDelegate {
     }
 
     public func provisioningSocket(_ provisioningSocket: ProvisioningSocket, didReceiveEnvelope envelope: ProvisioningProtoProvisionEnvelope) {
-        // After receiving the provisioning message, there's nothing else to retreive from the provisioning socket
+        // After receiving the provisioning message, there's nothing else to retrieve from the provisioning socket
         provisioningSocket.disconnect()
 
         owsAssertDebug(!provisionEnvelopePromise.isSealed)

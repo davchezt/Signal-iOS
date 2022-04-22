@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 #import <SignalServiceKit/BaseModel.h>
@@ -12,6 +12,7 @@ NS_ASSUME_NONNULL_BEGIN
 @class SSKProtoSyncMessageRead;
 @class SSKProtoSyncMessageViewed;
 @class SignalServiceAddress;
+@class StoryMessage;
 @class TSIncomingMessage;
 @class TSMessage;
 @class TSOutgoingMessage;
@@ -108,10 +109,9 @@ extern NSString *const kIncomingMessageMarkedAsReadNotification;
             circumstance:(OWSReceiptCircumstance)circumstance
              transaction:(SDSAnyWriteTransaction *)transaction;
 
-- (void)markAsReadLocallyBeforeSortId:(uint64_t)sortId
-                               thread:(TSThread *)thread
-             hasPendingMessageRequest:(BOOL)hasPendingMessageRequest
-                           completion:(void (^)(void))completion;
+- (void)storyWasViewed:(StoryMessage *)storyMessage
+          circumstance:(OWSReceiptCircumstance)circumstance
+           transaction:(SDSAnyWriteTransaction *)transaction;
 
 #pragma mark - Settings
 

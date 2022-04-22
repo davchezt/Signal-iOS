@@ -115,6 +115,10 @@ CREATE
             ,"paymentRequest" BLOB
             ,"viewed" BOOLEAN
             ,"serverGuid" TEXT
+            ,"storyAuthorUuidString" TEXT
+            ,"storyTimestamp" INTEGER
+            ,"isGroupStoryReply" BOOLEAN DEFAULT 0
+            ,"storyReactionEmoji" TEXT
         )
 ;
 
@@ -251,6 +255,8 @@ CREATE
             ,"boostPaymentIntentID" TEXT
             ,"isBoost" BOOLEAN
             ,"receiptCredentialPresentation" BLOB
+            ,"amount" NUMERIC
+            ,"currencyCode" TEXT
         )
 ;
 
@@ -354,12 +360,12 @@ CREATE
             ,"recipientUUID" TEXT
             ,"username" TEXT
             ,"familyName" TEXT
-            ,"isUuidCapable" BOOLEAN NOT NULL DEFAULT 0
             ,"lastFetchDate" DOUBLE
             ,"lastMessagingDate" DOUBLE
             ,"bio" TEXT
             ,"bioEmoji" TEXT
             ,"profileBadgeInfo" BLOB
+            ,"isStoriesCapable" BOOLEAN NOT NULL DEFAULT 0
         )
 ;
 
@@ -530,14 +536,6 @@ CREATE
         ON "model_TSInteraction"("timestamp"
     ,"sourceDeviceId"
     ,"authorPhoneNumber"
-)
-;
-
-CREATE
-    INDEX "index_interactions_unread_counts"
-        ON "model_TSInteraction"("read"
-    ,"uniqueThreadId"
-    ,"recordType"
 )
 ;
 
@@ -1221,9 +1219,68 @@ CREATE
 ;
 
 CREATE
+    TABLE
+        IF NOT EXISTS "model_ProfileBadgeTable" (
+            "id" TEXT PRIMARY KEY
+            ,"rawCategory" TEXT NOT NULL
+            ,"localizedName" TEXT NOT NULL
+            ,"localizedDescriptionFormatString" TEXT NOT NULL
+            ,"resourcePath" TEXT NOT NULL
+            ,"badgeVariant" TEXT NOT NULL
+            ,"localization" TEXT NOT NULL
+        )
+;
+
+CREATE
+    TABLE
+        IF NOT EXISTS "model_StoryMessage" (
+            "id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL
+            ,"recordType" INTEGER NOT NULL
+            ,"uniqueId" TEXT NOT NULL UNIQUE
+                ON CONFLICT FAIL
+            ,"timestamp" INTEGER NOT NULL
+            ,"authorUuid" TEXT NOT NULL
+            ,"groupId" BLOB
+            ,"direction" INTEGER NOT NULL
+            ,"manifest" BLOB NOT NULL
+            ,"attachment" BLOB NOT NULL
+        )
+;
+
+CREATE
+    INDEX "index_model_StoryMessage_on_uniqueId"
+        ON "model_StoryMessage"("uniqueId"
+)
+;
+
+CREATE
+    INDEX "index_model_StoryMessage_on_timestamp_and_authorUuid"
+        ON "model_StoryMessage"("timestamp"
+    ,"authorUuid"
+)
+;
+
+CREATE
+    INDEX "index_model_StoryMessage_on_direction"
+        ON "model_StoryMessage"("direction"
+)
+;
+
+CREATE
+    INDEX index_model_StoryMessage_on_incoming_viewedTimestamp
+        ON model_StoryMessage (
+        json_extract (
+            manifest
+            ,'$.incoming.viewedTimestamp'
+        )
+    )
+;
+
+CREATE
     INDEX index_model_TSInteraction_ConversationLoadInteractionCount
         ON model_TSInteraction (
         uniqueThreadId
+        ,isGroupStoryReply
         ,recordType
     )
 WHERE
@@ -1235,6 +1292,7 @@ CREATE
         ON model_TSInteraction (
         uniqueThreadId
         ,id
+        ,isGroupStoryReply
         ,recordType
         ,uniqueId
     )
@@ -1243,14 +1301,32 @@ WHERE
 ;
 
 CREATE
+    INDEX index_model_TSInteraction_UnreadCount
+        ON model_TSInteraction (
+        READ
+        ,isGroupStoryReply
+        ,uniqueThreadId
+        ,recordType
+    )
+;
+
+CREATE
+    INDEX "index_model_TSInteraction_on_StoryContext"
+        ON "model_TSInteraction"("storyTimestamp"
+    ,"storyAuthorUuidString"
+    ,"isGroupStoryReply"
+)
+;
+
+CREATE
     TABLE
-        IF NOT EXISTS "model_ProfileBadgeTable" (
-            "id" TEXT PRIMARY KEY
-            ,"rawCategory" TEXT NOT NULL
-            ,"localizedName" TEXT NOT NULL
-            ,"localizedDescriptionFormatString" TEXT NOT NULL
-            ,"resourcePath" TEXT NOT NULL
-            ,"badgeVariant" TEXT NOT NULL
-            ,"localization" TEXT NOT NULL
+        IF NOT EXISTS "model_DonationReceipt" (
+            "id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL
+            ,"uniqueId" TEXT NOT NULL UNIQUE
+                ON CONFLICT FAIL
+            ,"timestamp" INTEGER NOT NULL
+            ,"subscriptionLevel" INTEGER
+            ,"amount" NUMERIC NOT NULL
+            ,"currencyCode" TEXT NOT NULL
         )
 ;

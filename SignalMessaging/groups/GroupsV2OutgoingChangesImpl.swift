@@ -4,7 +4,7 @@
 
 import Foundation
 import SignalServiceKit
-import SignalClient
+import LibSignalClient
 
 // Represents a proposed set of changes to a group.
 //
@@ -140,14 +140,14 @@ public class GroupsV2OutgoingChangesImpl: NSObject, GroupsV2OutgoingChanges {
             setDescriptionText(newDescription)
         }
 
-        if oldGroupModel.groupAvatarData != newGroupModel.groupAvatarData {
+        if oldGroupModel.avatarHash != newGroupModel.avatarHash {
             let hasAvatarUrlPath = newGroupModel.avatarUrlPath != nil
-            let hasAvatarData = newGroupModel.groupAvatarData != nil
+            let hasAvatarData = newGroupModel.avatarData != nil
             guard hasAvatarUrlPath == hasAvatarData else {
                 throw OWSAssertionError("hasAvatarUrlPath: \(hasAvatarData) != hasAvatarData.")
             }
 
-            setAvatar(avatarData: newGroupModel.groupAvatarData,
+            setAvatar(avatarData: newGroupModel.avatarData,
                       avatarUrlPath: newGroupModel.avatarUrlPath)
         }
 
@@ -701,7 +701,7 @@ public class GroupsV2OutgoingChangesImpl: NSObject, GroupsV2OutgoingChanges {
             }
             let currentRole = currentGroupMembership.role(for: uuid)
             guard currentRole != newRole else {
-                // Another user has already modifed the role of this member.
+                // Another user has already modified the role of this member.
                 // We don't treat that as a conflict.
                 continue
             }

@@ -1,8 +1,8 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
-import SignalClient
+import LibSignalClient
 
 @objc
 public class SenderKeyStore: NSObject {
@@ -85,7 +85,7 @@ public class SenderKeyStore: NSObject {
                 throw OWSAssertionError("Failed to look up key metadata")
             }
             var updatedMetadata = existingMetadata
-            try updatedMetadata.recordSKMDSent(at: timestamp, address: address, transaction: writeTx)
+            try updatedMetadata.recordSKDMSent(at: timestamp, address: address, transaction: writeTx)
             setMetadata(updatedMetadata, writeTx: writeTx)
         }
     }
@@ -156,9 +156,7 @@ public class SenderKeyStore: NSObject {
     @objc
     public func skdmBytesForGroupThread(_ groupThread: TSGroupThread, writeTx: SDSAnyWriteTransaction) -> Data? {
         do {
-            guard let localAddress = ProtocolAddress.localAddress, localAddress.uuid != nil else {
-                throw OWSAssertionError("No local address")
-            }
+            let localAddress = try ProtocolAddress.localAddress
             let distributionId = distributionIdForSendingToThread(groupThread, writeTx: writeTx)
             let skdm = try SenderKeyDistributionMessage(from: localAddress,
                                                         distributionId: distributionId,
@@ -172,9 +170,9 @@ public class SenderKeyStore: NSObject {
     }
 }
 
-// MARK: - <SignalClient.SenderKeyStore>
+// MARK: - <LibSignalClient.SenderKeyStore>
 
-extension SenderKeyStore: SignalClient.SenderKeyStore {
+extension SenderKeyStore: LibSignalClient.SenderKeyStore {
     public func storeSenderKey(
         from sender: ProtocolAddress,
         distributionId: UUID,
@@ -439,11 +437,12 @@ private struct KeyRecipient: Codable, Dependencies {
         }
 
         let protocolAddresses = try deviceIds.map { try ProtocolAddress(from: address, deviceId: $0.uint32Value) }
+        let sessionStore = signalProtocolStore(for: .aci).sessionStore
         let devices: [Device] = try protocolAddresses.map {
             // We have to fetch the registrationId since deviceIds can be reused.
             // By comparing a set of (deviceId,registrationId) structs, we should be able to detect reused
             // deviceIds that will need an SKDM
-            let registrationId = try Self.sessionStore.loadSession(
+            let registrationId = try sessionStore.loadSession(
                 for: SignalServiceAddress(from: $0),
                 deviceId: Int32($0.deviceId),
                 transaction: transaction
@@ -475,11 +474,11 @@ private struct KeyMetadata {
     let ownerDeviceId: UInt32
     var keyId: String { SenderKeyStore.buildKeyId(addressUuid: ownerUuid, distributionId: distributionId) }
 
-    private var recordData: [UInt8]
+    private var serializedRecord: Data
     var record: SenderKeyRecord? {
         get {
             do {
-                return try SenderKeyRecord(bytes: recordData)
+                return try SenderKeyRecord(bytes: serializedRecord)
             } catch {
                 owsFailDebug("Failed to deserialize sender key record")
                 return nil
@@ -487,10 +486,10 @@ private struct KeyMetadata {
         }
         set {
             if let newValue = newValue {
-                recordData = newValue.serialize()
+                serializedRecord = Data(newValue.serialize())
             } else {
                 owsFailDebug("Invalid new value")
-                recordData = []
+                serializedRecord = Data()
             }
         }
     }
@@ -505,7 +504,7 @@ private struct KeyMetadata {
             throw OWSAssertionError("Invalid sender. Must have UUID")
         }
 
-        self.recordData = record.serialize()
+        self.serializedRecord = Data(record.serialize())
         self.distributionId = distributionId
         self.ownerUuid = uuid
         self.ownerDeviceId = sender.deviceId
@@ -528,7 +527,7 @@ private struct KeyMetadata {
         sentKeyInfo[address] = nil
     }
 
-    mutating func recordSKMDSent(at timestamp: UInt64, address: SignalServiceAddress, transaction: SDSAnyReadTransaction) throws {
+    mutating func recordSKDMSent(at timestamp: UInt64, address: SignalServiceAddress, transaction: SDSAnyReadTransaction) throws {
         let recipient = try KeyRecipient.currentState(for: address, transaction: transaction)
         let sendInfo = SKDMSendInfo(skdmTimestamp: timestamp, keyRecipient: recipient)
         sentKeyInfo[address] = sendInfo
@@ -540,7 +539,7 @@ extension KeyMetadata: Codable {
         case distributionId
         case ownerUuid
         case ownerDeviceId
-        case recordData
+        case serializedRecord
 
         case creationDate
         case sentKeyInfo
@@ -548,6 +547,7 @@ extension KeyMetadata: Codable {
 
         enum LegacyKeys: String, CodingKey {
             case keyRecipients
+            case recordData
         }
     }
 
@@ -558,9 +558,18 @@ extension KeyMetadata: Codable {
         distributionId  = try container.decode(SenderKeyStore.DistributionId.self, forKey: .distributionId)
         ownerUuid       = try container.decode(UUID.self, forKey: .ownerUuid)
         ownerDeviceId   = try container.decode(UInt32.self, forKey: .ownerDeviceId)
-        recordData      = try container.decode([UInt8].self, forKey: .recordData)
         creationDate    = try container.decode(Date.self, forKey: .creationDate)
         isForEncrypting = try container.decode(Bool.self, forKey: .isForEncrypting)
+
+        // We used to store this as an Array, but that serializes poorly in most Codable formats. Now we use Data.
+        if let serializedRecord = try container.decodeIfPresent(Data.self, forKey: .serializedRecord) {
+            self.serializedRecord = serializedRecord
+        } else if let recordData = try legacyValues.decodeIfPresent([UInt8].self, forKey: .recordData) {
+            serializedRecord = Data(recordData)
+        } else {
+            // We lost the entire record. "This should never happen."
+            throw OWSAssertionError("failed to deserialize SenderKey record")
+        }
 
         // There have been a few iterations of our delivery tracking. Briefly we have:
         // - V1: We just recorded a mapping from UUID -> Set<DeviceIds>
@@ -592,20 +601,13 @@ fileprivate extension TSGroupThread {
 }
 
 extension ProtocolAddress {
-
-    // TODO: Replace implementation for Swift 5.5 with throwable computed properties
-    //    static var localAddress: ProtocolAddress {
-    //        get throws {
-    //            ...
-    //            guard let address = address else { throw OWSAssertionError("No recipient address") }
-    //            return try ProtocolAddress(from: address, deviceId: deviceId)
-    @available(swift, obsoleted: 5.6, message: "Please swap out commented implementation in SenderKeyStore.swift")
-    static var localAddress: ProtocolAddress? {
-        get {
-            let tsAccountManager = SSKEnvironment.shared.tsAccountManager
-            let address = tsAccountManager.localAddress
+    static var localAddress: ProtocolAddress {
+        get throws {
+            guard let address = SSKEnvironment.shared.tsAccountManager.localAddress else {
+                throw OWSAssertionError("No address for the local account")
+            }
             let deviceId = SSKEnvironment.shared.tsAccountManager.storedDeviceId()
-            return try? address.map { try ProtocolAddress(from: $0, deviceId: deviceId) }
+            return try ProtocolAddress(from: address, deviceId: deviceId)
         }
     }
 

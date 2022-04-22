@@ -1,6 +1,8 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
+
+import SignalServiceKit
 
 public protocol ForwardMessageDelegate: AnyObject {
     func forwardMessageFlowDidComplete(items: [ForwardMessageItem],
@@ -24,7 +26,6 @@ class ForwardMessageViewController: InteractiveSheetViewController {
 
     public typealias Item = ForwardMessageItem
     fileprivate typealias Content = ForwardMessageContent
-    fileprivate typealias RecipientThread = ForwardMessageRecipientThread
 
     fileprivate var content: Content
 
@@ -32,8 +33,6 @@ class ForwardMessageViewController: InteractiveSheetViewController {
 
     private let selection = ConversationPickerSelection()
     var selectedConversations: [ConversationItem] { selection.conversations }
-
-    fileprivate var currentMentionableAddresses: [SignalServiceAddress] = []
 
     private init(content: Content) {
         self.content = content
@@ -81,6 +80,19 @@ class ForwardMessageViewController: InteractiveSheetViewController {
         } catch {
             ForwardMessageViewController.showAlertForForwardError(error: error,
                                                                         forwardedInteractionCount: selectionItems.count)
+        }
+    }
+
+    public class func present(_ attachments: [TSAttachment],
+                              from fromViewController: UIViewController,
+                              delegate: ForwardMessageDelegate) {
+        do {
+            let content: Content = try Self.databaseStorage.read { transaction in
+                try Content.build(attachments: attachments, transaction: transaction)
+            }
+            present(content: content, from: fromViewController, delegate: delegate)
+        } catch {
+            ForwardMessageViewController.showAlertForForwardError(error: error, forwardedInteractionCount: 1)
         }
     }
 
@@ -177,25 +189,6 @@ class ForwardMessageViewController: InteractiveSheetViewController {
 
     override var renderExternalHandle: Bool { false }
     override var minHeight: CGFloat { 576 }
-
-    fileprivate func updateCurrentMentionableAddresses() {
-        guard selectedConversations.count == 1,
-              let conversationItem = selectedConversations.first else {
-            self.currentMentionableAddresses = []
-            return
-        }
-
-        do {
-            try databaseStorage.write { transaction in
-                let recipientThread = try RecipientThread.build(conversationItem: conversationItem,
-                                                                transaction: transaction)
-                self.currentMentionableAddresses = recipientThread.mentionCandidates
-            }
-        } catch {
-            owsFailDebug("Error: \(error)")
-            self.currentMentionableAddresses = []
-        }
-    }
 }
 
 // MARK: - Sending
@@ -269,11 +262,11 @@ extension ForwardMessageViewController {
         let recipientConversations = self.selectedConversations
         firstly(on: .global()) {
             self.recipientThreads(for: recipientConversations)
-        }.then(on: .main) { (recipientThreads: [RecipientThread]) -> Promise<Void> in
+        }.then(on: .main) { (recipientThreads: [TSThread]) -> Promise<Void> in
             try Self.databaseStorage.write { transaction in
                 for recipientThread in recipientThreads {
                     // We're sending a message to this thread, approve any pending message request
-                    ThreadUtil.addThreadToProfileWhitelistIfEmptyOrPendingRequestAndSetDefaultTimer(thread: recipientThread.thread,
+                    ThreadUtil.addThreadToProfileWhitelistIfEmptyOrPendingRequestAndSetDefaultTimer(thread: recipientThread,
                                                                                                     transaction: transaction)
                 }
 
@@ -286,7 +279,7 @@ extension ForwardMessageViewController {
 
                 // Make sure the message and its content haven't been deleted (view-once
                 // messages, remove delete, disappearing messages, manual deletion, etc.).
-                for item in content.allItems {
+                for item in content.allItems where !item.isUnsavedInteraction {
                     let interactionId = item.interaction.uniqueId
                     guard let latestInteraction = TSInteraction.anyFetch(uniqueId: interactionId, transaction: transaction),
                           hasRenderableContent(interaction: latestInteraction) else {
@@ -295,7 +288,7 @@ extension ForwardMessageViewController {
                 }
             }
 
-            // TODO: Ideally we would enqueue all with a single write tranasction.
+            // TODO: Ideally we would enqueue all with a single write transaction.
             return firstly { () -> Promise<Void> in
                 // Maintain order of interactions.
                 let sortedItems = content.allItems.sorted { lhs, rhs in
@@ -314,16 +307,15 @@ extension ForwardMessageViewController {
                         return self.send(toRecipientThreads: recipientThreads) { recipientThread in
                             self.send(body: messageBody,
                                       linkPreviewDraft: nil,
-                                      thread: recipientThread.thread)
+                                      recipientThread: recipientThread)
                         }
                     } else {
                         return Promise.value(())
                     }
                 }
             }.map(on: .main) {
-                let threads = recipientThreads.map { $0.thread }
                 self.forwardMessageDelegate?.forwardMessageFlowDidComplete(items: content.allItems,
-                                                                           recipientThreads: threads)
+                                                                           recipientThreads: recipientThreads)
             }
         }.catch(on: .main) { error in
             owsFailDebug("Error: \(error)")
@@ -332,7 +324,7 @@ extension ForwardMessageViewController {
         }
     }
 
-    private func send(item: Item, toRecipientThreads recipientThreads: [RecipientThread]) -> Promise<Void> {
+    private func send(item: Item, toRecipientThreads recipientThreads: [TSThread]) -> Promise<Void> {
         AssertIsOnMainThread()
 
         let componentState = item.componentState
@@ -341,7 +333,7 @@ extension ForwardMessageViewController {
             let stickerInfo = stickerMetadata.stickerInfo
             if StickerManager.isStickerInstalled(stickerInfo: stickerInfo) {
                 return send(toRecipientThreads: recipientThreads) { recipientThread in
-                    self.send(installedSticker: stickerInfo, thread: recipientThread.thread)
+                    self.send(installedSticker: stickerInfo, thread: recipientThread)
                 }
             } else {
                 guard let stickerAttachment = componentState.stickerAttachment else {
@@ -352,7 +344,7 @@ extension ForwardMessageViewController {
                     return send(toRecipientThreads: recipientThreads) { recipientThread in
                         self.send(uninstalledSticker: stickerMetadata,
                                   stickerData: stickerData,
-                                  thread: recipientThread.thread)
+                                  thread: recipientThread)
                     }
                 } catch {
                     return Promise(error: error)
@@ -365,7 +357,7 @@ extension ForwardMessageViewController {
                         contactShare.dbRecord.saveAvatarImage(avatarImage, transaction: transaction)
                     }
                 }
-                return self.send(contactShare: contactShare, thread: recipientThread.thread)
+                return self.send(contactShare: contactShare, thread: recipientThread)
             }
         } else if let attachments = item.attachments,
                   !attachments.isEmpty {
@@ -379,20 +371,22 @@ extension ForwardMessageViewController {
             return send(toRecipientThreads: recipientThreads) { recipientThread in
                 self.send(body: messageBody,
                           linkPreviewDraft: linkPreviewDraft,
-                          thread: recipientThread.thread)
+                          recipientThread: recipientThread)
             }
         } else {
             return Promise(error: ForwardError.invalidInteraction)
         }
     }
 
-    fileprivate func send(body: MessageBody, linkPreviewDraft: OWSLinkPreviewDraft?, thread: TSThread) -> Promise<Void> {
+    fileprivate func send(body: MessageBody, linkPreviewDraft: OWSLinkPreviewDraft?, recipientThread: TSThread) -> Promise<Void> {
         databaseStorage.read { transaction in
-            ThreadUtil.enqueueMessage(body: body,
-                                      thread: thread,
-                                      quotedReplyModel: nil,
-                                      linkPreviewDraft: linkPreviewDraft,
-                                      transaction: transaction)
+            ThreadUtil.enqueueMessage(
+                body: body.forNewContext(recipientThread, transaction: transaction.unwrapGrdbRead),
+                thread: recipientThread,
+                quotedReplyModel: nil,
+                linkPreviewDraft: linkPreviewDraft,
+                transaction: transaction
+            )
         }
         return Promise.value(())
     }
@@ -424,14 +418,14 @@ extension ForwardMessageViewController {
         return Promise.value(())
     }
 
-    fileprivate func send(toRecipientThreads recipientThreads: [RecipientThread],
-                          enqueueBlock: @escaping (RecipientThread) -> Promise<Void>) -> Promise<Void> {
+    fileprivate func send(toRecipientThreads recipientThreads: [TSThread],
+                          enqueueBlock: @escaping (TSThread) -> Promise<Void>) -> Promise<Void> {
         AssertIsOnMainThread()
 
         return Promise.when(fulfilled: recipientThreads.map { thread in enqueueBlock(thread) }).asVoid()
     }
 
-    fileprivate func recipientThreads(for conversationItems: [ConversationItem]) -> Promise<[RecipientThread]> {
+    fileprivate func recipientThreads(for conversationItems: [ConversationItem]) -> Promise<[TSThread]> {
         firstly(on: .global()) {
             guard conversationItems.count > 0 else {
                 throw OWSAssertionError("No recipients.")
@@ -439,7 +433,10 @@ extension ForwardMessageViewController {
 
             return try self.databaseStorage.write { transaction in
                 try conversationItems.map {
-                    try RecipientThread.build(conversationItem: $0, transaction: transaction)
+                    guard let thread = $0.getOrCreateThread(transaction: transaction) else {
+                        throw ForwardError.missingThread
+                    }
+                    return thread
                 }
             }
         }
@@ -450,7 +447,6 @@ extension ForwardMessageViewController {
 
 extension ForwardMessageViewController: ConversationPickerDelegate {
     func conversationPickerSelectionDidChange(_ conversationPickerViewController: ConversationPickerViewController) {
-        updateCurrentMentionableAddresses()
         ensureBottomFooterVisibility()
     }
 
@@ -579,6 +575,7 @@ public struct ForwardMessageItem {
     fileprivate typealias Item = ForwardMessageItem
 
     let interaction: TSInteraction
+    let isUnsavedInteraction: Bool
     let componentState: CVComponentState
 
     let attachments: [SignalAttachment]?
@@ -589,6 +586,7 @@ public struct ForwardMessageItem {
 
     fileprivate class Builder {
         let interaction: TSInteraction
+        let isUnsavedInteraction: Bool
         let componentState: CVComponentState
 
         var attachments: [SignalAttachment]?
@@ -597,13 +595,15 @@ public struct ForwardMessageItem {
         var linkPreviewDraft: OWSLinkPreviewDraft?
         var stickerMetadata: StickerMetadata?
 
-        init(interaction: TSInteraction, componentState: CVComponentState) {
+        init(interaction: TSInteraction, isUnsavedInteraction: Bool, componentState: CVComponentState) {
             self.interaction = interaction
+            self.isUnsavedInteraction = isUnsavedInteraction
             self.componentState = componentState
         }
 
         func build() -> ForwardMessageItem {
             ForwardMessageItem(interaction: interaction,
+                               isUnsavedInteraction: isUnsavedInteraction,
                                componentState: componentState,
                                attachments: attachments,
                                contactShare: contactShare,
@@ -614,7 +614,7 @@ public struct ForwardMessageItem {
     }
 
     fileprivate var asBuilder: Builder {
-        let builder = Builder(interaction: interaction, componentState: componentState)
+        let builder = Builder(interaction: interaction, isUnsavedInteraction: isUnsavedInteraction, componentState: componentState)
         builder.attachments = attachments
         builder.contactShare = contactShare
         builder.messageBody = messageBody
@@ -637,11 +637,12 @@ public struct ForwardMessageItem {
     }
 
     fileprivate static func build(interaction: TSInteraction,
+                                  isUnsavedInteraction: Bool = false,
                                   componentState: CVComponentState,
                                   selectionType: CVSelectionType,
                                   transaction: SDSAnyReadTransaction) throws -> Item {
 
-        let builder = Builder(interaction: interaction, componentState: componentState)
+        let builder = Builder(interaction: interaction, isUnsavedInteraction: isUnsavedInteraction, componentState: componentState)
 
         let shouldHaveText = (selectionType == .allContent ||
                                 selectionType == .secondaryContent)
@@ -786,9 +787,9 @@ private enum ForwardMessageContent {
             let interactionId = selectionItem.interactionId
             guard let interaction = TSInteraction.anyFetch(uniqueId: interactionId,
                                                            transaction: transaction) else {
-                throw ForwardError.invalidInteraction
+                throw ForwardError.missingInteraction
             }
-            let componentState = try buildComponentState(interactionId: interactionId,
+            let componentState = try buildComponentState(interaction: interaction,
                                                          transaction: transaction)
             return try Item.build(interaction: interaction,
                                   componentState: componentState,
@@ -798,48 +799,40 @@ private enum ForwardMessageContent {
         return build(items: items)
     }
 
-    private static func buildComponentState(interactionId: String,
-                                            transaction: SDSAnyReadTransaction) throws -> CVComponentState {
-        guard let interaction = TSInteraction.anyFetch(uniqueId: interactionId,
-                                                       transaction: transaction) else {
-            throw ForwardError.missingInteraction
+    static func build(attachments: [TSAttachment], transaction: SDSAnyReadTransaction) throws -> ForwardMessageContent {
+        // The forwarding mechanism all operates on "interactions", so create a dummy unsaved interaction
+        // to wrap each attachment we're trying to forward.
+        guard let localThread = TSContactThread.getWithContactAddress(
+            TSAccountManager.shared.localAddress!,
+            transaction: transaction
+        ) else {
+            throw ForwardError.missingThread
         }
+
+        let items: [Item] = try attachments.map { attachment in
+            let builder = TSOutgoingMessageBuilder(thread: localThread)
+            builder.attachmentIds = [attachment.uniqueId]
+            let interaction = builder.build()
+
+            let componentState = try buildComponentState(interaction: interaction,
+                                                         transaction: transaction)
+
+            return try Item.build(interaction: interaction,
+                                  isUnsavedInteraction: true,
+                                  componentState: componentState,
+                                  selectionType: .allContent,
+                                  transaction: transaction)
+        }
+        return build(items: items)
+    }
+
+    private static func buildComponentState(interaction: TSInteraction,
+                                            transaction: SDSAnyReadTransaction) throws -> CVComponentState {
         guard let componentState = CVLoader.buildStandaloneComponentState(interaction: interaction,
                                                                           transaction: transaction) else {
             throw ForwardError.invalidInteraction
         }
         return componentState
-    }
-}
-
-// MARK: -
-
-private struct ForwardMessageRecipientThread {
-    let thread: TSThread
-    let mentionCandidates: [SignalServiceAddress]
-
-    static func build(conversationItem: ConversationItem,
-                      transaction: SDSAnyWriteTransaction) throws -> ForwardMessageRecipientThread {
-
-        guard let thread = conversationItem.thread(transaction: transaction) else {
-            owsFailDebug("Missing thread for conversation")
-            throw ForwardError.missingThread
-        }
-
-        let mentionCandidates = self.mentionCandidates(conversationItem: conversationItem,
-                                                       thread: thread,
-                                                       transaction: transaction)
-        return ForwardMessageRecipientThread(thread: thread, mentionCandidates: mentionCandidates)
-    }
-
-    private static func mentionCandidates(conversationItem: ConversationItem,
-                                          thread: TSThread,
-                                          transaction: SDSAnyReadTransaction) -> [SignalServiceAddress] {
-        guard let groupThread = thread as? TSGroupThread,
-              Mention.threadAllowsMentionSend(groupThread) else {
-            return []
-        }
-        return groupThread.recipientAddresses
     }
 }
 

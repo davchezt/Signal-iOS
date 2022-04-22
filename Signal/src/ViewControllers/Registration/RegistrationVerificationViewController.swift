@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import UIKit
@@ -331,7 +331,7 @@ class RegistrationVerificationViewModel: NSObject {
         } else {
             let countdownInterval = abs(codeCountdownStart.timeIntervalSinceNow)
             let countdownRemaining = max(0, Self.countdownDuration - countdownInterval)
-            let formattedCountdown = OWSFormat.formatDurationSeconds(Int(round(countdownRemaining)))
+            let formattedCountdown = OWSFormat.localizedDurationString(from: round(countdownRemaining))
 
             let resendCodeCountdownFormat = NSLocalizedString(
                 "ONBOARDING_VERIFICATION_RESEND_CODE_COUNTDOWN_FORMAT",
@@ -535,9 +535,7 @@ class RegistrationVerificationCodeView: UIView {
         textfield.textColor = Theme.primaryTextColor
         textfield.font = UIFont.ows_dynamicTypeLargeTitle1Clamped
         textfield.keyboardType = .numberPad
-        if #available(iOS 12, *) {
-            textfield.textContentType = .oneTimeCode
-        }
+        textfield.textContentType = .oneTimeCode
 
         var digitViews = [UIView]()
         (0..<digitCount).forEach { (_) in

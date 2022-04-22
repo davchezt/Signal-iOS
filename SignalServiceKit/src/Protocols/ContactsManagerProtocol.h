@@ -1,11 +1,12 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 NS_ASSUME_NONNULL_BEGIN
 
 @class CNContact;
 @class Contact;
+@class ModelReadCacheSizeLease;
 @class NSPersonNameComponents;
 @class PhoneNumber;
 @class SDSAnyReadTransaction;
@@ -25,6 +26,9 @@ NS_ASSUME_NONNULL_BEGIN
 /// - The address' UUID
 - (NSString *)displayNameForAddress:(SignalServiceAddress *)address;
 - (NSString *)displayNameForAddress:(SignalServiceAddress *)address transaction:(SDSAnyReadTransaction *)transaction;
+
+- (NSArray<NSString *> *)displayNamesForAddresses:(NSArray<SignalServiceAddress *> *)addresses
+                                      transaction:(SDSAnyReadTransaction *)transaction;
 
 /// Returns the user's nickname / first name, if supported by the name's locale.
 /// If we don't know the user's name components, falls back to displayNameForAddress:
@@ -67,6 +71,8 @@ NS_SWIFT_NAME(isSystemContactWithSneakyTransaction(address:));
                                  transaction:(SDSAnyReadTransaction *)transaction;
 
 @property (nonatomic, readonly) NSString *unknownUserLabel;
+
+- (nullable ModelReadCacheSizeLease *)leaseCacheSize:(NSInteger)size;
 
 #pragma mark - CNContacts
 

@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -25,6 +25,18 @@ public class VideoPlayerView: UIView {
     public var videoPlayer: OWSVideoPlayer? {
         didSet {
             player = videoPlayer?.avPlayer
+        }
+    }
+
+    @objc
+    override public var contentMode: UIView.ContentMode {
+        didSet {
+            switch contentMode {
+            case .scaleAspectFill: playerLayer.videoGravity = .resizeAspectFill
+            case .scaleToFill: playerLayer.videoGravity = .resize
+            case .scaleAspectFit: playerLayer.videoGravity = .resizeAspect
+            default: playerLayer.videoGravity = .resizeAspect
+            }
         }
     }
 
@@ -209,7 +221,7 @@ class TrackingSlider: UISlider {
     }
 
     required init?(coder aDecoder: NSCoder) {
-        notImplemented()
+        fatalError("init(coder:) has not been implemented")
     }
 }
 
@@ -260,7 +272,7 @@ public class PlayerProgressBar: UIView {
     }
 
     required public init?(coder aDecoder: NSCoder) {
-        notImplemented()
+        fatalError("init(coder:) has not been implemented")
     }
 
     override public init(frame: CGRect) {
@@ -290,7 +302,7 @@ public class PlayerProgressBar: UIView {
         slider.addTarget(self, action: #selector(handleSliderValueChanged), for: .valueChanged)
 
         // Panning is a no-op. We just absorb pan gesture's originating in the video controls
-        // from propogating so we don't inadvertently change pages while trying to scrub in
+        // from propagating so we don't inadvertently change pages while trying to scrub in
         // the MediaPageView.
         let panAbsorber = UIPanGestureRecognizer(target: self, action: nil)
         self.addGestureRecognizer(panAbsorber)

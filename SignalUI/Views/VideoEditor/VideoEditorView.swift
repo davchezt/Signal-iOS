@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import UIKit
@@ -84,7 +84,7 @@ public class VideoEditorView: UIView {
 
     @available(*, unavailable, message: "use other init() instead.")
     required public init?(coder aDecoder: NSCoder) {
-        notImplemented()
+        fatalError("init(coder:) has not been implemented")
     }
 
     // MARK: - Views
@@ -105,7 +105,7 @@ public class VideoEditorView: UIView {
         timelineView.autoPinEdge(toSuperviewMargin: .top)
         timelineView.autoSetDimension(.height, toSize: timelineHeight)
 
-        playButton.accessibilityLabel = NSLocalizedString("PLAY_BUTTON_ACCESSABILITY_LABEL", comment: "Accessibility label for button to start media playback")
+        playButton.accessibilityLabel = OWSLocalizedString("PLAY_BUTTON_ACCESSABILITY_LABEL", comment: "Accessibility label for button to start media playback")
         playButton.setBackgroundImage(#imageLiteral(resourceName: "play_button"), for: .normal)
         playButton.contentMode = .scaleAspectFit
 
@@ -322,7 +322,7 @@ public class VideoEditorView: UIView {
                     modalVC.dismiss {}
                 }.catch { _ in
                     modalVC.dismiss {
-                        OWSActionSheets.showErrorAlert(message: NSLocalizedString("ERROR_COULD_NOT_SAVE_VIDEO", comment: "Error indicating that 'save video' failed."))
+                        OWSActionSheets.showErrorAlert(message: OWSLocalizedString("ERROR_COULD_NOT_SAVE_VIDEO", comment: "Error indicating that 'save video' failed."))
                     }
                 }
             }
@@ -500,7 +500,7 @@ class TrimVideoTimelineView: UIView {
 
     @available(*, unavailable, message: "use other init() instead.")
     required public init?(coder aDecoder: NSCoder) {
-        notImplemented()
+        fatalError("init(coder:) has not been implemented")
     }
 
     private func createContents() {
@@ -936,7 +936,7 @@ class TrimVideoTimelineView: UIView {
         }
 
         let label = UILabel()
-        label.text = OWSFormat.formatDurationSeconds(Int(round(time)))
+        label.text = OWSFormat.localizedDurationString(from: round(time))
         label.textColor = .ows_white
         label.font = .ows_dynamicTypeCaption1
         timeBubbleView.addSubview(label)

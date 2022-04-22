@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -101,7 +101,10 @@ public class SessionResetOperation: OWSOperation, DurableOperation {
         if firstAttempt {
             self.databaseStorage.write { transaction in
                 Logger.info("archiving sessions for recipient: \(self.recipientAddress)")
-                self.sessionStore.archiveAllSessions(for: self.recipientAddress, transaction: transaction)
+                // PNI TODO: should this archive PNI sessions as well, or should that be a parameter of the job?
+                // Do we ever need a SessionResetJob for a PNI session?
+                self.signalProtocolStore(for: .aci).sessionStore.archiveAllSessions(for: self.recipientAddress,
+                                                                                    transaction: transaction)
             }
             firstAttempt = false
         }
@@ -121,8 +124,10 @@ public class SessionResetOperation: OWSOperation, DurableOperation {
             self.databaseStorage.write { transaction in
                 // Archive the just-created session since the recipient should delete their corresponding
                 // session upon receiving and decrypting our EndSession message.
-                // Otherwise if we send another message before them, they wont have the session to decrypt it.
-                self.sessionStore.archiveAllSessions(for: self.recipientAddress, transaction: transaction)
+                // Otherwise if we send another message before them, they won't have the session to decrypt it.
+                // PNI TODO: same as above
+                self.signalProtocolStore(for: .aci).sessionStore.archiveAllSessions(for: self.recipientAddress,
+                                                                                    transaction: transaction)
 
                 let message = TSInfoMessage(thread: self.contactThread,
                                             messageType: TSInfoMessageType.typeSessionDidEnd)
@@ -159,14 +164,16 @@ public class SessionResetOperation: OWSOperation, DurableOperation {
             self.durableOperationDelegate?.durableOperation(self, didFailWithError: error, transaction: transaction)
 
             // Even though this is the failure handler - which means probably the recipient didn't receive the message
-            // there's a chance that our send did succeed and the server just timed out our repsonse or something.
+            // there's a chance that our send did succeed and the server just timed out our response or something.
             // Since the cost of sending a future message using a session the recipient doesn't have is so high,
             // we archive the session just in case.
             //
             // Archive the just-created session since the recipient should delete their corresponding
             // session upon receiving and decrypting our EndSession message.
-            // Otherwise if we send another message before them, they wont have the session to decrypt it.
-            self.sessionStore.archiveAllSessions(for: self.recipientAddress, transaction: transaction)
+            // Otherwise if we send another message before them, they won't have the session to decrypt it.
+            // PNI TODO: same as above
+            self.signalProtocolStore(for: .aci).sessionStore.archiveAllSessions(for: self.recipientAddress,
+                                                                                transaction: transaction)
         }
     }
 }

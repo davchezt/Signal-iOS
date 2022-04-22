@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 import Foundation
@@ -53,6 +53,8 @@ public struct JobRecordRecord: SDSRecord {
     public let boostPaymentIntentID: String?
     public let isBoost: Bool?
     public let receiptCredentialPresentation: Data?
+    public let amount: Data?
+    public let currencyCode: String?
 
     public enum CodingKeys: String, CodingKey, ColumnExpression, CaseIterable {
         case id
@@ -81,6 +83,8 @@ public struct JobRecordRecord: SDSRecord {
         case boostPaymentIntentID
         case isBoost
         case receiptCredentialPresentation
+        case amount
+        case currencyCode
     }
 
     public static func columnName(_ column: JobRecordRecord.CodingKeys, fullyQualified: Bool = false) -> String {
@@ -130,6 +134,8 @@ public extension JobRecordRecord {
         boostPaymentIntentID = row[23]
         isBoost = row[24]
         receiptCredentialPresentation = row[25]
+        amount = row[26]
+        currencyCode = row[27]
     }
 }
 
@@ -154,6 +160,7 @@ extension SSKJobRecord {
     class func fromRecord(_ record: JobRecordRecord) throws -> SSKJobRecord {
 
         guard let recordId = record.id else {
+            owsFailDebug("Record id is null")
             throw SDSError.invalidValue
         }
 
@@ -224,7 +231,10 @@ extension SSKJobRecord {
             let label: String = record.label
             let sortId: UInt64 = UInt64(recordId)
             let status: SSKJobRecordStatus = record.status
+            let amountSerialized: Data? = record.amount
+            let amount: NSDecimalNumber? = try SDSDeserialization.optionalUnarchive(amountSerialized, name: "amount")
             let boostPaymentIntentID: String = try SDSDeserialization.required(record.boostPaymentIntentID, name: "boostPaymentIntentID")
+            let currencyCode: String? = record.currencyCode
             let isBoost: Bool = try SDSDeserialization.required(record.isBoost, name: "isBoost")
             let priorSubscriptionLevel: UInt = try SDSDeserialization.required(record.priorSubscriptionLevel, name: "priorSubscriptionLevel")
             let receiptCredentailRequest: Data = try SDSDeserialization.required(record.receiptCredentailRequest, name: "receiptCredentailRequest")
@@ -240,7 +250,9 @@ extension SSKJobRecord {
                                                            label: label,
                                                            sortId: sortId,
                                                            status: status,
+                                                           amount: amount,
                                                            boostPaymentIntentID: boostPaymentIntentID,
+                                                           currencyCode: currencyCode,
                                                            isBoost: isBoost,
                                                            priorSubscriptionLevel: priorSubscriptionLevel,
                                                            receiptCredentailRequest: receiptCredentailRequest,
@@ -494,7 +506,21 @@ extension SSKJobRecord: DeepCopyable {
             let label: String = modelToCopy.label
             let sortId: UInt64 = modelToCopy.sortId
             let status: SSKJobRecordStatus = modelToCopy.status
+            // NOTE: If this generates build errors, you made need to
+            // modify DeepCopy.swift to support this type.
+            //
+            // That might mean:
+            //
+            // * Implement DeepCopyable for this type (e.g. a model).
+            // * Modify DeepCopies.deepCopy() to support this type (e.g. a collection).
+            let amount: NSDecimalNumber?
+            if let amountForCopy = modelToCopy.amount {
+               amount = try DeepCopies.deepCopy(amountForCopy)
+            } else {
+               amount = nil
+            }
             let boostPaymentIntentID: String = modelToCopy.boostPaymentIntentID
+            let currencyCode: String? = modelToCopy.currencyCode
             let isBoost: Bool = modelToCopy.isBoost
             let priorSubscriptionLevel: UInt = modelToCopy.priorSubscriptionLevel
             let receiptCredentailRequest: Data = modelToCopy.receiptCredentailRequest
@@ -510,7 +536,9 @@ extension SSKJobRecord: DeepCopyable {
                                                            label: label,
                                                            sortId: sortId,
                                                            status: status,
+                                                           amount: amount,
                                                            boostPaymentIntentID: boostPaymentIntentID,
+                                                           currencyCode: currencyCode,
                                                            isBoost: isBoost,
                                                            priorSubscriptionLevel: priorSubscriptionLevel,
                                                            receiptCredentailRequest: receiptCredentailRequest,
@@ -637,6 +665,8 @@ extension SSKJobRecordSerializer {
     static var boostPaymentIntentIDColumn: SDSColumnMetadata { SDSColumnMetadata(columnName: "boostPaymentIntentID", columnType: .unicodeString, isOptional: true) }
     static var isBoostColumn: SDSColumnMetadata { SDSColumnMetadata(columnName: "isBoost", columnType: .int, isOptional: true) }
     static var receiptCredentialPresentationColumn: SDSColumnMetadata { SDSColumnMetadata(columnName: "receiptCredentialPresentation", columnType: .blob, isOptional: true) }
+    static var amountColumn: SDSColumnMetadata { SDSColumnMetadata(columnName: "amount", columnType: .blob, isOptional: true) }
+    static var currencyCodeColumn: SDSColumnMetadata { SDSColumnMetadata(columnName: "currencyCode", columnType: .unicodeString, isOptional: true) }
 
     // TODO: We should decide on a naming convention for
     //       tables that store models.
@@ -669,7 +699,9 @@ extension SSKJobRecordSerializer {
         targetSubscriptionLevelColumn,
         boostPaymentIntentIDColumn,
         isBoostColumn,
-        receiptCredentialPresentationColumn
+        receiptCredentialPresentationColumn,
+        amountColumn,
+        currencyCodeColumn
         ])
     }
 }
@@ -747,7 +779,7 @@ public extension SSKJobRecord {
     //
     // We should generally use `anyUpdate` to ensure we're not unintentionally
     // clobbering other columns in the database when another concurrent update
-    // has occured.
+    // has occurred.
     //
     // There are cases when this doesn't make sense, e.g. when  we know we've
     // just loaded the model in the same transaction. In those cases it is
@@ -779,7 +811,7 @@ public extension SSKJobRecord {
 // MARK: - SSKJobRecordCursor
 
 @objc
-public class SSKJobRecordCursor: NSObject {
+public class SSKJobRecordCursor: NSObject, SDSCursor {
     private let transaction: GRDBReadTransaction
     private let cursor: RecordCursor<JobRecordRecord>?
 
@@ -958,7 +990,7 @@ public extension SSKJobRecord {
             }
         }
 
-        if shouldBeIndexedForFTS {
+        if ftsIndexMode != .never {
             FullTextSearchFinder.allModelsWereRemoved(collection: collection(), transaction: transaction)
         }
     }
@@ -984,7 +1016,7 @@ public extension SSKJobRecord {
             instance.anyRemove(transaction: transaction)
         })
 
-        if shouldBeIndexedForFTS {
+        if ftsIndexMode != .never {
             FullTextSearchFinder.allModelsWereRemoved(collection: collection(), transaction: transaction)
         }
     }
@@ -1081,8 +1113,10 @@ class SSKJobRecordSerializer: SDSSerializer {
         let boostPaymentIntentID: String? = nil
         let isBoost: Bool? = nil
         let receiptCredentialPresentation: Data? = nil
+        let amount: Data? = nil
+        let currencyCode: String? = nil
 
-        return JobRecordRecord(delegate: model, id: id, recordType: recordType, uniqueId: uniqueId, failureCount: failureCount, label: label, status: status, attachmentIdMap: attachmentIdMap, contactThreadId: contactThreadId, envelopeData: envelopeData, invisibleMessage: invisibleMessage, messageId: messageId, removeMessageAfterSending: removeMessageAfterSending, threadId: threadId, attachmentId: attachmentId, isMediaMessage: isMediaMessage, serverDeliveryTimestamp: serverDeliveryTimestamp, exclusiveProcessIdentifier: exclusiveProcessIdentifier, isHighPriority: isHighPriority, receiptCredentailRequest: receiptCredentailRequest, receiptCredentailRequestContext: receiptCredentailRequestContext, priorSubscriptionLevel: priorSubscriptionLevel, subscriberID: subscriberID, targetSubscriptionLevel: targetSubscriptionLevel, boostPaymentIntentID: boostPaymentIntentID, isBoost: isBoost, receiptCredentialPresentation: receiptCredentialPresentation)
+        return JobRecordRecord(delegate: model, id: id, recordType: recordType, uniqueId: uniqueId, failureCount: failureCount, label: label, status: status, attachmentIdMap: attachmentIdMap, contactThreadId: contactThreadId, envelopeData: envelopeData, invisibleMessage: invisibleMessage, messageId: messageId, removeMessageAfterSending: removeMessageAfterSending, threadId: threadId, attachmentId: attachmentId, isMediaMessage: isMediaMessage, serverDeliveryTimestamp: serverDeliveryTimestamp, exclusiveProcessIdentifier: exclusiveProcessIdentifier, isHighPriority: isHighPriority, receiptCredentailRequest: receiptCredentailRequest, receiptCredentailRequestContext: receiptCredentailRequestContext, priorSubscriptionLevel: priorSubscriptionLevel, subscriberID: subscriberID, targetSubscriptionLevel: targetSubscriptionLevel, boostPaymentIntentID: boostPaymentIntentID, isBoost: isBoost, receiptCredentialPresentation: receiptCredentialPresentation, amount: amount, currencyCode: currencyCode)
     }
 }
 

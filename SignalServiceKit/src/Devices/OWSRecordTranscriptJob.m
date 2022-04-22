@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2021 Open Whisper Systems. All rights reserved.
+//  Copyright (c) 2022 Open Whisper Systems. All rights reserved.
 //
 
 #import "OWSRecordTranscriptJob.h"
@@ -44,7 +44,8 @@ NS_ASSUME_NONNULL_BEGIN
 
     if (transcript.isEndSessionMessage) {
         OWSLogInfo(@"EndSession was sent to recipient: %@.", transcript.recipientAddress);
-        [self.sessionStore archiveAllSessionsForAddress:transcript.recipientAddress transaction:transaction];
+        SSKSessionStore *sessionStore = [self signalProtocolStoreForIdentity:OWSIdentityACI].sessionStore;
+        [sessionStore archiveAllSessionsForAddress:transcript.recipientAddress transaction:transaction];
 
         TSInfoMessage *infoMessage = [[TSInfoMessage alloc] initWithThread:transcript.thread
                                                                messageType:TSInfoMessageTypeSessionDidEnd];
@@ -58,14 +59,6 @@ NS_ASSUME_NONNULL_BEGIN
         OWSFailDebug(@"Transcript is missing timestamp.");
         // This transcript is invalid, discard it.
         return;
-    } else if (transcript.dataMessageTimestamp < 1) {
-        OWSLogError(@"Transcript is missing data message timestamp.");
-        // Legacy desktop doesn't supply data message timestamp;
-        // ignore until desktop are in production.
-        if (SSKFeatureFlags.strictSyncTranscriptTimestamps) {
-            OWSFailDebug(@"Transcript timestamps do not match, discarding message.");
-            return;
-        }
     } else if (transcript.timestamp != transcript.dataMessageTimestamp) {
         OWSLogVerbose(
             @"Transcript timestamps do not match: %llu != %llu", transcript.timestamp, transcript.dataMessageTimestamp);
@@ -123,7 +116,10 @@ NS_ASSUME_NONNULL_BEGIN
                                                                        messageSticker:transcript.messageSticker
                                                                     isViewOnceMessage:transcript.isViewOnceMessage
                                                                changeActionsProtoData:nil
-                                                                 additionalRecipients:nil] build];
+                                                                 additionalRecipients:nil
+                                                                   storyAuthorAddress:transcript.storyAuthorAddress
+                                                                       storyTimestamp:transcript.storyTimestamp
+                                                                   storyReactionEmoji:nil] build];
 
     SignalServiceAddress *_Nullable localAddress = self.tsAccountManager.localAddress;
     if (localAddress == nil) {
@@ -231,11 +227,6 @@ NS_ASSUME_NONNULL_BEGIN
 {
     OWSAssertDebug(transcript);
     OWSAssertDebug(transaction);
-
-    if (!SSKFeatureFlags.sendRecipientUpdates) {
-        OWSFailDebug(@"Ignoring 'recipient update' transcript; disabled.");
-        return;
-    }
 
     if (transcript.udRecipientAddresses.count < 1 && transcript.nonUdRecipientAddresses.count < 1) {
         OWSFailDebug(@"Ignoring empty 'recipient update' transcript.");
